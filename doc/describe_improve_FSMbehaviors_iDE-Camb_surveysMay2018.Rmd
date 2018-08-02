@@ -1,0 +1,84 @@
+---
+title: "Describing and Improving Behaviors When Rural Latrine Pits Fill: A Randomized Controlled Trial"
+author: "James Harper, PE, ENV SP; Angela Bielefeldt, PE; Amy Javernick-Will; Touer Veasna; Chris Nicoletti"
+date: "Started: Oct 1, 2017; Last Updated: July 27, 2018"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load(file = "/data/raw/surveys/iDE_May2018.Rdata")
+summary(data1)
+summary(data2)
+```
+
+## Summary
+
+Latrine-owning households in rural communities typically manage their own fecal sludge.  However, their decisions when pits fill are poorly understood, preventing safely managing sanitation.  Using behavioral theory and a randomized controlled trial, this study describes the intentions and behaviors of rural Cambodian households when pits fill, and investigates how visible indicators of pits’ sludge levels affects these intentions and behaviors.  Nearly all households (93%) emptied their own pits, and most (63%) are unwilling to pay for professional emptying.  The sludge-level indicator encouraged planning for when pits fill but did not encourage safely managing fecal sludge.
+
+## Introduction
+
+Safely managing fecal sludge from the billions of pit latrines used daily around the world has been difficult to achieve, threatening public health.  In rural communities, where households typically manage their own fecal sludge, decisions when pits fill strongly affect fecal sludge management (FSM) but are poorly understood.  Using the Theory of Planned Behavior and the RANAS model of behavior change, this study describes the intentions and behaviors of rural Cambodian households when pits fill, identifies associations with contextual factors, and investigates how a Pit Gauge (PG), a continuously visible indicator of a pit’s sludge level, affects these FSM intentions and behaviors via a randomized controlled trial (RCT).
+
+## Methods
+
+In August 2017, the international development organization iDE began an RCT in 10 similar villages (5 intervention, 5 control) in Svay Rieng province, Cambodia.  Each household owned a latrine (6.1 years mean duration) and had an average of 4.0 out of 4.6 household members using the latrine daily.  Households in the intervention group (n = 90) had PGs installed, while those in the control group (n = 254) did not and were >25 km from the nearest intervention household.  It was also postulated that PGs may affect the FSM intentions of households neighboring intervention households by making sludge levels visible to neighbors and/or  encouraging FSM discussions in the community.  Thus, households neighboring intervention households were recruited into the intervention-neighbors group (n = 176).
+
+Pre-intervention surveys were conducted with 642 households (416 control, 226 intervention) in August 2017.  Post-intervention surveying is on-going, will continue through December 2018, and has surveyed 523 households (256 control, 267 intervention) to date.  These surveys describe FSM behaviors, including pit emptying methods, motivations and barriers to empty, and who emptied; FSM intentions; and latrine usage habits.
+
+Structural equation modeling combined with frequency and association analyses will describe how the three groups differ pre- and post-intervention regarding intentions, behaviors and related barriers and motivators when pits fill.  Results will also be compared to those from a previous study of FSM intentions of households that owned their latrines for less than 1 year.
+
+## Results
+
+Nearly one third of households (30%) emptied their pit before.
+
+```{r freqs_1way}
+summary(cars)
+```
+
+Of these, 93% self-emptied, while the others paid between $0.37 and $29.60 USD (median = $1.73 USD) for professional emptying.  The majority (63%) were unwilling to pay for emptying, while the median willingness to pay of the others was $4.93 USD.  To prevent their pits from filling, 14% had installed overflow pipes onto their pits to allow liquid FS to flow untreated into a field or body of water.  Only 3% of households reported knowing a professional emptier.
+
+Households with PGs and their neighbors reported less indecision about their intended emptying methods compared to the control group (7%, 9%, and 14%, respectively; p = 0.04).  However, households with PGs reported intending to empty using a bucket on a rope more frequently than households without PGs (84%, 75%, and 74%; p = 0.04).
+
+## Discussion
+
+## Conclusions and Implications
+
+The behaviors of latrine-owning households in rural Cambodia when pits fill are cause for concern.  Few households attempt to manage their fecal sludge safely, and most are unwilling to pay for professional emptying.  The Pit Gauge encouraged households and their neighbors to plan for when their pits fill, indicating a strong effect of FSM social norms, but did not encourage safe FSM.  Additional results, including the longitudinal effects of PGs and comparisons with contextual factors, such as employment, number of people in a household, and duration of latrine use, will be reported in the full presentation after all data has been gathered.  Additional research is required, particularly in other provinces of Cambodia and countries, to improve generalizability, and is on-going.
+
+The problem of unsafely managed fecal sludge is likely to continue in rural Cambodia unless new affordable and aspirational FSM products and services become available, and sustainable FSM business models are developed.  Pit Gauges or similar devices could be used in conjunction with other behavior change methods to encourage safe FSM.  This formative research should be used to improve FSM behavior change campaigns and improve the design of latrines and FSM processes and training to achieve safely managed sanitation.
+
+## References
+
+Ajzen, I. (1985). From Intentions to Actions: A Theory of Planned Behavior. In Action Control (pp. 11–39). Springer, Berlin, Heidelberg. https://doi.org/10.1007/978-3-642-69746-3_2
+
+Harper, J., Bielefeldt, A., Javernick-Will, A., Veasna, T., & Nicoletti, C. (2018). Intentions Toward Fecal Sludge Management in Rural Developing Communities. Presented at the Engineering Project Organizations Conference 2018, Brijuni, Croatia on June 27, 2018.
+
+Jenkins, M. W., Cumming, O., & Cairncross, S. (2015). Pit Latrine Emptying Behavior and Demand for Sanitation Services in Dar Es Salaam, Tanzania. International Journal of Environmental Research and Public Health, 12(3), 2588–2611. https://doi.org/10.3390/ijerph120302588
+
+Mosler, H.-J. (2012). A systematic approach to behavior change interventions for the water and sanitation sector in developing countries: a conceptual model, a review, and a guideline. International Journal of Environmental Health Research, 22(5), 431–449. https://doi.org/10.1080/09603123.2011.650156
+
+Still, D., & Foxon, K. (2012). Tackling the challenges of full pit latrines: report to the Water Research Commission. Gezina [South Africa]: Water Research Commission. ISBN 9781431202935.
+
+## Tables
+
+## Figures
+
+
+## Notes
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
