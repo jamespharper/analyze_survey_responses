@@ -27,7 +27,7 @@ freqs.1way = function(data, metric1, return = 0) {
   freqs_prop_df = freqs_prop_df[order(-freqs_prop_df$Proportion),]
   
   # Start sending text output to text file
-  file1 = file(paste(getwd(),"/output/", name, ".txt", sep = ""))
+  file1 = file(paste(getwd(),"/data/", name, ".txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
 
@@ -111,7 +111,7 @@ freqs.2way = function(data, metric1, metric2, return = 0) {
   else {stop("ERROR: Variable not found in data, and metrics not same type.")}
   
   # Start sending text output to dump file
-  file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
+  file1 = file(paste(getwd(),"/data/dump.txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -218,7 +218,7 @@ freqs.2way.prov = function(data, metric1, metric2, prov, return = 0) {
   else {stop("ERROR: Variable not found in data, and metrics not same type.")}
   
   # Start sending text output to dump file
-  file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
+  file1 = file(paste(getwd(),"/data/dump.txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -288,7 +288,7 @@ freqs.3way = function(data, metric1, metric2, metric3) {
   C = data[metric3][[1]]
   
   # Start sending text output to dump file
-  file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
+  file1 = file(paste(getwd(),"/data/dump.txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -413,7 +413,7 @@ correspondence = function(data, metric1, metric2) {
   plot_name = paste(name_metric1, "_", name_metric2, sep = "")
   
   # Start sending text output to text file in folder
-  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  file1 = file(paste(getwd(), "/data/", name, ".txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -473,7 +473,7 @@ correspondence = function(data, metric1, metric2) {
   ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
                            plot8, plot9, plot10, plot11, plot12, plot13,
                            plot14, plot15, plot16, plot17, plot18), 
-           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
+           filename = paste(getwd(), "/data/", name, ".pdf", sep = ""))
 }
 correspondence.prov = function(data, metric1, metric2, prov, return = 0) {
   
@@ -488,7 +488,7 @@ correspondence.prov = function(data, metric1, metric2, prov, return = 0) {
                     names(data)[[metric2]], sep = "")
   
   # Start sending text output to text file in folder
-  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  file1 = file(paste(getwd(), "/data/", name, ".txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -565,7 +565,7 @@ multiple_correspondence = function(data, quali_sup, quanti_sup) {
   plot_name = name
   
   # Start sending text output to text file in folder
-  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  file1 = file(paste(getwd(), "/data/", name, ".txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
   
@@ -598,7 +598,7 @@ multiple_correspondence = function(data, quali_sup, quanti_sup) {
   ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
                            plot8, plot9, plot10, plot11, plot12, plot13,
                            plot14, plot15), 
-           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
+           filename = paste(getwd(), "/data/", name, ".pdf", sep = ""))
 }
 multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
                                    return = 0) {
@@ -733,7 +733,7 @@ genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
 save_text_output_to_file = function(subfolder, name) {
 
   # Name folder to store output
-  folder = paste(getwd(),"/Output/", subfolder, sep = "")
+  folder = paste(getwd(),"/data/", subfolder, sep = "")
   
   # Create folder if it does not exist
   if (!dir.exists(folder)) {
@@ -746,7 +746,7 @@ save_text_output_to_file = function(subfolder, name) {
 create_folder = function(subfolder) {
   
   # Name folder to store output
-  folder = paste(getwd(),"/output/", subfolder, sep = "")
+  folder = paste(getwd(),"/data/", subfolder, sep = "")
   
   # Create folder if it does not exist
   if (!dir.exists(folder)) {
