@@ -1,25 +1,17 @@
 # Analysis of Survey Responses of Rural Cambodian Latrine Owners
 # Written by James Harper, PE, ENV SP of the University of Colorado Boulder
-# Started October 1, 2017
-# Last updated June 9, 2018
-
+# Started October 1, 2017; Last updated Aug 8, 2018
 ###############################################################################
-# INITIALIZE
-###############################################################################
+# Initialize environment and user input
 rm(list = ls())                                      # Clear global environment
-cat("\014")                                          # Clear console window
-source("functions.R")
-load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
-                 "ca", "extracat", "iplots", "FactoMineR", "gplots", 
-                 "factoextra", "corrplot", "ggpubr", "rgl", "missMDA", "pscl",
-                 "ltm", "Amelia", "ROCR", "extrafont", "DescTools", "sp",
-                 "plyr"))
+cat("\014")                                              # Clear console window
+source("functions.R")                                   # Load custom functions
+load_libraries(                                      # Install & load libraries
+  c("rio", "gplots", "missMDA", "car", "fastDummies", "lavaan"))
 loadfonts(device = "win")
-clean.raw.data = 1
-
+clean.raw.data = 0                                      # Clean raw data: 1=yes
 ###############################################################################
-# LOAD DATA, CLEAN IF SELECTED, CLEAR CONSOLE WINDOW, AND SUMMARIZE DATA
-###############################################################################
+# Load, clean, and summarize data
 if (clean.raw.data == 0) {
   load(file = paste(getwd(),"/data/raw/surveys/iDE_May2018.RData", sep = ""))
   } else if (clean.raw.data == 1) {
@@ -373,9 +365,26 @@ if (clean.raw.data == 0) {
     summary(data.followup$EmptyChlngs)  # After
     
     # Rename responses in EmptyLast
-    summary(data.followup$EmptyLast, maxsum = 50)  # Before
-    levels(data.followup$EmptyLast) = c("None", "EmptyReqTooFreq")
-    summary(data.followup$EmptyLast)  # After
+    # summary(data.followup$EmptyLast, maxsum = 50)  # Before
+    # levels(data.followup$EmptyLast) = c("2001", "2004", "2008", "2011", "2012", 
+    #                                     "2014", "2015", "2016", "2017", "2018", 
+    #                                     "12/2012", "7/2016", "1/2017")
+    # summary(data.followup$EmptyLast)  # After
+    
+    # Rename responses in EmptyMethds
+    summary(data.followup$EmptyMethds, maxsum = 50)  # Before
+    levels(data.followup$EmptyMethds) = c("Self-Bucketing", "Self-Pump")
+    summary(data.followup$EmptyMethds)  # After
+    
+    # Rename responses in EmptyWho
+    summary(data.followup$EmptyWho, maxsum = 50)  # Before
+    levels(data.followup$EmptyWho) = c("FamilyMemb", "Pro", "Self")
+    summary(data.followup$EmptyWho)  # After
+    
+    # Rename responses in EmptyExprience
+    summary(data.followup$EmptyExprience, maxsum = 50)  # Before
+    levels(data.followup$EmptyExprience) = c("Good", "Neutral", "Bad")
+    summary(data.followup$EmptyExprience)  # After
     
     # CLEANING TASKS REMAINING
     # Skipped data.followup$NumRngs and data.followup$NumRngs.Othr
@@ -390,8 +399,8 @@ if (clean.raw.data == 0) {
     ###############################################################################
     # DATA QUALITY CONTROL
     ###############################################################################
-    summary(data.baseline, maxsum = 10)
-    summary(data.followup, maxsum = 10)
+    summary(data.baseline, maxsum = 30)
+    summary(data.followup, maxsum = 30)
     # missmap(data.baseline, main = "Missing vs observed", legend = F)  # visualize NAs
     # missmap(data.followup, main = "Missing vs observed", legend = F)
     sapply(data.baseline, function(x) sum(is.na(x)))  # count NAs
@@ -403,19 +412,9 @@ if (clean.raw.data == 0) {
     save(data.baseline, data.followup,
          file = paste(getwd(),"/data/raw/surveys/iDE_May2018.RData", sep = ""))
 
-}
-
-# Retain only rows of interest
-# data.followup = subset(data.followup, !is.na(EmptyPlan))
-# data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
-#                                 IntndChng_Shwr, IntndChng_Sink, IntndChng_Pit,
-#                                 IntndChng_WtrRes, IntndChng_Othr,
-#                                 IntndChng_NAAlwysToi, RDefBefor))
-
-# Clear console window for clarity
-cat("\014")
-
-# Summarize data
+  }
+load(file = paste(getwd(),"/data/raw/surveys/iDE_Oct2017.Rdata", sep = ""))
+cat("\014")                                              # Clear console window
 summary(data.baseline)
 summary(data.followup)
 names(data.baseline)
@@ -424,11 +423,128 @@ print(sapply(data.baseline, function(x) sum(is.na(x))))
 print(sapply(data.followup, function(x) sum(is.na(x))))
 missmap(data.baseline, main = "Missing Values in Variables", legend = F)
 missmap(data.followup, main = "Missing Values in Variables", legend = F)
+###############################################################################
+# Confirmatory Factor Analysis
+?HolzingerSwineford1939
+model = "visual  =~ x1 + x2 + x3
+         textual =~ x4 + x5 + x6
+         speed   =~ x7 + x8 + x9"
+fit = cfa(model, data = HolzingerSwineford1939)
+summary(fit, fit.measures = TRUE)
 
-###############################################################################
-# ANALYZE DATA AND PLOT RESULTS BY RESEARCH QUESTION
-###############################################################################
-# BASIC DATA CHARACTERIZATION
+model.group = "visual  =~ x1 + x2 + x3
+               textual =~ x4 + x5 + x6
+               speed   =~ x7 + x8 + x9"
+fit = cfa(model.group, data = HolzingerSwineford1939, group = "school")
+summary(fit)
+
+# Structural Equation Modeling
+model = "
+  # measurement model
+    ind60 =~ x1 + x2 + x3
+    dem60 =~ y1 + y2 + y3 + y4
+    dem65 =~ y5 + y6 + y7 + y8
+  # regressions
+    dem60 ~ ind60
+    dem65 ~ ind60 + dem60
+  # residual correlations
+    y1 ~~ y5
+    y2 ~~ y4 + y6
+    y3 ~~ y7
+    y4 ~~ y8
+    y6 ~~ y8"
+fit = sem(model, data = PoliticalDemocracy)
+summary(fit, standardized = TRUE)
+
+data.test = subset(data, !is.na(IntndPitFull))
+data.test = subset(data.test, Yr == 2017)
+data.test = subset(data.test, 
+                   select = c(Prov, IDPoor, VillOD, Mnth,         # Exogenous
+                              IntndPitFull, Satis, Rec, SatisSup, # Endogenous
+                                            RecSup))
+data.test = subset(data.test, Satis != "DK")
+data.test = subset(data.test, SatisSup != "DK")
+data.test = droplevels(data.test)
+summary(data.test)
+varTable(data.test)
+data.test$Prov = recode(data.test$Prov, "'Banteay Meanchey' = 'BM';
+                                         'Kampong Thom'     = 'KT';
+                                         'Kandal'           = 'KL';
+                                         'Oddar Meanchey'   = 'OM';
+                                         'Prey Veng'        = 'PV';
+                                         'Siem Reap'        = 'SR';
+                                         'Svay Rieng'       = 'SG'")
+data.test$IDPoor = as.numeric(as.character(recode(data.test$IDPoor, 
+                                                  "'Yes' = 1; 'No' = 0")))
+data.test$Mnth = as.numeric(as.character(data.test$Mnth))
+data.test$Satis = as.numeric(as.character(data.test$Satis))
+data.test$Rec = as.numeric(as.character(recode(data.test$Rec, 
+                                               "'Yes' = 1; 'No' = 0")))
+data.test$SatisSup = as.numeric(as.character(data.test$SatisSup))
+data.test$RecSup = as.numeric(as.character(recode(data.test$RecSup, 
+                                                  "'Yes' = 1; 'No' = 0")))
+varTable(data.test)
+data.test = dummy_cols(data.test)
+varTable(data.test)
+model1 = "PercepSanSys =~ Satis + Rec
+          PercepSanSys ~ Prov_SG + Prov_KL + Prov_PV + Prov_BM + Prov_KT + 
+                         Prov_OM + Prov_SR + IDPoor + VillOD_Some +
+                         VillOD_Most + VillOD_None + Mnth"
+model2 = "PercepSanSys =~ Satis + Rec
+          PercepSanSys ~ IDPoor + Mnth"
+model3 = "PercepSanSys =~ Satis + Rec + SatisSup + RecSup"
+fit = sem(model3, data = data.test, std.lv = TRUE)
+summary(fit, standardized = TRUE)
+
+# Exploratory Factor Analysis (EFA)
+##libraries
+# library(GPArotation)
+# library(car)
+# library(psych)
+##normal data screening (fake style) goes here
+##screen all the items (but not demographics)
+
+##correlation adequacy Bartlett's test
+correlations = cor(efadata)
+cortest.bartlett(correlations, n = nrow(efadata))
+
+##sampling adequacy KMO test
+KMO(correlations)
+
+##how many factors?
+nofactors = fa.parallel(efadata, fm="ml", fa="fa")
+nofactors$fa.values
+sum(nofactors$fa.values > 1.0) ##old kaiser criterion
+sum(nofactors$fa.values > .7) ##new kaiser criterion
+
+##simple structure with a two factor model
+fa(efadata, nfactors=2, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
+
+##get cfi
+finalmodel = fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
+1 - ((finalmodel$STATISTIC-finalmodel$dof)/
+       (finalmodel$null.chisq-finalmodel$null.dof))
+
+##reliability
+factor1 = c(1:7, 9:10, 12:16, 18:22)
+factor2 = c(8, 11, 17)
+alpha(efadata[, factor1])
+alpha(efadata[, factor2])
+
+##simple structure with a five factor model
+##an example of OVERfactoring
+fa(efadata, nfactors=5, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(15)], nfactors=5, rotate = "oblimin", fm = "ml")
+##all items load but factor five only has two items
+##try four factor model
+fa(efadata[ , -c(15)], nfactors=4, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(3,14,15)], nfactors=4, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(3,7,10,14,15,18)], nfactors=4, rotate = "oblimin", fm = "ml")
+##at this point you would get rid of 12, and then factor four
+##only has two items ... this pattern indicates that you should 
+##try the smaller numbers of factors
+
 # Plot jobs, baseline data
 df = data.frame(Job = names(summary(data.baseline$Job)), 
                 Count = summary(data.baseline$Job))
