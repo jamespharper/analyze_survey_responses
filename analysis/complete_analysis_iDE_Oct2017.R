@@ -8,8 +8,6 @@
 ###############################################################################
 rm(list = ls())                                      # Clear global environment
 cat("\014")                                          # Clear console window
-file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
-                full.names = TRUE))    
 source("functions.R")
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
@@ -18,11 +16,11 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "pscl", "ltm", "Amelia", "ROCR", "extrafont",
                  "DescTools"))
 loadfonts(device = "win")
-load(file = "iDE_Oct2017.Rdata")
-data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
-                                IntndChng_Shwr, IntndChng_Sink, IntndChng_Pit,
-                                IntndChng_WtrRes, IntndChng_Othr,
-                                IntndChng_NAAlwysToi, RDefBefor))
+load(file = paste(getwd(),"/data/raw/surveys/iDE_Oct2017.Rdata", sep = ""))
+# data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
+#                                 IntndChng_Shwr, IntndChng_Sink, IntndChng_Pit,
+#                                 IntndChng_WtrRes, IntndChng_Othr,
+#                                 IntndChng_NAAlwysToi, RDefBefor))
 
 # Characterize data, focusing on NAs
 summary(data)
@@ -42,7 +40,7 @@ summary(data)
 
 # Run 1-way frequency analysis on selected variable
 names(data)
-var1 = c(2:length(data))
+var1 = c(1:length(data))
 for (num in var1) {
   print(num)
   freqs.1way(data = data, metric1 = num)
