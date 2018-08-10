@@ -14,13 +14,39 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "FactoMineR", "gplots", "factoextra",
                  "corrplot", "ggpubr", "rgl", "missMDA",
                  "pscl", "ltm", "Amelia", "ROCR", "extrafont",
-                 "DescTools"))
+                 "DescTools", "car"))
 loadfonts(device = "win")
 load(file = paste(getwd(),"/data/raw/surveys/iDE_Oct2017.Rdata", sep = ""))
 # data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
 #                                 IntndChng_Shwr, IntndChng_Sink, IntndChng_Pit,
 #                                 IntndChng_WtrRes, IntndChng_Othr,
 #                                 IntndChng_NAAlwysToi, RDefBefor))
+
+# Create collapsed satisfaction variables for latrine and supplier
+summary(data$Satis)
+data$SatisColaps = recode(data$Satis, 
+                          "'DK' = 'DK'; 
+                          1 = 1; 2 = 1; 3 = 2;
+                          4 = 3; 5 = 3")
+summary(data$SatisColaps)
+summary(data$SatisSup)
+data$SatisSupColaps = recode(data$SatisSup, 
+                          "'DK' = 'DK'; 
+                          1 = 1; 2 = 1; 3 = 2;
+                          4 = 3; 5 = 3")
+summary(data$SatisSupColaps)
+summary(data$Satis)
+data$SatisColapsMore = recode(data$Satis, 
+                          "'DK' = 'DK'; 
+                          1 = 1; 2 = 1; 3 = 1;
+                          4 = 2; 5 = 2")
+summary(data$SatisColapsMore)
+summary(data$SatisSup)
+data$SatisSupColapsMore = recode(data$SatisSup, 
+                             "'DK' = 'DK'; 
+                          1 = 1; 2 = 1; 3 = 1;
+                          4 = 2; 5 = 2")
+summary(data$SatisSupColapsMore)
 
 # Characterize data, focusing on NAs
 summary(data)
@@ -48,8 +74,8 @@ for (num in var1) {
 
 # Run 2-way frequency and correspondence analyses on selected variable pairs
 names(data)
-var1 = c(14, 28)
-var2 = c(1:2, 6:13, 15:27, 35:42)
+var1 = c(17, 38)
+var2 = c(20, 22, 54, 55)
 pairs = expand.grid(var1, var2)
 for (num in 1:length(pairs[,1])) {
   print(paste(pairs[num,1], "_", pairs[num,2]))
@@ -57,6 +83,8 @@ for (num in 1:length(pairs[,1])) {
   # correspondence(data = data, metric1 = pairs[num,1], metric2 = pairs[num,2],
   #    prov = prov)     # NOT WORKING
 }
+
+
 
 # Run multiple correspondence analysis
 # multiple.correspondence(data = data[2:length(data)],
