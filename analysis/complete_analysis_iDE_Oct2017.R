@@ -56,8 +56,8 @@ names(data)
 
 # Remove rows missing IntndPitFull response
 data = subset(data, !is.na(IntndPitFull))
-# print(sapply(data, function(x) sum(is.na(x))))
-# missmap(data[1:35], main = "Missing Values in Variables", legend = F)
+print(sapply(data, function(x) sum(is.na(x))))
+missmap(data, main = "Missing Values in Variables", legend = F)
 summary(data)
 
 ###############################################################################
@@ -74,8 +74,8 @@ for (num in var1) {
 
 # Run 2-way frequency and correspondence analyses on selected variable pairs
 names(data)
-var1 = c(17, 38)
-var2 = c(20, 22, 54, 55)
+var1 = c(94)
+var2 = c(87:93)
 pairs = expand.grid(var1, var2)
 for (num in 1:length(pairs[,1])) {
   print(paste(pairs[num,1], "_", pairs[num,2]))
@@ -83,6 +83,13 @@ for (num in 1:length(pairs[,1])) {
   # correspondence(data = data, metric1 = pairs[num,1], metric2 = pairs[num,2],
   #    prov = prov)     # NOT WORKING
 }
+
+freqs_2way_IntndPitFullDes_IntndChng_Shltr = freqs.2way(data, "IntndPitFullDes", "IntndChng_Shltr", 1)
+freqs_2way_IntndPitFullDes_IntndChng_Shwr = freqs.2way(data, "IntndPitFullDes", "IntndChng_Shwr", 1)
+freqs_2way_IntndPitFullDes_IntndChng_WtrRes = freqs.2way(data, "IntndPitFullDes", "IntndChng_WtrRes", 1)
+freqs_2way_IntndPitFullDes_IntndChng_Othr = freqs.2way(data, "IntndPitFullDes", "IntndChng_Othr", 1)
+freqs_2way_IntndPitFullDes_IntndChng_Pit = freqs.2way(data, "IntndPitFullDes", "IntndChng_Pit", 1)
+freqs_2way_IntndPitFullDes_IntndChng_Sink = freqs.2way(data, "IntndPitFullDes", "IntndChng_Sink", 1)
 
 
 
@@ -93,10 +100,30 @@ for (num in 1:length(pairs[,1])) {
 
 # Develop generalized linear model
 data.sub = subset(data, select = -c(Comm, Vill))
+data.sub = subset(data, select = -c(ID, Date, RGend, RisC, CrelR, DateSlabPur,
+                                    LatInst, BelowGrndInst, DateBelowGrndInst,
+                                    ShltrInst, DateInstComp, RDefBeforOthr,
+                                    WhoInstLat, KnwSubsdy, RecSubsdy,
+                                    BorwLat, CanBuyLat, UseFincOthr, SlabTil,
+                                    Npits, PitConfig, NringsDir, NringsOff,
+                                    NringsOthr, ShltrWallTypOthr, 
+                                    LatRoofTypOthr, MatsPurTgthr,
+                                    Cost, CostInclInst, CostPitSlab,
+                                    CostPitSlabKnwn, CostShltrMats,
+                                    CostShltrMatsKnwn, LabPitShltrPurTgthr,
+                                    CostLabLat, CostLabPitSlab,
+                                    CostLabPitSlabKnwn, CostLabShltr,
+                                    CostLabShltrKnwn, LatTypOwndBefor,
+                                    IntndChngOthr, IntndPitFullOthrAns,
+                                    DateSurvCreated, M01, M1824, M217,
+                                    M2559, M60, F01, F1824, F217, F2559, F60, 
+                                    LBO))
 data.sub = subset(data.sub, Prov != "Takeo" & Prov != "Kampong Cham" &
                     Prov != "Kampong Speu" & Yr != "2014")
 data.sub = droplevels(data.sub)
-summary(data.sub, maxsum = 100)
+summary(data.sub, maxsum = 10)
+print(sapply(data.sub, function(x) sum(is.na(x))))
+missmap(data.sub, main = "Missing Values in Variables", legend = F)
 # Removed due to not enough data in each geographic area: Dist, Comm, Vill
 results = genlinmod(data = data.sub, 
                     formula = paste("IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor +",
@@ -127,13 +154,21 @@ results = genlinmod(data = data.sub,
                     formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
                                     "RecSup + Yr + SatisSup + ",
                                     "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
-                    iter = 1, perc_train = 1, return = 1)
+                    iter = 1000, perc_train = 0.95, return = 1)
 print(results)
 print(summary(results[[2]]))
 print(anova(results[[2]], test = "Chisq"))
 # pR2(results[[2]])
 PseudoR2(results[[2]])
 print(confint(results[[2]]))
+
+# NULL MODEL
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ 1"),
+                    iter = 1000, perc_train = 0.95, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
 
 model = glm(formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
                             "RecSup + Yr + SatisSup + ",
@@ -147,6 +182,13 @@ print(anova(model, test = "Chisq"))
 pR2(model)
 PseudoR2(model, which = "all")
 print(confint(model))
+# IMPROVED MODEL WITH INTNDCHNG VARS
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                                    "RecSup + Yr + SatisSup + ",
+                                    "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+                    iter = 1, perc_train = 1, return = 1)
+print(results)
 
 ### OLD
 # ALL VARIABLES POSSIBLE
