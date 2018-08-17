@@ -7,7 +7,7 @@ rm(list = ls())                                      # Clear global environment
 cat("\014")                                              # Clear console window
 source("functions.R")                                   # Load custom functions
 load_libraries(                                      # Install & load libraries
-  c("rio", "gplots", "missMDA", "car", "fastDummies", "lavaan"))
+  c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan"))
 loadfonts(device = "win")
 clean.raw.data = 0                                      # Clean raw data: 1=yes
 ###############################################################################
@@ -424,6 +424,121 @@ print(sapply(data.followup, function(x) sum(is.na(x))))
 missmap(data.baseline, main = "Missing Values in Variables", legend = F)
 missmap(data.followup, main = "Missing Values in Variables", legend = F)
 ###############################################################################
+
+
+# Exploratory Factor Analysis (EFA)
+##libraries
+library(GPArotation)
+library(car)
+library(psych)
+##normal data screening (fake style) goes here
+##screen all the items (but not demographics)
+
+data.efa = data.baseline
+summary(data.efa)
+# ##correlation adequacy Bartlett's test
+# correlations = cor(efadata)
+# cortest.bartlett(correlations, n = nrow(efadata))
+# 
+# ##sampling adequacy KMO test
+# KMO(correlations)
+
+##how many factors?
+num_factors = fa.parallel(data.efa, fm = "ml", fa = "fa")
+nofactors$fa.values
+sum(nofactors$fa.values > 1.0) ##old kaiser criterion
+sum(nofactors$fa.values > .7) ##new kaiser criterion
+
+##simple structure with a two factor model
+fa(efadata, nfactors=2, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
+
+##get cfi
+finalmodel = fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
+1 - ((finalmodel$STATISTIC-finalmodel$dof)/
+       (finalmodel$null.chisq-finalmodel$null.dof))
+
+##reliability
+factor1 = c(1:7, 9:10, 12:16, 18:22)
+factor2 = c(8, 11, 17)
+alpha(efadata[, factor1])
+alpha(efadata[, factor2])
+
+##simple structure with a five factor model
+##an example of OVERfactoring
+fa(efadata, nfactors=5, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(15)], nfactors=5, rotate = "oblimin", fm = "ml")
+##all items load but factor five only has two items
+##try four factor model
+fa(efadata[ , -c(15)], nfactors=4, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(3,14,15)], nfactors=4, rotate = "oblimin", fm = "ml")
+fa(efadata[ , -c(3,7,10,14,15,18)], nfactors=4, rotate = "oblimin", fm = "ml")
+##at this point you would get rid of 12, and then factor four
+##only has two items ... this pattern indicates that you should 
+##try the smaller numbers of factors
+
+
+# Multiple Correspondence Analysis
+# Select relevant data
+data.mca = subset(data.baseline, select = -c(Intrviewr, PGInstlDate, Dist, 
+                                             Prov, Lat, Lon, LatOwnrJob1,
+                                             LatOwnrJob2, NumRings, LatAge,
+                                             LatInstlYr))
+# Remove/rename missing data
+print(sapply(data.mca, function(x) sum(is.na(x))))
+data.mca$NumAdlts18[is.na(data.mca$NumAdlts18)] = 
+  round(mean(!is.na(data.mca$NumAdlts18)), 0)
+data.mca$NumChld217[is.na(data.mca$NumChld217)] = 
+  round(mean(!is.na(data.mca$NumChld217)), 0)
+data.mca$NumInf2[is.na(data.mca$NumInf2)] = 
+  round(mean(!is.na(data.mca$NumInf2)), 0)
+levels(data.mca$UseLatReg) = c(levels(data.mca$UseLatReg), "Unknown")
+data.mca$UseLatReg[is.na(data.mca$UseLatReg)] = "Unknown"
+levels(data.mca$EmptyPitBefor) = c(levels(data.mca$EmptyPitBefor), "Unknown")
+data.mca$EmptyPitBefor[is.na(data.mca$EmptyPitBefor)] = "Unknown"
+levels(data.mca$WhyNoEmpty) = c(levels(data.mca$WhyNoEmpty), "Emptied")
+data.mca$WhyNoEmpty[is.na(data.mca$WhyNoEmpty)] = "Emptied"
+levels(data.mca$EmptyMethds) = c(levels(data.mca$EmptyMethds), "HasntEmptied")
+data.mca$EmptyMethds[is.na(data.mca$EmptyMethds)] = "HasntEmptied"
+levels(data.mca$Job) = c(levels(data.mca$Job), "Unknown")
+data.mca$Job[is.na(data.mca$Job)] = "Unknown"
+print(sapply(data.mca, function(x) sum(is.na(x))))
+# Change data types
+data.mca$DateStartUseLat[is.na(data.mca$DateStartUseLat)] = 
+  round(mean(as.numeric(as.character(
+    data.mca$DateStartUseLat[!is.na(data.mca$DateStartUseLat)]))), 0)
+data.mca$DateStartUseLat = as.numeric(as.character(data.mca$DateStartUseLat))
+# Run analysis
+varTable(data.mca)
+quali.sup = c(2:5)
+quanti.sup = c(8:12)
+results = MCA(data.mca, quali.sup = quali.sup, quanti.sup = quanti.sup)
+# Print and plot results
+summary(results, ncp = 3, nbelements = Inf)
+dimdesc(results)
+plot(results, label = c("var","quali.sup"), cex = 0.7)
+plot(results, invisible = c("var","quali.sup"), cex = 0.7)
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories")
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20")
+plot5 = recordPlot(plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories"))
+plot6 = recordPlot(plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories"))
+plot7 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10"))
+plot8 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20"))
+plot9 = recordPlot(plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10"))
+plot10 = recordPlot(plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10"))
+plot11 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6)))
+plot12 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup")))
+plot13 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4))
+plot14 = recordPlot(plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4))
+plot15 = recordPlot(plotellipses(results, keepvar = c(1:4)))
+
+# Save plots to PDF
+ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                         plot8, plot9, plot10, plot11, plot12, plot13,
+                         plot14, plot15),
+         filename = paste(folder, "/", name, ".pdf", sep = ""))
+
+
 # Confirmatory Factor Analysis
 ?HolzingerSwineford1939
 model = "visual  =~ x1 + x2 + x3
@@ -496,54 +611,6 @@ model3 = "PercepSanSys =~ Satis + Rec + SatisSup + RecSup"
 fit = sem(model3, data = data.test, std.lv = TRUE)
 summary(fit, standardized = TRUE)
 
-# Exploratory Factor Analysis (EFA)
-##libraries
-# library(GPArotation)
-# library(car)
-# library(psych)
-##normal data screening (fake style) goes here
-##screen all the items (but not demographics)
-
-##correlation adequacy Bartlett's test
-correlations = cor(efadata)
-cortest.bartlett(correlations, n = nrow(efadata))
-
-##sampling adequacy KMO test
-KMO(correlations)
-
-##how many factors?
-nofactors = fa.parallel(efadata, fm="ml", fa="fa")
-nofactors$fa.values
-sum(nofactors$fa.values > 1.0) ##old kaiser criterion
-sum(nofactors$fa.values > .7) ##new kaiser criterion
-
-##simple structure with a two factor model
-fa(efadata, nfactors=2, rotate = "oblimin", fm = "ml")
-fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
-
-##get cfi
-finalmodel = fa(efadata[ , -c(23)], nfactors=2, rotate = "oblimin", fm = "ml")
-1 - ((finalmodel$STATISTIC-finalmodel$dof)/
-       (finalmodel$null.chisq-finalmodel$null.dof))
-
-##reliability
-factor1 = c(1:7, 9:10, 12:16, 18:22)
-factor2 = c(8, 11, 17)
-alpha(efadata[, factor1])
-alpha(efadata[, factor2])
-
-##simple structure with a five factor model
-##an example of OVERfactoring
-fa(efadata, nfactors=5, rotate = "oblimin", fm = "ml")
-fa(efadata[ , -c(15)], nfactors=5, rotate = "oblimin", fm = "ml")
-##all items load but factor five only has two items
-##try four factor model
-fa(efadata[ , -c(15)], nfactors=4, rotate = "oblimin", fm = "ml")
-fa(efadata[ , -c(3,14,15)], nfactors=4, rotate = "oblimin", fm = "ml")
-fa(efadata[ , -c(3,7,10,14,15,18)], nfactors=4, rotate = "oblimin", fm = "ml")
-##at this point you would get rid of 12, and then factor four
-##only has two items ... this pattern indicates that you should 
-##try the smaller numbers of factors
 
 # Plot jobs, baseline data
 df = data.frame(Job = names(summary(data.baseline$Job)), 
