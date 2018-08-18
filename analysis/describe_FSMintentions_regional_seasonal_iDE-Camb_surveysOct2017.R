@@ -351,6 +351,7 @@ exclude = c("IntndChng_Shltr", "IntndChng_Shwr",
             "IntndChng_Othr", "IntndChng_NAAlwysToi",
             "RDefBefor_Othr", "RDefBefor_NAAlwysToi")
 data.mca = subset(data, select = select)
+data.mca = subset(data.mca, !is.na(IntndPitFull))
 # Summarize data, visualize missing data, and modify as needed
 par(mfrow = c(2,2))
 for (i in 1:length(data.mca)) {
@@ -358,41 +359,88 @@ for (i in 1:length(data.mca)) {
   plot(data.mca[,i], main = colnames(data.mca)[i],
        ylab = "Count", col = "steelblue", las = 2)
 }
-# summary(data.mca, maxsum = 12)
+summary(data.mca, maxsum = 12)
 levels(data.mca$Prov) = c("BM", "KT", "K", "OM", "PV", "SR", "SG")
 levels(data.mca$IDPoor) = c("NotIDPoor", "IDPoor")
-levels(data.mca$VillOD) = c("MostVillOD", "NoVillOD" ,"SomeVillOD")
 colnames(data.mca)[which(names(data.mca) == "LivRP")] = "LivWtr"
 data.mca$LivWtr = recode(data.mca$LivWtr, "'No' = 'NoLivWtr'; 
-                                'Pond' = 'LivWtr'; 'Rivr' = 'LivWtr'")
+                         'Pond' = 'LivWtr'; 'Rivr' = 'LivWtr'")
+levels(data.mca$VillOD) = c("MostVillOD", "NoVillOD" ,"SomeVillOD")
 levels(data.mca$FreqNeiToi) = c("FreqNeiToi", "NoNeiToi" ,"AlwysToi",
-                                       "SomeNeiToi")
+                                "SomeNeiToi")
 levels(data.mca$WhoInstLat) = c("Slf/FamInstLat", "GovInstLat",
-                                       "FrndInstLat", "MasonInstLat",
-                                       "LBOInstLat", "NGOInstLat",
-                                       "DKWhoInstLat")
+                                "FrndInstLat", "MasonInstLat",
+                                "LBOInstLat", "NGOInstLat",
+                                "DKWhoInstLat")
 data.mca$WhoInstLat[is.na(data.mca$WhoInstLat)] = "DKWhoInstLat"
+data.mca = subset(data.mca, WhoInstLat != "GovInstLat")
 levels(data.mca$KnwSubsdy) = c("KnwSubsdy", "DKSubsdy")
 data.mca = subset(data.mca, !is.na(KnwSubsdy))
-data.mca = droplevels(data.mca)
 levels(data.mca$RecSubsdy) = c("UnkSubsdy", "NoSubsdy", "FulSubsdy", "PrtSubsdy")
-levels(data.mca$BorwLat) = c("Borw", "NoBorw")
-data.mca = subset(data.mca, !is.na(BorwLat))
-levels(data.mca$SlabTil) = c("SlabTil", "NoSlabTil")
-data.mca = subset(data.mca, !is.na(SlabTil))
+levels(data.mca$BorwLat) = c("Borw", "NoBorw", "NoBorw", "UnkBorw")
+data.mca$BorwLat[is.na(data.mca$BorwLat)] = "UnkBorw"
+levels(data.mca$SlabTil) = c("NoSlabTil", "SlabTil", "UnkSlabTil")
+data.mca$SlabTil[is.na(data.mca$SlabTil)] = "UnkSlabTil"
 levels(data.mca$WallMat) = c("WoodWal", "MasnWal", "StelWal", "NoWal",
-                                  "OthrWal", "PlstcWal", "WoodWal")
-levels(data.mca$WallMat) = c("WoodWal", "MasnWal", "StelWal", "NoWal",
-                             "OthrWal", "PlstcWal", "WoodWal")
+                             "OthrWal", "PlstcWal", "WoodWal", "UnkWal")
+data.mca$WallMat[is.na(data.mca$WallMat)] = "UnkWal"
+levels(data.mca$RoofMat) = c("NoRoof", "PlstcRoof", "StelRoof", "WoodRoof",
+                             "MasnRoof", "OthrRoof", "OthrRoof", "WoodRoof",
+                             "UnkRoof")
+data.mca$RoofMat[is.na(data.mca$RoofMat)] = "UnkRoof"
+levels(data.mca$AdltUseLat) = c("AdltFreqLat", "AdltDKLat", "AdltRarLat", 
+                                "AdltSomLat")
+data.mca$AdltUseLat[is.na(data.mca$AdltUseLat)] = "AdltDKLat"
+levels(data.mca$ChldUseLat) = c("ChldFreqLat", "ChldDKLat", "ChldDKLat", 
+                                "ChldRarLat", "ChldSomLat")
+data.mca$ChldUseLat[is.na(data.mca$ChldUseLat)] = "ChldDKLat"
+levels(data.mca$InfLatDump) = c("InfFreqLat", "InfDKLat", "InfDKLat", 
+                                "InfRarLat", "InfSomLat")
+data.mca$InfLatDump[is.na(data.mca$InfLatDump)] = "InfDKLat"
+data.mca = subset(data.mca, Yr != 2014)
+data.mca$ODBefor = 0
+data.mca$ODBefor =
+  ifelse(data.mca$RDefBefor_BshFld == 1 | data.mca$RDefBefor_RivPnd == 1, 1, 0)
+data.mca$ODBefor = as.factor(data.mca$ODBefor)
+data.mca = subset(data.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
+levels(data.mca$RDefBefor_NeiToi) = c("NoDefBeforNeiToi", "DefBeforNeiToi")
+levels(data.mca$ChlngsNoFlsh) = c("FlshOK", "NoFlsh", "DKFlsh")
+data.mca$ChlngsNoFlsh[is.na(data.mca$ChlngsNoFlsh)] = "DKFlsh"
+levels(data.mca$ChlngsFlood) = c("NoFlood", "Flood", "DKFlood")
+data.mca$ChlngsFlood[is.na(data.mca$ChlngsFlood)] = "DKFlood"
+levels(data.mca$ChlngsOthr) = c("NoOthrChlngs", "OthrChlngs", "DKOthrChlngs")
+data.mca$ChlngsOthr[is.na(data.mca$ChlngsOthr)] = "DKOthrChlngs"
+levels(data.mca$ChlngsFulOvrFlw) = c("NoFulOvrflw", "FulOvrflw", "DKFulOvrflw")
+data.mca$ChlngsFulOvrFlw[is.na(data.mca$ChlngsFulOvrFlw)] = "DKFulOvrflw"
+levels(data.mca$ChlngsNoWtr) = c("WtrOK", "NoWtr", "DKWtr")
+data.mca$ChlngsNoWtr[is.na(data.mca$ChlngsNoWtr)] = "DKWtr"
+levels(data.mca$ChlngsSmels) = c("NoSmel", "Smel", "DKSmel")
+data.mca$ChlngsSmels[is.na(data.mca$ChlngsSmels)] = "DKSmel"
+levels(data.mca$ChlngsOK) = c("Chlngs", "NoChlngs", "DKChlngs")
+data.mca$ChlngsOK[is.na(data.mca$ChlngsOK)] = "DKChlngs"
+colnames(data.mca)[which(names(data.mca) == "SatisColapsMore")] = "Satis"
+levels(data.mca$Satis) = c("UnsatLat", "SatLat", "DKSatLat")
+data.mca$Satis[is.na(data.mca$Satis)] = "DKSatLat"
+colnames(data.mca)[which(names(data.mca) == "SatisSupColapsMore")] = "SatisSup"
+levels(data.mca$SatisSup) = c("UnsatSup", "SatSup", "DKSatSup")
+data.mca$SatisSup[is.na(data.mca$SatisSup)] = "DKSatSup"
+levels(data.mca$Rec) = c("NoRecLat", "RecLat", "DKRecLat")
+data.mca$Rec[is.na(data.mca$Rec)] = "DKRecLat"
+levels(data.mca$RecSup) = c("NoRecSup", "RecSup")
+data.mca = subset(data.mca, !is.na(RecSup))
+data.mca = droplevels(data.mca)
 summary(data.mca, maxsum = 12)
-         
 print(sapply(data.mca, function(x) sum(is.na(x))))
+data.mca$F217[is.na(data.mca$F217)] = 
+  mean(data.mca$F217[!is.na(data.mca$F217)])
+data.mca$M1824[is.na(data.mca$M1824)] = 
+  mean(data.mca$M1824[!is.na(data.mca$M1824)])
 # Run analysis
 varTable(data.mca)
-quali.sup = 1
-quanti.sup = 33:42
+quali.sup = c(1, 16:17)
+quanti.sup = 31:40
 res.mca = MCA(data.mca, quanti.sup = quanti.sup, quali.sup = quali.sup,
-              na.method = "Average", graph = FALSE)
+              na.method = "NA", graph = FALSE)
 # Print and plot results
 par(mfrow = c(1, 1))
 print(res.mca)
