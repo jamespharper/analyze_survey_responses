@@ -424,10 +424,64 @@ print(sapply(data.followup, function(x) sum(is.na(x))))
 missmap(data.baseline, main = "Missing Values in Variables", legend = F)
 missmap(data.followup, main = "Missing Values in Variables", legend = F)
 ###############################################################################
+# Multiple Correspondence Analysis
+# Select relevant data
+data.mca = subset(data.baseline, select = -c(Intrviewr, PGInstlDate, Dist, 
+                                             Prov, Lat, Lon, LatOwnrJob1,
+                                             LatOwnrJob2, NumRings, LatAge,
+                                             LatInstlYr))
+# Remove/rename missing data
+print(sapply(data.mca, function(x) sum(is.na(x))))
+data.mca$NumAdlts18[is.na(data.mca$NumAdlts18)] = 
+  round(mean(!is.na(data.mca$NumAdlts18)), 0)
+data.mca$NumChld217[is.na(data.mca$NumChld217)] = 
+  round(mean(!is.na(data.mca$NumChld217)), 0)
+data.mca$NumInf2[is.na(data.mca$NumInf2)] = 
+  round(mean(!is.na(data.mca$NumInf2)), 0)
+levels(data.mca$UseLatReg) = c(levels(data.mca$UseLatReg), "Unknown")
+data.mca$UseLatReg[is.na(data.mca$UseLatReg)] = "Unknown"
+levels(data.mca$EmptyPitBefor) = c(levels(data.mca$EmptyPitBefor), "Unknown")
+data.mca$EmptyPitBefor[is.na(data.mca$EmptyPitBefor)] = "Unknown"
+levels(data.mca$WhyNoEmpty) = c(levels(data.mca$WhyNoEmpty), "Emptied")
+data.mca$WhyNoEmpty[is.na(data.mca$WhyNoEmpty)] = "Emptied"
+levels(data.mca$EmptyMethds) = c(levels(data.mca$EmptyMethds), "HasntEmptied")
+data.mca$EmptyMethds[is.na(data.mca$EmptyMethds)] = "HasntEmptied"
+levels(data.mca$Job) = c(levels(data.mca$Job), "Unknown")
+data.mca$Job[is.na(data.mca$Job)] = "Unknown"
+print(sapply(data.mca, function(x) sum(is.na(x))))
+# Change data types
+data.mca$DateStartUseLat[is.na(data.mca$DateStartUseLat)] = 
+  round(mean(as.numeric(as.character(
+    data.mca$DateStartUseLat[!is.na(data.mca$DateStartUseLat)]))), 0)
+data.mca$DateStartUseLat = as.numeric(as.character(data.mca$DateStartUseLat))
+# Run analysis
+varTable(data.mca)
+quali.sup = c(2:5)
+quanti.sup = c(8:12)
+results = MCA(data.mca, quali.sup = quali.sup, quanti.sup = quanti.sup)
+# Print and plot results
+summary(results, ncp = 3, nbelements = Inf)
+dimdesc(results)
+plot(results, label = c("var","quali.sup"), cex = 0.7)
+plot(results, invisible = c("var","quali.sup"), cex = 0.7)
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories")
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20")
+plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories")
+plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories")
+plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10")
+plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20")
+plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10")
+plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10")
+plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6))
+plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup"))
+plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4)
+plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4)
+plotellipses(results, keepvar = c(1:4))
 
 
 # Exploratory Factor Analysis (EFA)
-##libraries
+data.efa = data.baseline
+
 library(GPArotation)
 library(car)
 library(psych)
@@ -479,12 +533,12 @@ fa(efadata[ , -c(3,7,10,14,15,18)], nfactors=4, rotate = "oblimin", fm = "ml")
 
 
 # Multiple Correspondence Analysis
-# Select relevant data
+   # Select relevant data
 data.mca = subset(data.baseline, select = -c(Intrviewr, PGInstlDate, Dist, 
                                              Prov, Lat, Lon, LatOwnrJob1,
                                              LatOwnrJob2, NumRings, LatAge,
                                              LatInstlYr))
-# Remove/rename missing data
+   # Remove/rename missing data
 print(sapply(data.mca, function(x) sum(is.na(x))))
 data.mca$NumAdlts18[is.na(data.mca$NumAdlts18)] = 
   round(mean(!is.na(data.mca$NumAdlts18)), 0)
@@ -503,17 +557,17 @@ data.mca$EmptyMethds[is.na(data.mca$EmptyMethds)] = "HasntEmptied"
 levels(data.mca$Job) = c(levels(data.mca$Job), "Unknown")
 data.mca$Job[is.na(data.mca$Job)] = "Unknown"
 print(sapply(data.mca, function(x) sum(is.na(x))))
-# Change data types
+   # Change data types
 data.mca$DateStartUseLat[is.na(data.mca$DateStartUseLat)] = 
   round(mean(as.numeric(as.character(
     data.mca$DateStartUseLat[!is.na(data.mca$DateStartUseLat)]))), 0)
 data.mca$DateStartUseLat = as.numeric(as.character(data.mca$DateStartUseLat))
-# Run analysis
+   # Run analysis
 varTable(data.mca)
 quali.sup = c(2:5)
 quanti.sup = c(8:12)
 results = MCA(data.mca, quali.sup = quali.sup, quanti.sup = quanti.sup)
-# Print and plot results
+   # Print and plot results
 summary(results, ncp = 3, nbelements = Inf)
 dimdesc(results)
 plot(results, label = c("var","quali.sup"), cex = 0.7)
@@ -531,12 +585,6 @@ plot12 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6
 plot13 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4))
 plot14 = recordPlot(plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4))
 plot15 = recordPlot(plotellipses(results, keepvar = c(1:4)))
-
-# Save plots to PDF
-ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
-                         plot8, plot9, plot10, plot11, plot12, plot13,
-                         plot14, plot15),
-         filename = paste(folder, "/", name, ".pdf", sep = ""))
 
 
 # Confirmatory Factor Analysis
