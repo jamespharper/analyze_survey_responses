@@ -1,0 +1,711 @@
+---
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    fig_caption: true
+    latex_engine: pdflatex
+    template: svm-latex-ms.tex
+title: "A Pandoc Markdown Article Starter and Template"
+thanks: "Replication files are available on the author's Github account (http://github.com/svmiller). **Current version**: `r format(Sys.time(), '%B %d, %Y')`; **Corresponding author**: svmille@clemson.edu."
+author:
+- name: James Harper, PE, ENV SP
+  affiliation: University of Colorado Boulder
+abstract: "This document provides an introduction to R Markdown, argues for its benefits, and presents a sample manuscript template intended for an academic audience. I include basic syntax to R Markdown and a minimal working example of how the analysis itself can be conducted within R with the `knitr` package."
+keywords: "pandoc, r markdown, knitr"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+# Started October 1, 2017; Last updated Aug 8, 2018
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+# spacing: double
+bibliography: ~/Dropbox/master.bib
+biblio-style: apsr
+endnote: no
+---
+
+# Results
+
+```{r initialize, echo = FALSE}
+rm(list = ls())                                      # Clear global environment
+cat("\014")                                              # Clear console window
+source(paste("C:/Users/James Harper/Documents/Github/", # Load custom functions
+               "analyze_survey_responses/functions.R", sep = ""))
+load_libraries(                                      # Install & load libraries
+  c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
+    "FactoMineR", "factoextra", "lavaan"))
+```
+```{r load_clean, echo = FALSE}
+# Load, clean, and summarize data
+clean.raw.data = 0                                      # Clean raw data: 1=yes
+if (clean.raw.data != 1) {
+  load(file = 
+         paste("C:/Users/James Harper/Documents/Github/",
+               "analyze_survey_responses/data/raw/surveys/",
+               "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData",
+               sep = ""))
+} else if (clean.raw.data == 1) {
+  file_to_import = 
+    paste(getwd(),
+          "/data/raw/surveys/Customer Survey-exported30oct2017.xlsx", sep = "")
+  data = import(file_to_import)
+
+  # Shorten variable (column) names
+  old.col.names = names(data)
+  names(data) = c("ID", "Creatr", "Date", "LBO", "Prov", "Dist", "Comm", "Vill",
+                  "Lat", "Lng", "CLoc", "LatPur", "RLname", "RFname", "RGend",
+                  "Phone", "RisC", "CLname", "CFname", "CGend", "CrelR",
+                  "IDPoor", "IDPoorTyp", "M01", "M1824", "M217", "M2559",
+                  "M60", "F01", "F1824", "F217",
+                  "F2559", "F60", "LivRP", "VillOD", "DateSlabPur", "LatInst",
+                  "BelowGrndInst", "DateBelowGrndInst", "ShltrInst",
+                  "DateInstComp", "RDefBefor", "RDefBeforOthr", "FreqNeiToi",
+                  "WhoInstLat", "KnwSubsdy", "RecSubsdy", "BorwLat",
+                  "CanBuyLat", "UseFincOthr", "SlabTil", "Npits", "PitConfig",
+                  "NringsDir", "NringsOff", "NringsOthr", "WallMat",
+                  "WallMatOthr", "RoofMat", "RoofMatOthr", 
+                  "MatsPurTgthr", "Cost", "CostInclInst", "CostPitSlab", 
+                  "CostPitSlabKnwn", "CostShltrMats", "CostShltrMatsKnwn",
+                  "LabPitShltrPurTgthr", "CostLabLat", "CostLabPitSlab",
+                  "CostLabPitSlabKnwn", "CostLabShltr", "CostLabShltrKnwn",
+                  "LatTypOwndBefor", "IntndChngDich", "IntndChng", 
+                  "IntndChngOthr", "AdltUseLat", "ChldUseLat", "InfLatDump",
+                  "IntndPitFull", "IntndPitFullOthrAns", "Chlngs", "Satis",
+                  "Rec", "SatisSup", "RecSup", "RQues", "DateSurvCreated")
+  
+  # Convert data formats
+  for (i in 1:length(names(data))) {
+    if (is.character(data[i][[1]])) {
+      data[i][[1]] = as.factor(data[i][[1]])
+    }
+  }
+  data$Date = as.Date(data$Date)
+  data$DateSlabPur = as.Date(data$DateSlabPur)
+  data$DateBelowGrndInst = as.Date(data$DateBelowGrndInst)
+  data$DateInstComp = as.Date(data$DateInstComp)
+  data$DateSurvCreated = as.Date(data$DateSurvCreated)
+  
+  # Remove unused variables
+  data = subset(data, select = -c(ID, Creatr, Lat, Lng, CLoc, LatPur, RLname,
+                                  RFname, RGend, Phone, RisC, CLname, CFname, 
+                                  CGend, CrelR, RQues))
+  
+  # Remove data that is not applicable to this study
+  data = subset(data, Prov != "Phnom Penh")
+  
+  # Remove data with low frequencies
+  data = subset(data, Prov != "Takeo" & Prov != "Kampong Cham" &
+                  Prov != "Kampong Speu")
+  
+  # Create Yr, Mnth, and YrMnth variables as factors
+  data$Yr = as.factor(format(as.Date(data$Date, format = "%Y-%m-%d"),"%Y"))
+  data$Mnth = as.factor(format(as.Date(data$Date, format = "%Y-%m-%d"),"%m"))
+  data$YrMnth = as.factor(paste(data$Yr, data$Mnth, sep = ""))
+  
+  # Rename responses in variables as needed
+  levels(data$Prov) = c("Banteay Meanchey", "Kampong Cham", "Kampong Speu",
+                        "Kampong Thom", "Kandal", "Oddar Meanchey", 
+                        "Phnom Penh", "Prey Veng", "Siem Reap", "Svay Rieng",
+                        "Takeo")
+  levels(data$IDPoorTyp) = c("IDP1", "IDP2", "UnkIDP", "No")
+  levels(data$LivRP) = c("No", "Pond", "Rivr", "Pond", "Rivr")
+  levels(data$VillOD) = c("Most", "None", "Some")
+  levels(data$RDefBefor) = c("Bsh/Fld", "Bsh/Fld;NA/AlwysToi", "Bsh/Fld;Othr",
+                             "NeiToi", "NeiToi;Bsh/Fld", "NeiToi;Bsh/Fld;Othr",
+                             "NeiToi;NA/AlwysToi", "NeiToi;Othr", "NA/AlwysToi",
+                             "Othr", "NA/AlwysToi", "Riv/Pnd",
+                             "Riv/Pnd;Bsh/Fld", "Riv/Pnd;NeiToi;Bsh/Fld",
+                             "Riv/Pnd;Othr")
+  levels(data$FreqNeiToi) = c("Freq", "Freq", "Nevr", "NA/AlwysToi",
+                              "NA/AlwysToi", "Some")
+  levels(data$WhoInstLat) = c("Self/Fam", "Self/Fam", "Gov", "Friend$", "Mason",
+                              "LBO", "NGO")
+  levels(data$RecSubsdy) = c("DK", "No", "Yfull", "Ypart", "Yfull", "Ypart")
+  levels(data$BorwLat) = c("Yes", "DK", "No", "Yes")
+  levels(data$IntndChng) = c("Shltr", "Shltr;Othr", "Shwr", "Shltr;Shwr",
+                             "Shltr;Shwr;Othr", "Shwr;Sink", 
+                             "Shltr;Shwr;Sink", "Shwr;Sink;Othr",
+                             "Shwr;Othr", "WtrRes", "Shltr;WtrRes",
+                             "Shwr;WtrRes", "Shltr;Shwr;WtrRes",
+                             "Shwr;Sink;WtrRes", "Shltr;Shwr;Sink;WtrRes",
+                             "Shltr;Shwr;Sink;WtrRes;Othr",
+                             "Shwr;Sink;WtrRes;Othr", "Shwr;WtrRes;Othr",
+                             "Sink;WtrRes", "Shltr;Sink;WtrRes",
+                             "WtrRes;Othr", "Sink", "Shltr;Sink", "Pit",
+                             "Shltr;Pit", "Shltr;Pit;Othr", "Shwr;Pit",
+                             "Shltr;Shwr;Pit", "Shwr;Sink;Pit",
+                             "Shwr;Pit;Othr", "WtrRes;Pit",
+                             "Shltr;WtrRes;Pit", "Shwr;WtrRes;Pit",
+                             "Shltr;Shwr;WtrRes;Pit", "Shwr;Sink;WtrRes;Pit",
+                             "Shltr;Shwr;Sink;WtrRes;Pit", "Sink;Pit",
+                             "Shltr;Sink;Pit", "Pit;Othr", "NA/AlwysToi",
+                             "Othr")
+  levels(data$AdltUseLat) = c("Freq", "Freq", "DK", "Rare", "Some")
+  levels(data$ChldUseLat) = c("Freq", "NoChld", "DK/NA", "DK/NA", "Rare",
+                              "Some")
+  levels(data$InfLatDump) = c("Freq", "NoInf", "DK/NA", "DK/NA", "Rare", "Some")
+  levels(data$IntndPitFull) = c("DK", "EmpSlf", "Pit", "Othr", "Pay", "Stop")
+  levels(data$Chlngs) = c("NoFlsh", "NoFlsh;Flood", "NoFlsh;Othr",
+                          "NoFlsh;Ful/OvrFlw", "NoFlsh;Ful/OvrFlw;Flood",
+                          "Flood", "NoWtr", "NoFlsh;NoWtr", 
+                          "NoFlsh;Ful/OvrFlw;NoWtr", "NoWtr;Smels",
+                          "OK", "NoFlsh", "NoWtr", "Ful/OvrFlw", "Smels",
+                          "Othr", "Ful/OvrFlw", "Ful/OvrFlw", "Smels",
+                          "NoFlsh;Smels", "NoFlsh;Flood;Smels",
+                          "NoFlsh;Ful/OvrFlw;Smels", "Flood;Smels", 
+                          "Smels;Othr", "Ful/OvrFlw;Flood;Smels")
+  levels(data$Satis) = c("DK", 3, 2, 4, 1, 5)
+  levels(data$SatisSup) = c("DK", 3, 2, 4, 1, 5)
+  levels(data$WallMat) = c("Bamboo / Palm Leaves / Thatch", 
+                           "Bamboo / Palm Leaves / Thatch",
+                           "Concrete / Brick", "Concrete / Brick",
+                           "Galvanized steel", "No walls",
+                           "Other", "Plastic Sheet", "Wood")
+  levels(data$RoofMat) = c("No roof", "Plastic Sheet", "Galvanized steel",
+                           "Bamboo / Palm Leaves / Thatch",
+                           "Bamboo / Palm Leaves / Thatch",
+                           "Concrete / Brick", "Concrete / Brick",
+                           "Galvanized steel", "No roof", "No roof",
+                           "Other", "Plastic Sheet", "Tiles", "Wood")
+  
+  # If IDPoor is No and IDPoorType is NA, then copy IDPoor to IDPoorTyp
+  for (row in 1:length(data$IDPoor)) {
+    if (data[row,]$IDPoor == "No" & is.na(data[row,]$IDPoorTyp)) {
+      data[row,]$IDPoorTyp = data[row,]$IDPoor
+    }
+  }
+  
+  # Create new variables based on RDefBefor
+  data$RDefBefor_BshFld = ifelse(is.na(data$RDefBefor), NA,
+                                 ifelse(grepl("Bsh/Fld", data$RDefBefor,
+                                              fixed = TRUE), 1, 0))
+  data$RDefBefor_RivPnd = ifelse(is.na(data$RDefBefor), NA,
+                                 ifelse(grepl("Riv/Pnd", data$RDefBefor,
+                                              fixed = TRUE), 1, 0))
+  data$RDefBefor_NeiToi = ifelse(is.na(data$RDefBefor), NA,
+                                 ifelse(grepl("NeiToi", data$RDefBefor,
+                                              fixed = TRUE), 1, 0))
+  data$RDefBefor_Othr = ifelse(is.na(data$RDefBefor), NA,
+                               ifelse(grepl("Othr", data$RDefBefor,
+                                            fixed = TRUE), 1, 0))
+  data$RDefBefor_NAAlwysToi = ifelse(is.na(data$RDefBefor), NA,
+                                     ifelse(grepl("AlwysToi", data$RDefBefor,
+                                                  fixed = TRUE), 1, 0))
+  data$RDefBefor_BshFld = as.factor(data$RDefBefor_BshFld)
+  data$RDefBefor_RivPnd = as.factor(data$RDefBefor_RivPnd)
+  data$RDefBefor_NeiToi = as.factor(data$RDefBefor_NeiToi)
+  data$RDefBefor_Othr = as.factor(data$RDefBefor_Othr)
+  data$RDefBefor_NAAlwysToi = as.factor(data$RDefBefor_NAAlwysToi)
+  
+  # Create new variables based on IntndChng
+  data$IntndChng_Shltr = ifelse(is.na(data$IntndChng), NA,
+                                ifelse(grepl("Shltr", data$IntndChng,
+                                             fixed = TRUE), "1", "0"))
+  data$IntndChng_Shwr = ifelse(is.na(data$IntndChng), NA,
+                               ifelse(grepl("Shwr", data$IntndChng,
+                                            fixed = TRUE), 1, 0))
+  data$IntndChng_Sink = ifelse(is.na(data$IntndChng), NA,
+                               ifelse(grepl("Sink", data$IntndChng,
+                                            fixed = TRUE), 1, 0))
+  data$IntndChng_WtrRes = ifelse(is.na(data$IntndChng), NA,
+                                 ifelse(grepl("WtrRes", data$IntndChng,
+                                              fixed = TRUE), 1, 0))
+  data$IntndChng_Pit = ifelse(is.na(data$IntndChng), NA,
+                              ifelse(grepl("Pit", data$IntndChng,
+                                           fixed = TRUE), 1, 0))
+  data$IntndChng_Othr = ifelse(is.na(data$IntndChng), NA,
+                               ifelse(grepl("Othr", data$IntndChng,
+                                            fixed = TRUE), 1, 0))
+  data$IntndChng_NAAlwysToi = ifelse(is.na(data$IntndChng), NA,
+                                     ifelse(grepl("NA/AlwysToi", data$IntndChng,
+                                                  fixed = TRUE), 1, 0))
+  data$IntndChng_Shltr = as.factor(data$IntndChng_Shltr)
+  data$IntndChng_Shwr = as.factor(data$IntndChng_Shwr)
+  data$IntndChng_Sink = as.factor(data$IntndChng_Sink)
+  data$IntndChng_WtrRes = as.factor(data$IntndChng_WtrRes)
+  data$IntndChng_Pit = as.factor(data$IntndChng_Pit)
+  data$IntndChng_Othr = as.factor(data$IntndChng_Othr)
+  data$IntndChng_NAAlwysToi = as.factor(data$IntndChng_NAAlwysToi)
+  
+  # Create new variables based on IntndPitFull
+  data$IntndPitFullDes = ifelse(is.na(data$IntndPitFull), NA,
+                                ifelse(grepl("Pit", data$IntndPitFull,
+                                             fixed = TRUE) |
+                                         grepl("Pay", data$IntndPitFull,
+                                               fixed = TRUE), "1", "0"))
+  data$IntndPitFullDes = as.factor(data$IntndPitFullDes)
+  data$IntndPitFullPit = ifelse(is.na(data$IntndPitFull), NA,
+                                ifelse(grepl("Pit", data$IntndPitFull,
+                                             fixed = TRUE), "1", "0"))
+  data$IntndPitFullPit = as.factor(data$IntndPitFullPit)
+  data$IntndPitFullEmpSlf = ifelse(is.na(data$IntndPitFull), NA,
+                                   ifelse(grepl("EmpSlf", data$IntndPitFull,
+                                                fixed = TRUE), "1", "0"))
+  data$IntndPitFullEmpSlf = as.factor(data$IntndPitFullEmpSlf)
+  data$IntndPitFullDK = ifelse(is.na(data$IntndPitFull), NA,
+                               ifelse(grepl("DK", data$IntndPitFull,
+                                            fixed = TRUE), "1", "0"))
+  data$IntndPitFullDK = as.factor(data$IntndPitFullDK)
+  data$IntndPitFullOthr = ifelse(is.na(data$IntndPitFull), NA,
+                                 ifelse(grepl("Othr", data$IntndPitFull,
+                                              fixed = TRUE), "1", "0"))
+  data$IntndPitFullOthr = as.factor(data$IntndPitFullOthr)
+  data$IntndPitFullPay = ifelse(is.na(data$IntndPitFull), NA,
+                                ifelse(grepl("Pay", data$IntndPitFull,
+                                             fixed = TRUE), "1", "0"))
+  data$IntndPitFullPay = as.factor(data$IntndPitFullPay)
+  data$IntndPitFullStop = ifelse(is.na(data$IntndPitFull), NA,
+                                 ifelse(grepl("Stop", data$IntndPitFull,
+                                              fixed = TRUE), "1", "0"))
+  data$IntndPitFullStop = as.factor(data$IntndPitFullStop)
+  
+  # Create new variables based on Chlngs
+  data$ChlngsNoFlsh = ifelse(is.na(data$Chlngs), NA,
+                             ifelse(grepl("NoFlsh", data$Chlngs,
+                                          fixed = TRUE), "1", "0"))
+  data$ChlngsNoFlsh = as.factor(data$ChlngsNoFlsh)
+  data$ChlngsFlood = ifelse(is.na(data$Chlngs), NA,
+                            ifelse(grepl("Flood", data$Chlngs,
+                                         fixed = TRUE), "1", "0"))
+  data$ChlngsFlood = as.factor(data$ChlngsFlood)
+  data$ChlngsOthr = ifelse(is.na(data$Chlngs), NA,
+                           ifelse(grepl("Othr", data$Chlngs,
+                                        fixed = TRUE), "1", "0"))
+  data$ChlngsOthr = as.factor(data$ChlngsOthr)
+  data$ChlngsFulOvrFlw = ifelse(is.na(data$Chlngs), NA,
+                                ifelse(grepl("Ful/OvrFlw", data$Chlngs,
+                                             fixed = TRUE), "1", "0"))
+  data$ChlngsFulOvrFlw = as.factor(data$ChlngsFulOvrFlw)
+  data$ChlngsNoWtr = ifelse(is.na(data$Chlngs), NA,
+                            ifelse(grepl("NoWtr", data$Chlngs,
+                                         fixed = TRUE), "1", "0"))
+  data$ChlngsNoWtr = as.factor(data$ChlngsNoWtr)
+  data$ChlngsSmels = ifelse(is.na(data$Chlngs), NA,
+                            ifelse(grepl("Smels", data$Chlngs,
+                                         fixed = TRUE), "1", "0"))
+  data$ChlngsSmels = as.factor(data$ChlngsSmels)
+  data$ChlngsOK = ifelse(is.na(data$Chlngs), NA,
+                         ifelse(grepl("OK", data$Chlngs,
+                                      fixed = TRUE), "1", "0"))
+  data$ChlngsOK = as.factor(data$ChlngsOK)
+  
+  # Create collapsed satisfaction variables for latrine and supplier
+  data$SatisColaps = recode(data$Satis, 
+                            "'DK' = 'DK'; 1 = 1; 2 = 1; 3 = 2; 4 = 3; 5 = 3")
+  data$SatisSupColaps = recode(data$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
+                               3 = 2; 4 = 3; 5 = 3")
+  data$SatisColapsMore = recode(data$Satis, "'DK' = 'DK'; 1 = 1; 2 = 1; 3 = 1;
+                                4 = 2; 5 = 2")
+  data$SatisSupColapsMore = recode(data$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
+                                   3 = 1; 4 = 2; 5 = 2")
+  
+  # Drop empty levels from data
+  data = droplevels(data)
+  
+  # Save data to disk
+  save(data,
+       file = 
+         paste(getwd(),"/data/raw/surveys/",
+               "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData", 
+               sep = ""))
+}
+```
+```{r summarize, echo = FALSE}
+summary(data)
+names(data)
+print(sapply(data, function(x) sum(is.na(x))))
+missmap(data, main = "Missing Values in Variables", legend = F)
+```
+```{r MCA_setup, echo = FALSE}
+# Select relevant data
+names(data)
+select = c("Prov", "IDPoor", "LivRP", "VillOD", 
+           "FreqNeiToi", "WhoInstLat", "KnwSubsdy", "RecSubsdy", "BorwLat", 
+           "SlabTil", "WallMat", "RoofMat", 
+           "AdltUseLat", "ChldUseLat", "InfLatDump", "Yr", "Mnth", 
+           "RDefBefor_BshFld", "RDefBefor_RivPnd", "RDefBefor_NeiToi",
+           "IntndPitFull", 
+           "ChlngsNoFlsh", "ChlngsFlood", "ChlngsOthr", "ChlngsFulOvrFlw", 
+           "ChlngsNoWtr", "ChlngsSmels", "ChlngsOK",
+           "SatisColapsMore", "SatisSupColapsMore", "Rec", "RecSup",
+           "M01", "M1824", "M217", "M2559", "M60", "F01", "F1824", "F217", 
+           "F2559", "F60")
+exclude = c("IntndChng_Shltr", "IntndChng_Shwr", 
+            "IntndChng_Sink", "IntndChng_WtrRes", "IntndChng_Pit",
+            "IntndChng_Othr", "IntndChng_NAAlwysToi",
+            "RDefBefor_Othr", "RDefBefor_NAAlwysToi")
+data.mca = subset(data, select = select)
+data.mca = subset(data.mca, !is.na(IntndPitFull))
+# Summarize data, visualize missing data, and modify as needed
+par(mfrow = c(2,2))
+for (i in 1:length(data.mca)) {
+  if (i %% 4 == 0) {par(mfrow = c(2,2))}
+  plot(data.mca[,i], main = colnames(data.mca)[i],
+       ylab = "Count", col = "steelblue", las = 2)
+}
+summary(data.mca, maxsum = 12)
+levels(data.mca$Prov) = c("BM", "KT", "K", "OM", "PV", "SR", "SG")
+levels(data.mca$IDPoor) = c("NotIDPoor", "IDPoor")
+colnames(data.mca)[which(names(data.mca) == "LivRP")] = "LivWtr"
+data.mca$LivWtr = recode(data.mca$LivWtr, "'No' = 'NoLivWtr'; 
+                         'Pond' = 'LivWtr'; 'Rivr' = 'LivWtr'")
+levels(data.mca$VillOD) = c("MostVillOD", "NoVillOD" ,"SomeVillOD")
+levels(data.mca$FreqNeiToi) = c("FreqNeiToi", "NoNeiToi" ,"AlwysToi",
+                                "SomeNeiToi")
+levels(data.mca$WhoInstLat) = c("Slf/FamInstLat", "GovInstLat",
+                                "FrndInstLat", "MasonInstLat",
+                                "LBOInstLat", "NGOInstLat",
+                                "DKWhoInstLat")
+data.mca$WhoInstLat[is.na(data.mca$WhoInstLat)] = "DKWhoInstLat"
+levels(data.mca$KnwSubsdy) = c("KnwSubsdy", "DKSubsdy")
+levels(data.mca$RecSubsdy) = c("UnkSubsdy", "NoSubsdy", "FulSubsdy", "PrtSubsdy")
+levels(data.mca$BorwLat) = c("Borw", "NoBorw", "NoBorw", "UnkBorw")
+data.mca$BorwLat[is.na(data.mca$BorwLat)] = "UnkBorw"
+levels(data.mca$SlabTil) = c("NoSlabTil", "SlabTil", "UnkSlabTil")
+data.mca$SlabTil[is.na(data.mca$SlabTil)] = "UnkSlabTil"
+levels(data.mca$WallMat) = c("WoodWal", "MasnWal", "StelWal", "NoWal",
+                             "OthrWal", "PlstcWal", "WoodWal", "UnkWal")
+data.mca$WallMat[is.na(data.mca$WallMat)] = "UnkWal"
+levels(data.mca$RoofMat) = c("NoRoof", "PlstcRoof", "StelRoof", "WoodRoof",
+                             "MasnRoof", "OthrRoof", "OthrRoof", "WoodRoof",
+                             "UnkRoof")
+data.mca$RoofMat[is.na(data.mca$RoofMat)] = "UnkRoof"
+levels(data.mca$AdltUseLat) = c("AdltFreqLat", "AdltDKLat", "AdltRarLat", 
+                                "AdltSomLat")
+data.mca$AdltUseLat[is.na(data.mca$AdltUseLat)] = "AdltDKLat"
+levels(data.mca$ChldUseLat) = c("ChldFreqLat", "ChldDKLat", "ChldDKLat", 
+                                "ChldRarLat", "ChldSomLat")
+data.mca$ChldUseLat[is.na(data.mca$ChldUseLat)] = "ChldDKLat"
+levels(data.mca$InfLatDump) = c("InfFreqLat", "InfDKLat", "InfDKLat", 
+                                "InfRarLat", "InfSomLat")
+data.mca$InfLatDump[is.na(data.mca$InfLatDump)] = "InfDKLat"
+data.mca$ODBefor = 0
+data.mca$ODBefor =
+  ifelse(data.mca$RDefBefor_BshFld == 1 | data.mca$RDefBefor_RivPnd == 1, 1, 0)
+data.mca$ODBefor = as.factor(data.mca$ODBefor)
+levels(data.mca$ODBefor) = c("NoODBefor", "ODBefor")
+levels(data.mca$RDefBefor_NeiToi) = c("NoDefBeforNeiToi", "DefBeforNeiToi")
+levels(data.mca$ChlngsNoFlsh) = c("FlshOK", "NoFlsh", "DKFlsh")
+data.mca$ChlngsNoFlsh[is.na(data.mca$ChlngsNoFlsh)] = "DKFlsh"
+levels(data.mca$ChlngsFlood) = c("NoFlood", "Flood", "DKFlood")
+data.mca$ChlngsFlood[is.na(data.mca$ChlngsFlood)] = "DKFlood"
+levels(data.mca$ChlngsOthr) = c("NoOthrChlngs", "OthrChlngs", "DKOthrChlngs")
+data.mca$ChlngsOthr[is.na(data.mca$ChlngsOthr)] = "DKOthrChlngs"
+levels(data.mca$ChlngsFulOvrFlw) = c("NoFulOvrflw", "FulOvrflw", "DKFulOvrflw")
+data.mca$ChlngsFulOvrFlw[is.na(data.mca$ChlngsFulOvrFlw)] = "DKFulOvrflw"
+levels(data.mca$ChlngsNoWtr) = c("WtrOK", "NoWtr", "DKWtr")
+data.mca$ChlngsNoWtr[is.na(data.mca$ChlngsNoWtr)] = "DKWtr"
+levels(data.mca$ChlngsSmels) = c("NoSmel", "Smel", "DKSmel")
+data.mca$ChlngsSmels[is.na(data.mca$ChlngsSmels)] = "DKSmel"
+levels(data.mca$ChlngsOK) = c("Chlngs", "NoChlngs", "DKChlngs")
+data.mca$ChlngsOK[is.na(data.mca$ChlngsOK)] = "DKChlngs"
+colnames(data.mca)[which(names(data.mca) == "SatisColapsMore")] = "Satis"
+levels(data.mca$Satis) = c("UnsatLat", "SatLat", "DKSatLat")
+data.mca$Satis[is.na(data.mca$Satis)] = "DKSatLat"
+colnames(data.mca)[which(names(data.mca) == "SatisSupColapsMore")] = "SatisSup"
+levels(data.mca$SatisSup) = c("UnsatSup", "SatSup", "DKSatSup")
+data.mca$SatisSup[is.na(data.mca$SatisSup)] = "DKSatSup"
+levels(data.mca$Rec) = c("NoRecLat", "RecLat", "DKRecLat")
+data.mca$Rec[is.na(data.mca$Rec)] = "DKRecLat"
+levels(data.mca$RecSup) = c("NoRecSup", "RecSup")
+data.mca = subset(data.mca, WhoInstLat != "GovInstLat")
+data.mca = subset(data.mca, !is.na(KnwSubsdy))
+data.mca = subset(data.mca, Yr != 2014)
+data.mca = subset(data.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
+data.mca = subset(data.mca, !is.na(RecSup))
+data.mca = subset(data.mca, ChlngsOK != "DKChlngs")
+data.mca = subset(data.mca, SlabTil != "UnkSlabTil")
+data.mca = subset(data.mca, RoofMat != "UnkRoof")
+data.mca = subset(data.mca, AdltUseLat != "AdltDKLat")
+data.mca = subset(data.mca, Rec != "DKRecLat")
+data.mca = subset(data.mca, BorwLat != "UnkBorw")
+data.mca$F217[is.na(data.mca$F217)] = 
+  mean(data.mca$F217[!is.na(data.mca$F217)])
+data.mca$M1824[is.na(data.mca$M1824)] = 
+  mean(data.mca$M1824[!is.na(data.mca$M1824)])
+data.mca = droplevels(data.mca)
+summary(data.mca, maxsum = 12)
+print(sapply(data.mca, function(x) sum(is.na(x))))
+```
+```{r MCA_analyze, echo = FALSE}
+varTable(data.mca)
+quali.sup = c(1, 16:17)
+quanti.sup = c(31:40)
+res.mca = MCA(data.mca, quanti.sup = quanti.sup, quali.sup = quali.sup,
+              na.method = "NA", graph = FALSE)
+```
+```{r MCA_results, echo = TRUE}
+par(mfrow = c(1, 1))
+print(res.mca)
+get_eigenvalue(res.mca)
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 50))
+fviz_mca_biplot(res.mca, repel = FALSE, ggtheme = theme_minimal())
+res.mca.vars = get_mca_var(res.mca)
+fviz_mca_var(res.mca, choice = "mca.cor", repel = TRUE,      # Cor, vars & dims
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, repel = TRUE, ggtheme = theme_minimal())
+fviz_mca_var(res.mca, col.var = "black", shape.var = 15, repel = TRUE)
+head(round(res.mca.vars$coord, 2))
+head(round(res.mca.vars$coord, 2))
+head(round(res.mca.vars$cos2, 4))
+corrplot(res.mca.vars$cos2, is.corr = FALSE)
+fviz_mca_var(res.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE,
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, alpha.var = "cos2",
+             repel = TRUE,
+             ggtheme = theme_minimal())
+fviz_cos2(res.mca, choice = "var", axes = 1:2)
+head(round(res.mca.vars$contrib, 3))
+fviz_contrib(res.mca, choice = "var", axes = 1, top = 15)
+fviz_contrib(res.mca, choice = "var", axes = 2, top = 15)
+fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
+fviz_mca_var(res.mca, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, 
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, alpha.var = "contrib",
+             repel = TRUE,
+             ggtheme = theme_minimal())
+res.mca.ind = get_mca_ind(res.mca)
+print(res.mca.ind)
+head(res.mca.ind$coord)
+head(res.mca.ind$contrib)
+head(res.mca.ind$cos2)
+# fviz_mca_ind(res.mca, col.ind = "cos2", 
+#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#              repel = TRUE,
+#              ggtheme = theme_minimal())
+fviz_mca_ind(res.mca, 
+             label = "none", # hide individual labels
+             habillage = data.mca$Prov, # color by groups 
+             # palette = c("#00AFBB", "#E7B800"),
+             addEllipses = TRUE, ellipse.type = "confidence",
+             ggtheme = theme_minimal())
+```
+
+
+
+
+
+
+# Introduction
+
+Academic workflow, certainly in political science, is at a crossroads. The *American Journal of Political Science* (*AJPS*) announced a (my words) ["show your work" initiative](http://ajps.org/2015/03/26/the-ajps-replication-policy-innovations-and-revisions/) in which authors who are tentatively accepted for publication at the journal must hand over the raw code and data that produced the results shown in the manuscript. The editorial team at *AJPS* then reproduces the code from the manuscript. Pending successful replication, the manuscript moves toward publication. The *AJPS* might be at the fore of this movement, and it could be the most aggressive among political science journals, but other journals in our field have signed the joint [Data Access & Research Transparency](http://www.dartstatement.org/) (DART) initiative. This, at a bare minimum, requires uploading code from quantitatively-oriented published articles to in-house directories hosted by the journal or to services like [Dataverse](http://dataverse.org/). 
+
+There are workflow implications to the Lacour controversy as well. Political science, for the foreseeable future, will struggle with the extent of [the data fraud perpetrated by Michael Lacour](http://stanford.edu/~dbroock/broockman_kalla_aronow_lg_irregularities.pdf) in an article co-authored with Donald P. Green in *Science*, the general scientific journal of record in the United States. A failure to reproduce LaCour's results with different samples uncovered a comprehensive effort by LaCour to "fake" data that provided results to what we felt or believed to be true [(i.e. "truthiness")](http://chronicle.com/article/LAffaire-LaCour/230905/). However, [fake data can have real consequences](http://kieranhealy.org/blog/archives/2015/05/20/fake-science-real-consequences/) for both the researcher and those who want to learn from it and use it for various purposes. Even research done honestly may suffer the same fate if researchers are not diligent in their workflow.
+
+These recent events underscore the DART push and cast a shadow over our workflow. However, good workflow has always been an issue in our discipline. Cloud storage services like [Dropbox](http://www.dropbox.com) are still relatively new among political scientists. Without cloud storage, previous workflow left open the possibility that work between a home computer and an office computer was lost as a function of a corrupted thumb drive, an overheated power supply, or, among other things, the wave of viruses that [would particularly affect Microsoft users every summer](http://money.cnn.com/2003/11/05/technology/microsoftbounty/). Social sciences, [unlike engineering](http://kieranhealy.org/blog/archives/2014/01/23/plain-text/), have traditionally relied on software like Microsoft Word for manuscript preparation though any word processor reduces workflow to a series of clicks and strokes on a keyboard. This is [a terrible way to track changes](http://www.nytimes.com/2013/04/19/opinion/krugman-the-excel-depression.html) or maintain version control. The addition of collaborators only compounds all the aforementioned issues. The proverbial left hand may not know what the right hand is doing.
+
+I think there is reason for optimism. We only struggle with it now because we have tools like [R Markdown](http://rmarkdown.rstudio.com/) and [Pandoc](http://pandoc.org/), more generally, that make significant strides in workflow. LaTeX resolved earlier issues of corrupted binary files by reducing documents to raw markup that was little more than raw text and revisions that could be easily kept as ["commented" text](http://tex.stackexchange.com/questions/11177/how-to-write-hidden-notes-in-a-latex-file). However, for all its benefits (including pretty PDFs), [LaTeX is *ugly* code](http://www-rohan.sdsu.edu/~aty/bibliog/latex/gripe.html) and does not provide means of seamlessly working with the actual data analysis itself. R Markdown both eliminates markup and allows the author and her collaborators to write and reproduce the manuscript in one fell swoop.
+
+# Getting Started with YAML
+
+The lion's share of a R Markdown document will be raw text, though the front matter may be the most important part of the document. R Markdown uses [YAML](http://www.yaml.org/) for its metadata and the fields differ from [what an author would use for a Beamer presentation](http://svmiller.com/blog/2015/02/moving-from-beamer-to-r-markdown/). I provide a sample YAML metadata largely taken from this exact document and explain it below.
+
+```{r eval=FALSE}
+---
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    fig_caption: true
+    latex_engine: pdflatex
+    template: ~/Dropbox/miscelanea/svm-r-markdown-templates/svm-latex-ms.tex
+title: "A Pandoc Markdown Article Starter and Template"
+thanks: "Replication files are available on the author's Github account..."
+author:
+- name: Steven V. Miller
+  affiliation: Clemson University
+- name: Mary Margaret Albright
+  affiliation: Pendelton State University
+- name: Rembrandt Q. Einstein
+  affiliation: Springfield University
+abstract: "This document provides an introduction to R Markdown, argues for its..."
+keywords: "pandoc, r markdown, knitr"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+# spacing: double
+bibliography: ~/Dropbox/master.bib
+biblio-style: apsr
+---
+```
+
+`output:` will tell R Markdown we want a PDF document rendered with LaTeX. Since we are adding a fair bit of custom options to this call, we specify `pdf_document:` on the next line (with, importantly, a two-space indent). We specify additional output-level options underneath it, each are indented with four spaces. `citation_package: natbib` tells R Markdown to use `natbib` to handle bibliographic citations.[^natbib] Thereafter, the next line (`keep_tex: true`) tells R Markdown to render a raw `.tex` file along with the PDF document. This is useful for both debugging and the publication stage, when the editorial team will ask for the raw `.tex` so that they could render it and later provide page proofs. The next line `fig_caption: true` tells R Markdown to make sure that whatever images are included in the document are treated as figures in which our caption in brackets in a Markdown call is treated as the caption in the figure. The next line (`latex_engine: pdflatex`) tells R Markdown to use pdflatex and not some other option like `lualatex`. For my template, I'm pretty sure this is mandatory.[^pdflatex]
+
+[^natbib]: R Markdown can use Pandoc's native bibliography management system or even `biblatex`, but I've found that it chokes with some of the more advanced stuff I've done with my .bib file over the years. For example, I've been diligent about special characters (e.g. umlauts and acute accents) in author names in my .bib file, but Pandoc's native citation system will choke on these characters in a .bib file. I effectively need `natbib` for my own projects.
+[^pdflatex]: The main reason I still use `pdflatex` (and most readers probably do as well) is because of LaTeX fonts. [Unlike others](http://www-rohan.sdsu.edu/~aty/bibliog/latex/gripe.html), I find standard LaTeX fonts to be appealing.
+
+The next line (`template: ...`) tells R Markdown to use my custom LaTeX template.[^path] While I will own any errors in the code, I confess to "Frankensteining" this template from [the default LaTeX template](https://github.com/jgm/pandoc-templates) from Pandoc, [Kieran Healy's LaTeX template](https://github.com/kjhealy/pandoc-templates/tree/master/templates), and liberally using raw TeX from the [Association for Computing Machinery's (ACM) LaTeX template](https://www.acm.org/publications/article-templates/acm-latex-style-guide). I rather like that template since it resembles standard manuscripts when they are published in some of our more prominent journals. I will continue with a description of the YAML metadata in the next paragraph, though invite the curious reader to scroll to the end of the accompanying post to see the PDF this template produces.
+
+
+[^path]: Notice that the path is relative. The user can, if she wishes, install this in the default Pandoc directory. I don't think this is necessary. Just be mindful of wherever the template is placed. Importantly, `~` is used in R to find the home directory (not necessarily the working directory). It is equivalent to saying `/home/steve` in Linux, or `/Users/steve` on a Mac, in my case.
+
+The next fields get to the heart of the document itself. `title:` is, intuitively, the title of the manuscript. Do note that fields like `title:` do not have to be in quotation marks, but must be in quotation marks if the title of the document includes a colon. That said, the only reason to use a colon in an article title is if it is followed by a subtitle, hence the optional field (`subtitle:`). Notice I "comment out" the subtitle in the above example with a pound sign since this particular document does not have a subtitle. If `thanks:` is included and has an accompanying entry, the ensuing title of the document gets an asterisk and a footnote. This field is typically used to advise readers that the document is a working paper or is forthcoming in a journal.
+
+The next field (`author:`) is a divergence from standard YAML, but I think it is useful. I will also confess to pilfering this idea from Kieran Healy's template. Typically, multiple authors for a given document are separated by an `\and` in this field. However, standard LaTeX then creates a tabular field separating multiple authors that is somewhat restrictive and not easy to override. As a result, I use this setup (again, taken from Kieran Healy) to sidestep the restrictive rendering of authors in the standard `\maketitle` tag. After `author:`, enter `- name:` (no space before the dash) and fill in the field with the first author. On the next line, enter two spaces, followed by `affiliation:` and the institute or university affiliation of the first author.
+
+Do notice this can be repeated for however many co-authors there are to a manuscript. The rendered PDF will enter each co-author in a new line in a manner similar to journals like *American Journal of Political Science*, *American Political Science Review*, or *Journal of Politics*.
+
+The next two fields pertain to the frontmatter of a manuscript. They should also be intuitive for the reader. `abstract` should contain the abstract and `keywords` should contain some keywords that describe the research project. Both fields are optional, though are practically mandatory. Every manuscript requires an abstract and some journals---especially those published by Sage---request them with submitted manuscripts. My template also includes these keywords in the PDF's metadata.
+
+`date` comes standard with R Markdown and you can use it to enter the date of the most recent compile. I typically include the date of the last compile for a working paper in the `thanks:` field, so this field currently does not do anything in my Markdown-LaTeX manuscript template. I include it in my YAML as a legacy, basically.
+
+The next items are optional and cosmetic. `geometry:` is a standard option in LaTeX. I set the margins at one inch, and you probably should too. `fontfamily:` is optional, but I use it to specify the Palatino font. The default option is Computer Modern Roman. `fontsize:` sets, intuitively, the font size. The default is 10-point, but I prefer 11-point. `spacing:` is an optional field. If it is set as "double", the ensuing document is double-spaced. "single" is the only other valid entry for this field, though not including the entry in the YAML metadata amounts to singlespacing the document by default. Notice I have this "commented out" in the example code.
+
+The final two options pertain to the bibliography. `bibliography:` specifies the location of the .bib file, so the author could make citations in the manuscript. `biblio-style` specifies the type of bibliography to use. You'll typically set this as APSR. You could also specify the relative path of [my *Journal of Peace Research* .bst file](http://svmiller.com/miscellany/journal-of-peace-research-bst-file/) if you are submitting to that journal.
+
+# Getting Started with Markdown Syntax
+
+There are a lot of cheatsheets and reference guides for Markdown (e.g. [Adam Prichard](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet), [Assemble](http://assemble.io/docs/Cheatsheet-Markdown.html), [Rstudio](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf), [Rstudio again](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf), [Scott Boms](http://scottboms.com/downloads/documentation/markdown_cheatsheet.pdf), [Daring Fireball](https://daringfireball.net/projects/markdown/syntax), among, I'm sure, several others). I encourage the reader to look at those, though I will retread these references here with a minimal working example below.
+
+```markdown
+
+# Introduction
+
+**Lorem ipsum** dolor *sit amet*. 
+
+- Single asterisks italicize text *like this*. 
+- Double asterisks embolden text **like this**.
+
+Start a new paragraph with a blank line separating paragraphs.
+
+- This will start an unordered list environment, and this will be the first item.
+- This will be a second item.
+- A third item.
+    - Four spaces and a dash create a sublist and this item in it.
+- The fourth item.
+    
+1. This starts a numerical list.
+2. This is no. 2 in the numerical list.
+    
+# This Starts A New Section
+## This is a Subsection
+### This is a Subsubsection
+#### This starts a Paragraph Block.
+
+> This will create a block quote, if you want one.
+
+Want a table? This will create one.
+
+Table Header  | Second Header
+------------- | -------------
+Table Cell    | Cell 2
+Cell 3        | Cell 4 
+
+Note that the separators *do not* have to be aligned.
+
+Want an image? This will do it.
+
+![caption for my image](path/to/image.jpg)
+
+`fig_caption: yes` will provide a caption. Put that in the YAML metadata.
+
+Almost forgot about creating a footnote.[^1] This will do it again.[^2]
+
+[^1]: The first footnote
+[^2]: The second footnote
+
+Want to cite something? 
+
+- Find your biblatexkey in your bib file.
+- Put an @ before it, like @smith1984, or whatever it is.
+- @smith1984 creates an in-text citation (e.g. Smith (1984) says...)
+- [@smith1984] creates a parenthetical citation (Smith, 1984)
+
+That'll also automatically create a reference list at the end of the document.
+
+[In-text link to Google](http://google.com) as well.
+```
+
+That's honestly it. Markdown takes the chore of markup from your manuscript (hence: "Markdown").
+
+On that note, you could easily pass most LaTeX code through Markdown if you're writing a LaTeX document. However, you don't need to do this (unless you're using the math environment) and probably shouldn't anyway if you intend to share your document in HTML as well.
+
+# Using R Markdown with Knitr
+
+Perhaps the greatest intrigue of R Markdown comes with the [`knitr` package](http://yihui.name/knitr/) provided by @xie2013ddrk. In other words, the author can, if she chooses, do the analysis in the Markdown document itself and compile/execute it in R.
+
+Take, for example, this simple exercise using the `voteincome` data from the `Zelig` package. Suppose I want to explain the decision to vote using data from this package. I load in the data, clean the data, run the analyses, and present the results as a coefficient plot.
+
+Here's what this code looks like. All I did was create a code display, which starts with three *backticks* (i.e. those ticks next to the number 1 key on your keyboard) and ends with three backticks on another line. On the first line of backticks (i.e. to start the code display) enter `{r, eval=FALSE, tidy=TRUE}`. The `eval=FALSE` option just displays the R code (and does not run it), `tidy=TRUE` wraps long code so it does not run off the page.
+
+Within that code display, I enter my R code like this.
+
+
+```{r, eval=FALSE, tidy = TRUE}
+suppressMessages(library(Zelig))
+suppressMessages(library(arm))
+suppressMessages(library(coefplot))
+
+data(voteincome)
+
+voteincome$z.age <- arm::rescale(voteincome$age)
+voteincome$z.education <- arm::rescale(voteincome$education)
+voteincome$z.income <- arm::rescale(voteincome$income)
+
+M1 <- glm(vote ~ z.age + female + z.education + z.income,
+            data=voteincome, family=binomial)
+
+coefplot(M1)
+```
+
+The implications for workflow are faily substantial. Authors can rather quickly display the code they used to run the analyses in the document itself (likely in the appendix). As such, there's little guesswork for reviewers and editors in understanding what the author did in the analyses reported in the manuscript.
+
+It doesn't end there. In fact, here's what happens when `eval=FALSE` is omitted or changed to `eval=TRUE`. Now, the code runs within R. Observe.
+
+```{r, eval=TRUE, tidy = TRUE, cache=FALSE, fig.cap="A Coefficient Plot"}
+suppressMessages(library(Zelig))
+suppressMessages(library(arm))
+
+
+data(voteincome)
+
+voteincome$z.age <- arm::rescale(voteincome$age)
+voteincome$z.education <- arm::rescale(voteincome$education)
+voteincome$z.income <- arm::rescale(voteincome$income)
+
+M1 <- glm(vote ~ z.age + female + z.education + z.income,
+            data=voteincome, family=binomial)
+
+arm::coefplot(M1)
+```
+
+To get `knitr` to present the results of a table, add `results="asis"` to the brackets to start the R code chunk. The ensuing output will look like this (though the table may come on the next page).
+
+```{r, eval=TRUE, tidy = TRUE, size="small", cache=FALSE, results="asis"}
+suppressMessages(library(Zelig))
+suppressMessages(library(stargazer))
+suppressMessages(library(arm))
+
+data(voteincome)
+
+voteincome$z.age <- arm::rescale(voteincome$age)
+voteincome$z.education <- arm::rescale(voteincome$education)
+voteincome$z.income <- arm::rescale(voteincome$income)
+
+
+M1 <- glm(vote ~ z.age + female + z.education + z.income,
+            data=voteincome, family=binomial)
+
+stargazer(M1, title="A Handsome Table", header=FALSE)
+```
+
+Adding `echo="FALSE"` inside the brackets to start the R chunk will omit the presentation of the R commands. It will just present the table. This provides substantial opportunity for authors in doing their analyses. Now, the analysis and presentation in the form of a polished manuscript can be effectively simultaneous.[^4]
+
+[^4]: I'm not sure if I'm ready to commit to this myself since my workflow is still largely derived from [Rob J. Hyndman's example](http://robjhyndman.com/hyndsight/workflow-in-r/). However, *knitr* has endless potential, especially when analyses can stored in cache, saved as chunks, or loaded in the preamble of a document to reference later in the manuscript.
+
+
+
+
+<!--
+# References
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\vspace*{-0.2in}
+\noindent
+-->
