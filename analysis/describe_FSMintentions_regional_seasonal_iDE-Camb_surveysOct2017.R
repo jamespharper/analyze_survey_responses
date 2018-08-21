@@ -7,7 +7,7 @@ rm(list = ls())                                      # Clear global environment
 cat("\014")                                              # Clear console window
 source("functions.R")                                   # Load custom functions
 load_libraries(                                      # Install & load libraries
-  c("rio", "gplots", "Amelia", "car", "fastDummies",
+  c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
     "FactoMineR", "factoextra", "lavaan"))
 loadfonts(device = "win")
 clean.raw.data = 0                                      # Clean raw data: 1=yes
@@ -373,9 +373,7 @@ levels(data.mca$WhoInstLat) = c("Slf/FamInstLat", "GovInstLat",
                                 "LBOInstLat", "NGOInstLat",
                                 "DKWhoInstLat")
 data.mca$WhoInstLat[is.na(data.mca$WhoInstLat)] = "DKWhoInstLat"
-data.mca = subset(data.mca, WhoInstLat != "GovInstLat")
 levels(data.mca$KnwSubsdy) = c("KnwSubsdy", "DKSubsdy")
-data.mca = subset(data.mca, !is.na(KnwSubsdy))
 levels(data.mca$RecSubsdy) = c("UnkSubsdy", "NoSubsdy", "FulSubsdy", "PrtSubsdy")
 levels(data.mca$BorwLat) = c("Borw", "NoBorw", "NoBorw", "UnkBorw")
 data.mca$BorwLat[is.na(data.mca$BorwLat)] = "UnkBorw"
@@ -397,12 +395,11 @@ data.mca$ChldUseLat[is.na(data.mca$ChldUseLat)] = "ChldDKLat"
 levels(data.mca$InfLatDump) = c("InfFreqLat", "InfDKLat", "InfDKLat", 
                                 "InfRarLat", "InfSomLat")
 data.mca$InfLatDump[is.na(data.mca$InfLatDump)] = "InfDKLat"
-data.mca = subset(data.mca, Yr != 2014)
 data.mca$ODBefor = 0
 data.mca$ODBefor =
   ifelse(data.mca$RDefBefor_BshFld == 1 | data.mca$RDefBefor_RivPnd == 1, 1, 0)
 data.mca$ODBefor = as.factor(data.mca$ODBefor)
-data.mca = subset(data.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
+levels(data.mca$ODBefor) = c("NoODBefor", "ODBefor")
 levels(data.mca$RDefBefor_NeiToi) = c("NoDefBeforNeiToi", "DefBeforNeiToi")
 levels(data.mca$ChlngsNoFlsh) = c("FlshOK", "NoFlsh", "DKFlsh")
 data.mca$ChlngsNoFlsh[is.na(data.mca$ChlngsNoFlsh)] = "DKFlsh"
@@ -427,18 +424,28 @@ data.mca$SatisSup[is.na(data.mca$SatisSup)] = "DKSatSup"
 levels(data.mca$Rec) = c("NoRecLat", "RecLat", "DKRecLat")
 data.mca$Rec[is.na(data.mca$Rec)] = "DKRecLat"
 levels(data.mca$RecSup) = c("NoRecSup", "RecSup")
+data.mca = subset(data.mca, WhoInstLat != "GovInstLat")
+data.mca = subset(data.mca, !is.na(KnwSubsdy))
+data.mca = subset(data.mca, Yr != 2014)
+data.mca = subset(data.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
 data.mca = subset(data.mca, !is.na(RecSup))
-data.mca = droplevels(data.mca)
-summary(data.mca, maxsum = 12)
-print(sapply(data.mca, function(x) sum(is.na(x))))
+data.mca = subset(data.mca, ChlngsOK != "DKChlngs")
+data.mca = subset(data.mca, SlabTil != "UnkSlabTil")
+data.mca = subset(data.mca, RoofMat != "UnkRoof")
+data.mca = subset(data.mca, AdltUseLat != "AdltDKLat")
+data.mca = subset(data.mca, Rec != "DKRecLat")
+data.mca = subset(data.mca, BorwLat != "UnkBorw")
 data.mca$F217[is.na(data.mca$F217)] = 
   mean(data.mca$F217[!is.na(data.mca$F217)])
 data.mca$M1824[is.na(data.mca$M1824)] = 
   mean(data.mca$M1824[!is.na(data.mca$M1824)])
+data.mca = droplevels(data.mca)
+summary(data.mca, maxsum = 12)
+print(sapply(data.mca, function(x) sum(is.na(x))))
 # Run analysis
 varTable(data.mca)
 quali.sup = c(1, 16:17)
-quanti.sup = 31:40
+quanti.sup = c(31:40)
 res.mca = MCA(data.mca, quanti.sup = quanti.sup, quali.sup = quali.sup,
               na.method = "NA", graph = FALSE)
 # Print and plot results
@@ -447,6 +454,51 @@ print(res.mca)
 get_eigenvalue(res.mca)
 fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 50))
 fviz_mca_biplot(res.mca, repel = FALSE, ggtheme = theme_minimal())
+res.mca.vars = get_mca_var(res.mca)
+fviz_mca_var(res.mca, choice = "mca.cor", repel = TRUE,      # Cor, vars & dims
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, repel = TRUE, ggtheme = theme_minimal())
+fviz_mca_var(res.mca, col.var = "black", shape.var = 15, repel = TRUE)
+head(round(res.mca.vars$coord, 2))
+head(round(res.mca.vars$coord, 2))
+head(round(res.mca.vars$cos2, 4))
+corrplot(res.mca.vars$cos2, is.corr = FALSE)
+fviz_mca_var(res.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, alpha.var = "cos2",
+             repel = TRUE,
+             ggtheme = theme_minimal())
+fviz_cos2(res.mca, choice = "var", axes = 1:2)
+head(round(res.mca.vars$contrib, 3))
+fviz_contrib(res.mca, choice = "var", axes = 1, top = 15)
+fviz_contrib(res.mca, choice = "var", axes = 2, top = 15)
+fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
+fviz_mca_var(res.mca, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, 
+             ggtheme = theme_minimal())
+fviz_mca_var(res.mca, alpha.var = "contrib",
+             repel = TRUE,
+             ggtheme = theme_minimal())
+res.mca.ind = get_mca_ind(res.mca)
+print(res.mca.ind)
+head(res.mca.ind$coord)
+head(res.mca.ind$contrib)
+head(res.mca.ind$cos2)
+# fviz_mca_ind(res.mca, col.ind = "cos2", 
+#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#              repel = TRUE,
+#              ggtheme = theme_minimal())
+fviz_mca_ind(res.mca, 
+             label = "none", # hide individual labels
+             habillage = data.mca$Prov, # color by groups 
+             # palette = c("#00AFBB", "#E7B800"),
+             addEllipses = TRUE, ellipse.type = "confidence",
+             ggtheme = theme_minimal())
+
+
 summary(res.mca, ncp = 3, nbelements = Inf)
 dimdesc(res.mca)
 plot(results, label = c("var","quali.sup"), cex = 0.7)
