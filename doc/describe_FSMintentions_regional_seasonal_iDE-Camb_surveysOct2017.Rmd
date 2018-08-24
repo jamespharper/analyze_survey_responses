@@ -6,16 +6,15 @@ output:
     fig_caption: true
     latex_engine: pdflatex
     template: svm-latex-ms.tex
-title: "A Pandoc Markdown Article Starter and Template"
-thanks: "Replication files are available on the author's Github account (http://github.com/svmiller). **Current version**: `r format(Sys.time(), '%B %d, %Y')`; **Corresponding author**: svmille@clemson.edu."
+title: "How Intentions Toward Fecal Sludge Management Vary Regionally and Seasonally in Rural Cambodia"
+thanks: "**Current version**: `r format(Sys.time(), '%B %d, %Y')`; **First version**: May 1, 2018; **Corresponding author**: james.harper@colorado.edu"
 author:
-- name: James Harper, PE, ENV SP
-  affiliation: University of Colorado Boulder
-abstract: "This document provides an introduction to R Markdown, argues for its benefits, and presents a sample manuscript template intended for an academic audience. I include basic syntax to R Markdown and a minimal working example of how the analysis itself can be conducted within R with the `knitr` package."
-keywords: "pandoc, r markdown, knitr"
+- name: James Harper, PE**; Angela Bielefeldt, PE; Amy Javernick-Will; Touer Veasna; Chris Nicoletti
+  affiliation: University of Colorado Boulder; University of Colorado Boulder; University of Colorado Boulder; iDE; iDE
+abstract: "With 45% of the world’s population defecating in pit latrines daily, safely managed fecal sludge has been difficult to achieve, particularly in rural communities, where households typically manage their own fecal sludge. A critical component of fecal sludge management (FSM) in these rural contexts - behavior - is known to affect FSM but is poorly understood. Using the Theory of Planned Behavior, which links contextual factors to the formation of behavioral intentions, this study examines the intentions of rural Cambodian latrine owners when their pits fill. Survey data collected from 3758 households in rural Cambodia between 2014 and 2017 were analyzed for regional and seasonal variations using structural equation modelling to answer the question “Do regional and seasonal contextual factors affect how rural latrine owners in Cambodia intend to manage their fecal sludge?”. Regional variations in FSM intentions were moderate. Latrine owners in provinces with stronger economies reported more desirable FSM intentions; however, those living in poor Oddar Meanchey province also reported more desirable FSM intentions. Thus, a strong regional economy was sufficient but not necessary for more desirable FSM intentions. FSM intentions also varied seasonally. Desirable FSM intentions peaked during April’s rice harvest (73%), when farmers are most financially stable, and fell to 50% during November’s rice planting/growing season, when farmers are least financially stable. Latrine coverage and FSM marketing history did not explain the remaining variations, indicating the need for more research. While financial stability does affect FSM intentions, other relevant contextual factors must be identified to fully describe these variations. This formative research describes a part of human decision-making that can be used to predict FSM behaviors, improve FSM behavior change methods, and improve the design of latrines and FSM processes and training to achieve safely managed sanitation."
+keywords: "intention, behavior, fecal sludge management, rural, sanitation, Cambodia"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-# Started October 1, 2017; Last updated Aug 8, 2018
-geometry: margin=1in
+geometry: margin = 1in
 fontfamily: mathpazo
 fontsize: 11pt
 # spacing: double
@@ -23,10 +22,11 @@ bibliography: ~/Dropbox/master.bib
 biblio-style: apsr
 endnote: no
 ---
-
 # Results
 
-```{r initialize, echo = FALSE}
+Survey data were first analyzed using multiple correspondnece analysis to show relationships between the variables.  The results of this analysis are then used in a heirarhical cluster analysis to identify groups of similar individuals within the survey data.
+
+```{r initialize, include = FALSE}
 rm(list = ls())                                      # Clear global environment
 cat("\014")                                              # Clear console window
 source(paste("C:/Users/James Harper/Documents/Github/", # Load custom functions
@@ -35,7 +35,7 @@ load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
     "FactoMineR", "factoextra", "lavaan", "corrplot"))
 ```
-```{r load_clean, echo = FALSE}
+```{r load_clean, include = FALSE}
 # Load, clean, and summarize data
 clean.raw.data = 0                                    # Clean raw data: 1 = yes
 if (clean.raw.data != 1) {
@@ -312,13 +312,13 @@ if (clean.raw.data != 1) {
                sep = ""))
 }
 ```
-```{r summarize, echo = FALSE}
+```{r summarize, include = FALSE}
 # summary(data)
 # names(data)
 # print(sapply(data, function(x) sum(is.na(x))))
 # missmap(data, main = "Missing Values in Variables", legend = F)
 ```
-```{r MCA_setup, echo = FALSE}
+```{r MCA_setup, include = FALSE}
 # Select relevant data
 # names(data)
 select = c("Prov", "IDPoor", "LivRP", "VillOD", 
@@ -339,12 +339,12 @@ exclude = c("IntndChng_Shltr", "IntndChng_Shwr",
 data.mca = subset(data, select = select)
 data.mca = subset(data.mca, !is.na(IntndPitFull))
 # Summarize data, visualize missing data, and modify as needed
-par(mfrow = c(2,2))
-for (i in 1:length(data.mca)) {
-  if (i %% 4 == 0) {par(mfrow = c(2,2))}
-  plot(data.mca[,i], main = colnames(data.mca)[i],
-       ylab = "Count", col = "steelblue", las = 2)
-}
+# par(mfrow = c(2,2))
+# for (i in 1:length(data.mca)) {
+#   if (i %% 4 == 0) {par(mfrow = c(2,2))}
+#   plot(data.mca[,i], main = colnames(data.mca)[i],
+#        ylab = "Count", col = "steelblue", las = 2)
+# }
 levels(data.mca$Prov) = c("BM", "KT", "K", "OM", "PV", "SR", "SG")
 levels(data.mca$IDPoor) = c("NotIDPoor", "IDPoor")
 colnames(data.mca)[which(names(data.mca) == "LivRP")] = "LivWtr"
@@ -429,75 +429,153 @@ data.mca = droplevels(data.mca)
 # summary(data.mca, maxsum = 12)
 # print(sapply(data.mca, function(x) sum(is.na(x))))
 ```
-```{r MCA_analyze, echo = FALSE}
+```{r MCA_analyze, include = FALSE}
 # varTable(data.mca)
 quali.sup = c(1, 16:17)
 quanti.sup = c(31:40)
 res.mca = MCA(data.mca, quanti.sup = quanti.sup, quali.sup = quali.sup,
               na.method = "NA", graph = FALSE)
 ```
-```{r MCA_results, echo = TRUE}
+
+The data analyzed with multiple correspondence analysis is first summarized by frequency using bar charts of each variable.
+
+```{r MCA_summarize, echo = FALSE}
+par(mfrow = c(3,1))
+for (i in 1:length(data.mca)) {
+  if (i %% 3 == 0) {par(mfrow = c(3,1))}
+  plot(data.mca[,i], main = colnames(data.mca)[i],
+       ylab = "Count", col = "steelblue", las = 2)
+}
+```
+
+The eigenvalues of the first six dimensions are shown below and describe the proportion of variances retained by each dimension.  A scree plot shows the percentages of inertia explained by each MCA dimension.
+
+```{r MCA_results_eigenvalues, echo = FALSE}
 par(mfrow = c(1, 1))
-print(res.mca)
-get_eigenvalue(res.mca)
+# print(res.mca)
+res.mca.eigs = get_eigenvalue(res.mca)
+# head(round(res.mca.eigs, 2))
 fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 50))
+```
+
+A biplot of individuals and variable categories (responses) shows the global patterns within the survey data.  Rows (individuals) are represented by blue points and columns (variable categories) by red triangles.  The distance between any row points or column points gives a measure of their similarity (or dissimilarity). Row points with similar profile are closed on the factor map. The same holds true for column points.
+
+```{r MCA_results_biplot, echo = FALSE}
 fviz_mca_biplot(res.mca, repel = FALSE, ggtheme = theme_minimal())
-res.mca.vars = get_mca_var(res.mca)
+```
+
+##Variable Categories
+
+Results for variable categories are shown below.  The plot of correlations between variables and the MCA dimensions helps to identify variables that are the most correlated with each dimension. The squared correlations between variables and the dimensions are used as coordinates.
+
+```{r MCA_results_vars1, echo = FALSE}
 fviz_mca_var(res.mca, choice = "mca.cor", repel = TRUE,      # Cor, vars & dims
              ggtheme = theme_minimal())
+```
+
+The coordinates of each variable are shown in table and graphical format.  The plot shows the relationships between variable categories. Variable categories with a similar profile are grouped together.  Negatively correlated variable categories are positioned on opposite sides of the plot origin (opposing quadrants).  The distance between category points and the origin measures the quality of the variable category on the factor map. Category points that are far away from the origin are well represented on the factor map.
+
+```{r MCA_results_vars2, echo = FALSE}
+res.mca.vars = get_mca_var(res.mca)
+# round(res.mca.vars$coord, 2)
 fviz_mca_var(res.mca, repel = TRUE, ggtheme = theme_minimal())
-fviz_mca_var(res.mca, col.var = "black", shape.var = 15, repel = TRUE)
-head(round(res.mca.vars$coord, 2))
-head(round(res.mca.vars$coord, 2))
-head(round(res.mca.vars$cos2, 4))
-corrplot(res.mca.vars$cos2, is.corr = FALSE)
-fviz_mca_var(res.mca, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE,
-             ggtheme = theme_minimal())
-fviz_mca_var(res.mca, alpha.var = "cos2",
-             repel = TRUE,
-             ggtheme = theme_minimal())
+# fviz_mca_var(res.mca, col.var = "black", shape.var = 15, repel = TRUE)
+```
+
+##Quality of Representation of Variable Categories
+
+Dimensions 1 and 2 are sufficient to retain `r res.mca.eigs[1,2] + res.mca.eigs[2,2]`% of the total inertia (variation) contained in the data. Not all the points are equally well displayed in the two dimensions.
+
+The quality of the representation is called the squared cosine (cos2), which measures the degree of association between variable categories and a particular axis. If a variable category is well represented by two dimensions, the sum of the cos2 value for each dimension is near one.  A bar plot can also be used.
+
+Note that variables that have a low cos2 value are not well represented by the dimensions indicated. This implies that the position of these points on the scatter plot should be interpreted with some caution. A higher dimensional solution is probably necessary.
+
+```{r MCA_results_vars3, echo = FALSE}
+round(res.mca.vars$cos2, 4)
 fviz_cos2(res.mca, choice = "var", axes = 1:2)
-head(round(res.mca.vars$contrib, 3))
+```
+
+Coloring each variable category by its cos2 values produces a color-gradient plot.
+
+```{r MCA_results_vars4, echo = FALSE}
+fviz_mca_var(res.mca, col.var = "cos2", repel = TRUE, 
+             ggtheme = theme_minimal(),
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+The transparency of each variable category may also be changed based on its cos2 value.
+
+```{r MCA_results_vars5, echo = FALSE}
+fviz_mca_var(res.mca, alpha.var = "cos2", repel = TRUE, 
+             ggtheme = theme_minimal())
+```
+
+Cos2 values may also be visualized using a correlation plot.
+
+```{r MCA_results_vars6, echo = FALSE}
+corrplot(res.mca.vars$cos2, is.corr = FALSE)
+```
+
+**Contribution of variable categories to the dimensions**
+
+The percent contribution of each variable category to the definition of each MCA dimension is shown below.  Variable categories with larger contributions define a dimension more than other variable categories and are thus most important in explaining the variability in the dataset.  Bar plots are also used to show these results.  The red dashed line on the plot indicates the expected average value if contributions were uniform.
+
+```{r MCA_results_vars7, echo = FALSE}
+round(res.mca.vars$contrib, 3)
 fviz_contrib(res.mca, choice = "var", axes = 1, top = 15)
 fviz_contrib(res.mca, choice = "var", axes = 2, top = 15)
+```
+
+The total contributions to dimension 1 and 2 described below as a table and highlighted on the scatter plot.  The plot describes how each variable category contributes to which pole of each dimension.
+
+```{r MCA_results_vars8, echo = FALSE}
 fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
 fviz_mca_var(res.mca, col.var = "contrib",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
              repel = TRUE, 
              ggtheme = theme_minimal())
+```
+
+The transparency of each variable category may also be changed based on its contribution.
+
+```{r MCA_results_vars9, echo = FALSE}
 fviz_mca_var(res.mca, alpha.var = "contrib",
              repel = TRUE,
              ggtheme = theme_minimal())
-res.mca.ind = get_mca_ind(res.mca)
-print(res.mca.ind)
-head(res.mca.ind$coord)
-head(res.mca.ind$contrib)
-head(res.mca.ind$cos2)
-# fviz_mca_ind(res.mca, col.ind = "cos2", 
-#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-#              repel = TRUE,
-#              ggtheme = theme_minimal())
-fviz_mca_ind(res.mca, 
-             label = "none", # hide individual labels
-             habillage = data.mca$Prov, # color by groups 
-             # palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, ellipse.type = "confidence",
-             ggtheme = theme_minimal())
-```
-```{r cluster, echo = FALSE}
-res.hcpc = HCPC(res.mca, graph = FALSE, max = 3)
-fviz_dend(res.hcpc, show_labels = FALSE)   # Dendrogram
-fviz_cluster(res.hcpc, geom = "point", main = "Factor map")  # Indiv factor map
-res.hcpc$desc.var$test.chi2   # Description by variables
-res.hcpc$desc.var$category   # Description by variable categories
-res.hcpc$desc.axes   # Description by princial components
-res.hcpc$desc.ind$para   # Description by individuals
 ```
 
 
 
+
+             
+             
+
+
+<!-- res.mca.ind = get_mca_ind(res.mca) -->
+<!-- print(res.mca.ind) -->
+<!-- head(res.mca.ind$coord) -->
+<!-- head(res.mca.ind$contrib) -->
+<!-- head(res.mca.ind$cos2) -->
+<!-- # fviz_mca_ind(res.mca, col.ind = "cos2", -->
+<!-- #              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), -->
+<!-- #              repel = TRUE, -->
+<!-- #              ggtheme = theme_minimal()) -->
+<!-- fviz_mca_ind(res.mca, -->
+<!--              label = "none", # hide individual labels -->
+<!--              habillage = data.mca$Prov, # color by groups -->
+<!--              # palette = c("#00AFBB", "#E7B800"), -->
+<!--              addEllipses = TRUE, ellipse.type = "confidence", -->
+<!--              ggtheme = theme_minimal()) -->
+
+<!-- ```{r cluster, include = FALSE} -->
+<!-- res.hcpc = HCPC(res.mca, graph = FALSE, max = 3) -->
+<!-- fviz_dend(res.hcpc, show_labels = FALSE)   # Dendrogram -->
+<!-- fviz_cluster(res.hcpc, geom = "point", main = "Factor map")  # Indiv factor map -->
+<!-- res.hcpc$desc.var$test.chi2   # Description by variables -->
+<!-- res.hcpc$desc.var$category   # Description by variable categories -->
+<!-- res.hcpc$desc.axes   # Description by princial components -->
+<!-- res.hcpc$desc.ind$para   # Description by individuals -->
+<!-- ``` -->
 
 
 
