@@ -465,7 +465,7 @@ head(round(res.mca.vars$cos2, 4))
 corrplot(res.mca.vars$cos2, is.corr = FALSE)
 fviz_mca_var(res.mca, col.var = "cos2",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE, # Avoid text overlapping
+             repel = TRUE,
              ggtheme = theme_minimal())
 fviz_mca_var(res.mca, alpha.var = "cos2",
              repel = TRUE,
