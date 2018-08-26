@@ -308,62 +308,97 @@ if (clean.raw.data != 1) {
   
   # Create d.sets.prov for provincial-level data from other datasets
   d.sets.prov = data.frame(Prov = levels(d.surv$Prov))
-  d.sets.prov$Pop13 =                                          # NIS CIPS, 2013
+  d.sets.prov$Pop13 =                                # NIS CIPS, Report 1, 2013
     c(729569, 690414, 1115965, 231390, 1156739, 922982, 578380)
+  d.sets.prov$Pop13M =                               # NIS CIPS, Report 1, 2013
+    c(354604, 333979, 538040, 116090, 557793, 447089, 286073)
+  d.sets.prov$Pop13MPerc = d.sets.prov$Pop13M / d.sets.prov$Pop13
+  d.sets.prov$Pop13F =                               # NIS CIPS, Report 1, 2013
+    c(374965, 356434, 577924, 115299, 598946, 475893, 292307)
+  d.sets.prov$Pop13FPerc = d.sets.prov$Pop13F / d.sets.prov$Pop13
+  d.sets.prov$PopChng08to13 =                        # NIS CIPS, Report 1, 2013
+    d.sets.prov$Pop13 - c(677872, 631409, 1091170, 185819, 947372, 
+                          896443, 482788)
+  d.sets.prov$PopChng08to13M =                        # NIS CIPS, Report 1, 2013
+    d.sets.prov$Pop13 - c(331715, 307724, 529433, 93646, 453082, 439982, 231578)
+  d.sets.prov$PopChng08to13MPerc = 
+    d.sets.prov$PopChng08to13M / d.sets.prov$PopChng08to13
+  d.sets.prov$PopChng08to13F =                        # NIS CIPS, Report 1, 2013
+    d.sets.prov$Pop13 - c(346157, 323685, 561737, 92173, 494290, 456461, 251210)
+  d.sets.prov$PopChng08to13FPerc = 
+    d.sets.prov$PopChng08to13F / d.sets.prov$PopChng08to13
+  
+  
+  
   d.sets.prov$PopGrow08to13Perc =                              # NIS CIPS, 2013
     c(1.47, 1.79, 0.45, 4.39, 3.99, 0.58, 3.61)
-  d.sets.prov$PopDens2013 =                                    # NIS CIPS, 2013
+  d.sets.prov$PopDens13 =                                    # NIS CIPS, 2013
     c(109, 50, 343, 38, 237, 90, 195)
-  d.sets.prov$PopDenseChng08to13 =                             # NIS CIPS, 2013
+  d.sets.prov$PopDensChng08to13 =                             # NIS CIPS, 2013
     d.sets.prov$PopDens2013 - c(101, 46, 335, 30, 194, 87, 163)
-  d.sets.prov$NatvLng_Khmer =                                  # NIS CIPS, 2013
+  d.sets.prov$NatvLng_Khmer =                        # NIS CIPS, Report 7, 2014
     c(99.7, 98.8, 99.2, 99.7, 98.8, 99.7, 99.8)
-  d.sets.prov$GenLitRat13 =                                    # NIS CIPS, 2013
+  d.sets.prov$GenLitRat13 =                          # NIS CIPS, Report 7, 2014
     c(77.4, 68.8, 86.7, 71.6, 79.7, 75.3, 83.3)
-  d.sets.prov$ChngGenLitRat08to13 =                            # NIS CIPS, 2013
+  d.sets.prov$GenLitRatChng08to13 =                  # NIS CIPS, Report 7, 2014
     d.sets.prov$GenLitRat13 - c(78.0, 69.9, 83.7, 65.5, 80.8, 71.2, 80.1)
-  d.sets.prov$GenLitRat13M =                                   # NIS CIPS, 2013
+  d.sets.prov$GenLitRat13M =                         # NIS CIPS, Report 7, 2014
     c(82.3, 74.1, 90.8, 77.4, 86.4, 80.6, 89.9)
-  d.sets.prov$GenLitRat13F =                                   # NIS CIPS, 2013
+  d.sets.prov$GenLitRat13F =                         # NIS CIPS, Report 7, 2014
     c(72.8, 63.9, 83.1, 65.9, 73.5, 70.4, 77.1)
-  d.sets.prov$ChngGenLitRatM08to13 =                           # NIS CIPS, 2013
+  d.sets.prov$GenLitRatChng08to13M =                 # NIS CIPS, Report 7, 2014
     d.sets.prov$GenLitRat13M - c(84.3, 75.6, 88.3, 72.9, 87.8, 76.9, 88.7)
-  d.sets.prov$ChngGenLitRatF08to13 =                           # NIS CIPS, 2013
+  d.sets.prov$GenLitRatChng08to13F =                # NIS CIPS, Report 7, 2014
     d.sets.prov$GenLitRat13F - c(72.0, 64.5, 79.4, 58.0, 74.5, 65.9, 72.3)
-  d.sets.prov$DiffChngGenLitRatMF08to13 =           # + value = F improved more
-    d.sets.prov$ChngGenLitRatF08to13 - d.sets.prov$ChngGenLitRatM08to13
-  d.sets.prov$EducNone =                                       # NIS CIPS, 2013
+  d.sets.prov$GenLitRatDiffChng08to13MF =           # + value = F improved more
+    d.sets.prov$GenLitRatChng08to13F - d.sets.prov$GenLitRatChng08to13M
+  d.sets.prov$EducNone =                             # NIS CIPS, Report 7, 2014
     c(26.0, 33.1, 17.5, 31.2, 21.4, 27.0, 17.4)
-  d.sets.prov$EducPrimIncomp =                                 # NIS CIPS, 2013
+  d.sets.prov$EducPrimIncomp =                       # NIS CIPS, Report 7, 2014
     c(37.0, 32.2, 31.2, 34.9, 37.8, 36.6, 31.7)
-  d.sets.prov$EducPrimComp =                                   # NIS CIPS, 2013
+  d.sets.prov$EducPrimComp =                         # NIS CIPS, Report 7, 2014
     c(21.0, 21.9, 24.5, 21.2, 24.9, 19.2, 28.7)
-  d.sets.prov$EducLowSecndComp =                               # NIS CIPS, 2013
+  d.sets.prov$EducLowSecndComp =                     # NIS CIPS, Report 7, 2014
     c(13.8, 11.5, 23.0, 11.7, 13.6, 12.1, 19.8)
-  d.sets.prov$EducSecndCompNAbov =                             # NIS CIPS, 2013
+  d.sets.prov$EducSecndCompNAbov =                   # NIS CIPS, Report 7, 2014
     c(2.3, 1.3, 3.7, 1.0, 2.3, 5.2, 2.4)
-  d.sets.prov$EducNoneNPrimIncompM =                           # NIS CIPS, 2013
+  d.sets.prov$EducNoneNPrimIncompM =                 # NIS CIPS, Report 7, 2014
     c(52.1, 53.9, 33.3, 53.0, 40.4, 51.2, 29.0)
-  d.sets.prov$EducNoneNPrimIncompF =                           # NIS CIPS, 2013
+  d.sets.prov$EducNoneNPrimIncompF =                 # NIS CIPS, Report 7, 2014
     c(63.2, 64.8, 48.6, 66.0, 62.6, 61.3, 54.1)
-  d.sets.prov$EducPrimCompM =                                  # NIS CIPS, 2013
+  d.sets.prov$EducPrimCompM =                        # NIS CIPS, Report 7, 2014
     c(24.1, 25.9, 27.7, 26.7, 33.2, 22.5, 36.1)
-  d.sets.prov$EducPrimCompF =                                  # NIS CIPS, 2013
+  d.sets.prov$EducPrimCompF =                        # NIS CIPS, Report 7, 2014
     c(20.5, 22.9, 25.2, 21.6, 22.8, 20.3, 26.6)
-  d.sets.prov$SchlAttnd13 =                                    # NIS CIPS, 2013
+  d.sets.prov$SchlAttnd13 =                          # NIS CIPS, Report 7, 2014
     c(24.1, 23.5, 26.6, 25.2, 27.4, 27.5, 24.4)
-  d.sets.prov$SchlAttnd13M =                                   # NIS CIPS, 2013
+  d.sets.prov$SchlAttnd13M =                         # NIS CIPS, Report 7, 2014
     c(26.1, 25.3, 28.8, 27.4, 31.0, 29.4, 27.9)
-  d.sets.prov$SchlAttnd13F =                                   # NIS CIPS, 2013
+  d.sets.prov$SchlAttnd13F =                         # NIS CIPS, Report 7, 2014
     c(22.3, 21.8, 24.6, 23.1, 24.2, 25.8, 21.1)
-  d.sets.prov$ChngSchlAttnd08to13 =                            # NIS CIPS, 2013
+  d.sets.prov$SchlAttndChng08to13 =                  # NIS CIPS, Report 7, 2014
     d.sets.prov$SchlAttnd13 - c(27.8, 29.2, 27.8, 26.9, 30.7, 27.8, 30.7)
-  d.sets.prov$ChngSchlAttnd08to13M =                           # NIS CIPS, 2013
+  d.sets.prov$SchlAttndChng08to13M =                 # NIS CIPS, Report 7, 2014
     d.sets.prov$SchlAttnd13M - c(29.9, 31.5, 31.3, 28.5, 35.0, 29.9, 35.4)
-  d.sets.prov$ChngSchlAttnd08to13F =                           # NIS CIPS, 2013
+  d.sets.prov$SchlAttndChng08to13F =                 # NIS CIPS, Report 7, 2014
     d.sets.prov$SchlAttnd13F - c(25.8, 27.0, 24.6, 25.2, 26.9, 25.9, 26.5)
-  d.sets.prov$DiffChngSchlAttndMF08to13 =           # + value = F improved more
-    d.sets.prov$ChngSchlAttnd08to13F - d.sets.prov$ChngSchlAttnd08to13M
+  d.sets.prov$SchlAttndDiffChng08to13MF =           # + value = F improved more
+    d.sets.prov$SchlAttndChng08to13F - d.sets.prov$SchlAttndChng08to13M
+  d.sets.prov$SchlAttndPerc5dwn =                    # NIS CIPS, Report 7, 2014
+    c(24.1, 23.5, 26.6, 25.2, 27.4, 27.5, 24.4)
+  d.sets.prov$SchlAttndPerc614 =                     # NIS CIPS, Report 7, 2014
+    c(86.1, 76.0, 88.1, 81.7, 88.7, 86.0, 86.7)
+  d.sets.prov$SchlAttndPerc1519 =                    # NIS CIPS, Report 7, 2014
+    c(46.6, 40.6, 55.2, 35.8, 53.2, 47.9, 55.1)
+  d.sets.prov$SchlAttndPerc2024 =                    # NIS CIPS, Report 7, 2014
+    c(11.5, 10.3, 22.1, 7.2, 11.8, 8.2, 12.0)
+  d.sets.prov$SchlAttndPerc25up =                    # NIS CIPS, Report 7, 2014
+    c(0.2, 0.1, 0.4, 0.2, 0.3, 0.4, 0.4)
+  d.sets.prov$FertRat13 =                            # NIS CIPS, Report 1, 2013
+    c(2.0, 3.1, 2.8, 4.0, 3.3, 3.3, 3.5)
+  d.sets.prov$FertRatChng08to13 =                    # NIS CIPS, Report 1, 2013
+    d.sets.prov$FertRat13 - c(2.7, 3.3, 2.8, 3.3, 2.9, 3.2, 2.8)
+  
   
   # Save data variables to disk
   save(d.surv, d.sets.prov,
