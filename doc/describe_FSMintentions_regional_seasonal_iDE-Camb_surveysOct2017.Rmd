@@ -319,23 +319,94 @@ if (clean.raw.data != 1) {
   d.sets.prov$PopChng08to13 =                        # NIS CIPS, Report 1, 2013
     d.sets.prov$Pop13 - c(677872, 631409, 1091170, 185819, 947372, 
                           896443, 482788)
-  d.sets.prov$PopChng08to13M =                        # NIS CIPS, Report 1, 2013
+  
+  d.sets.prov$PopChng08to13M =                       # NIS CIPS, Report 2, 2013
     d.sets.prov$Pop13 - c(331715, 307724, 529433, 93646, 453082, 439982, 231578)
   d.sets.prov$PopChng08to13MPerc = 
     d.sets.prov$PopChng08to13M / d.sets.prov$PopChng08to13
-  d.sets.prov$PopChng08to13F =                        # NIS CIPS, Report 1, 2013
+  d.sets.prov$PopChng08to13F =                       # NIS CIPS, Report 2, 2013
     d.sets.prov$Pop13 - c(346157, 323685, 561737, 92173, 494290, 456461, 251210)
   d.sets.prov$PopChng08to13FPerc = 
     d.sets.prov$PopChng08to13F / d.sets.prov$PopChng08to13
-  
-  
-  
-  d.sets.prov$PopGrow08to13Perc =                              # NIS CIPS, 2013
+  d.sets.prov$PopGrow08to13Perc =                    # NIS CIPS, Report 2, 2013
     c(1.47, 1.79, 0.45, 4.39, 3.99, 0.58, 3.61)
-  d.sets.prov$PopDens13 =                                    # NIS CIPS, 2013
+  d.sets.prov$PopDens13 =                                      # NIS CIPS, 2013
     c(109, 50, 343, 38, 237, 90, 195)
-  d.sets.prov$PopDensChng08to13 =                             # NIS CIPS, 2013
+  d.sets.prov$PopDensChng08to13 =                              # NIS CIPS, 2013
     d.sets.prov$PopDens2013 - c(101, 46, 335, 30, 194, 87, 163)
+  d.sets.prov$MigrntIn =                             # NIS CIPS, Report 2, 2013
+    c(76469, 84012, 263040, 11572, 145758, 57475, 62351)
+  d.sets.prov$MigrntOut =                            # NIS CIPS, Report 2, 2013
+    c(77317, 32676, 129130, 70347, 54288, 67301, 72221)
+  d.sets.prov$MigrntNet =                            # NIS CIPS, Report 2, 2013
+    d.sets.prov$MigrntIn - d.sets.prov$MigrntOut
+  d.sets.prov$MigrntNetPercPop =                     # NIS CIPS, Report 2, 2013
+    d.sets.prov$MigrntNet / d.sets.prov$Pop13
+  
+  d.sets.prov$GndrRatio014 =                         # NIS CIPS, Report 3, 2013
+    c(107.8, 106.9, 106.3, 106.7, 112.0, 106.9, 126.1)
+  d.sets.prov$GndrRatio1564 =                        # NIS CIPS, Report 3, 2013
+    c(91.7, 89.9, 90.3, 98.3, 86.8, 90.5, 91.6)
+  d.sets.prov$GndrRatio65up =                        # NIS CIPS, Report 3, 2013
+    c(66.8, 64.7, 72.8, 88.0, 74.1, 50.9, 59.1)
+  d.sets.prov$MedAge13 =                             # NIS CIPS, Report 3, 2013
+    c(25.24, 23.49, 25.36, 22.17, 24.53, 22.67, 25.34)
+  d.sets.prov$MedAge13M =                            # NIS CIPS, Report 3, 2013
+    c(24.36, 22.42, 23.99, 21.62, 22.94, 21.66, 23.56)
+  d.sets.prov$MedAge13F =                            # NIS CIPS, Report 3, 2013
+    c(26.25, 24.52, 27.06, 22.68, 26.33, 23.64, 27.44)
+  d.sets.prov$Pop014Perc =                           # NIS CIPS, Report 3, 2013
+    c(28.49, 31.56, 26.80, 32.17, 31.01, 33.95, 27.20)
+  d.sets.prov$Pop1549Perc =                          # NIS CIPS, Report 3, 2013
+    c(53.89, 54.13, 55.89, 55.86, 53.00, 53.62, 57.22)
+  d.sets.prov$Pop5064Perc =                          # NIS CIPS, Report 3, 2013
+    c(12.68, 10.15, 11.16, 9.67, 10.49, 8.93, 10.75)
+  d.sets.prov$Pop65upPerc =                          # NIS CIPS, Report 3, 2013
+    c(4.95, 4.16, 6.14, 2.30, 5.50, 3.50, 4.83)
+  d.sets.prov$AgedChildRatio =                       # NIS CIPS, Report 3, 2013
+    c(17.36, 13.19, 22.92, 7.16, 17.75, 10.31, 17.76)
+  d.sets.prov$AgeDepRatio =                          # NIS CIPS, Report 3, 2013
+    c(50.23, 55.58, 49.13, 52.60, 57.51, 59.87, 47.13)
+  
+  d.sets.prov$MaridNevrM =                           # NIS CIPS, Report 4, 2014
+    c(33.2, 32.6, 37.3, 34.4, 29.5, 34.2, 32.0)
+  d.sets.prov$MaridNevr2024M =                       # NIS CIPS, Report 4, 2014
+    c(70.79, 71.02, 81.85, 61.32, 67.00, 69.45, 65.75)
+  d.sets.prov$MaridNevrF =                           # NIS CIPS, Report 4, 2014
+    c(26.9, 25.6, 29.4, 25.6, 24.6, 28.8, 24.5)
+  d.sets.prov$MaridNevr2024F =                       # NIS CIPS, Report 4, 2014
+    c(54.40, 40.84, 60.29, 42.70, 40.60, 49.58, 37.70)
+  d.sets.prov$MaridNevr2024DiffMF =                          # + value = F more
+    d.sets.prov$MaridNevr2024F - d.sets.prov$MaridNevr2024M
+  d.sets.prov$MaridNevr4549F =                       # NIS CIPS, Report 4, 2014
+    c(4.38, 5.26, 7.32, 0.67, 6.09, 4.37, 5.87)
+  d.sets.prov$MaridM =                               # NIS CIPS, Report 4, 2014
+    c(64.7, 65.0, 59.9, 64.2, 67.9, 63.5, 66.5)
+  d.sets.prov$MaridF =                               # NIS CIPS, Report 4, 2014
+    c(64.5, 62.5, 58.0, 66.3, 65.4, 59.5, 64.2)
+  d.sets.prov$WidwdM =                               # NIS CIPS, Report 4, 2014
+    c(1.38, 1.75, 1.72, 0.93, 1.30, 1.46, 1.03)
+  d.sets.prov$Widwd60upM =                           # NIS CIPS, Report 4, 2014
+    c(8.54, 11.17, 28.23, 7.54, 5.94, 12.54, 6.18)
+  d.sets.prov$WidwdF =                               # NIS CIPS, Report 4, 2014
+    c(6.76, 8.93, 9.31, 6.60, 7.49, 8.67, 9.14)
+  d.sets.prov$Widwd60upF =                           # NIS CIPS, Report 4, 2014
+    c(33.10, 48.92, 39.62, 32.94, 31.77, 38.33, 38.63)
+  d.sets.prov$Widwd60upDiffMF =                              # + value = F more
+    d.sets.prov$Widwd60upF - d.sets.prov$Widwd60upM
+  d.sets.prov$DvrcdSepM =                            # NIS CIPS, Report 4, 2014
+    c(0.73, 0.62, 1.06, 0.47, 1.30, 0.82, 0.43)
+  d.sets.prov$DvrcdSepF =                            # NIS CIPS, Report 4, 2014
+    c(1.80, 2.99, 3.30, 1.44, 2.50, 3.07, 2.10)
+  d.sets.prov$DvrcdSep60upF =                        # NIS CIPS, Report 4, 2014
+    c(1.07, 3.67, 1.48, 3.15, 3.11, 4.09, 2.41)
+  d.sets.prov$MeanAgeMaridM =                        # NIS CIPS, Report 4, 2014
+    c(26.2, 24.9, 26.7, 24.6, 25.1, 25.6, 24.9)
+  d.sets.prov$MeanAgeMaridF =                        # NIS CIPS, Report 4, 2014
+    c(23.5, 22.4, 23.9, 22.3, 22.6, 23.4, 22.7)
+  d.sets.prov$MeanAgeMaridDiffMF =                           # + value = F more
+    d.sets.prov$MeanAgeMaridF - d.sets.prov$MeanAgeMaridM
+  
   d.sets.prov$NatvLng_Khmer =                        # NIS CIPS, Report 7, 2014
     c(99.7, 98.8, 99.2, 99.7, 98.8, 99.7, 99.8)
   d.sets.prov$GenLitRat13 =                          # NIS CIPS, Report 7, 2014
