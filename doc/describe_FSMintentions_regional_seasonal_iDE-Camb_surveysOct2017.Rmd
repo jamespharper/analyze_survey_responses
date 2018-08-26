@@ -33,11 +33,12 @@ source(paste("C:/Users/James Harper/Documents/Github/", # Load custom functions
                "analyze_survey_responses/functions.R", sep = ""))
 load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
-    "FactoMineR", "factoextra", "lavaan", "corrplot"))
+    "FactoMineR", "factoextra", "lavaan", "corrplot", "purrr", "tidyr",
+    "ggplot2"))
 ```
 ```{r load_clean, include = FALSE}
 # Load, clean, and summarize data
-clean.raw.data = 0                                    # Clean raw data: 1 = yes
+clean.raw.data = 1                                    # Clean raw data: 1 = yes
 if (clean.raw.data != 1) {
   load(file = 
          paste("C:/Users/James Harper/Documents/Github/",
@@ -46,13 +47,14 @@ if (clean.raw.data != 1) {
                sep = ""))
 } else if (clean.raw.data == 1) {
   file_to_import = 
-    paste(getwd(),
-          "/data/raw/surveys/Customer Survey-exported30oct2017.xlsx", sep = "")
-  data = import(file_to_import)
+    paste("C:/Users/James Harper/Documents/Github/",
+          "analyze_survey_responses/data/raw/surveys/",
+          "Customer Survey-exported30oct2017.xlsx", sep = "")
+  d.surv = import(file_to_import)
 
   # Shorten variable (column) names
-  old.col.names = names(data)
-  names(data) = c("ID", "Creatr", "Date", "LBO", "Prov", "Dist", "Comm",
+  old.col.names = names(d.surv)
+  names(d.surv) = c("ID", "Creatr", "Date", "LBO", "Prov", "Dist", "Comm",
                   "Vill", "Lat", "Lng", "CLoc", "LatPur", "RLname", "RFname",
                   "RGend", "Phone", "RisC", "CLname", "CFname", "CGend",
                   "CrelR", "IDPoor", "IDPoorTyp", "M01", "M1824", "M217",
@@ -74,55 +76,55 @@ if (clean.raw.data != 1) {
                   "RecSup", "RQues", "DateSurvCreated")
   
   # Convert data formats
-  for (i in 1:length(names(data))) {
-    if (is.character(data[i][[1]])) {
-      data[i][[1]] = as.factor(data[i][[1]])
+  for (i in 1:length(names(d.surv))) {
+    if (is.character(d.surv[i][[1]])) {
+      d.surv[i][[1]] = as.factor(d.surv[i][[1]])
     }
   }
-  data$Date = as.Date(data$Date)
-  data$DateSlabPur = as.Date(data$DateSlabPur)
-  data$DateBelowGrndInst = as.Date(data$DateBelowGrndInst)
-  data$DateInstComp = as.Date(data$DateInstComp)
-  data$DateSurvCreated = as.Date(data$DateSurvCreated)
+  d.surv$Date = as.Date(d.surv$Date)
+  d.surv$DateSlabPur = as.Date(d.surv$DateSlabPur)
+  d.surv$DateBelowGrndInst = as.Date(d.surv$DateBelowGrndInst)
+  d.surv$DateInstComp = as.Date(d.surv$DateInstComp)
+  d.surv$DateSurvCreated = as.Date(d.surv$DateSurvCreated)
   
   # Remove unused variables
-  data = subset(data, select = -c(ID, Creatr, Lat, Lng, CLoc, LatPur, RLname,
+  d.surv = subset(d.surv, select = -c(ID, Creatr, Lat, Lng, CLoc, LatPur, RLname,
                                   RFname, RGend, Phone, RisC, CLname, CFname, 
                                   CGend, CrelR, RQues))
   
   # Remove data that is not applicable to this study
-  data = subset(data, Prov != "Phnom Penh")
+  d.surv = subset(d.surv, Prov != "Phnom Penh")
   
   # Remove data with low frequencies
-  data = subset(data, Prov != "Takeo" & Prov != "Kampong Cham" &
+  d.surv = subset(d.surv, Prov != "Takeo" & Prov != "Kampong Cham" &
                   Prov != "Kampong Speu")
   
   # Create Yr, Mnth, and YrMnth variables as factors
-  data$Yr = as.factor(format(as.Date(data$Date, format = "%Y-%m-%d"),"%Y"))
-  data$Mnth = as.factor(format(as.Date(data$Date, format = "%Y-%m-%d"),"%m"))
-  data$YrMnth = as.factor(paste(data$Yr, data$Mnth, sep = ""))
+  d.surv$Yr = as.factor(format(as.Date(d.surv$Date, format = "%Y-%m-%d"),"%Y"))
+  d.surv$Mnth = as.factor(format(as.Date(d.surv$Date, format = "%Y-%m-%d"),"%m"))
+  d.surv$YrMnth = as.factor(paste(d.surv$Yr, d.surv$Mnth, sep = ""))
   
   # Rename responses in variables as needed
-  levels(data$Prov) = c("Banteay Meanchey", "Kampong Cham", "Kampong Speu",
+  levels(d.surv$Prov) = c("Banteay Meanchey", "Kampong Cham", "Kampong Speu",
                         "Kampong Thom", "Kandal", "Oddar Meanchey", 
                         "Phnom Penh", "Prey Veng", "Siem Reap", "Svay Rieng",
                         "Takeo")
-  levels(data$IDPoorTyp) = c("IDP1", "IDP2", "UnkIDP", "No")
-  levels(data$LivRP) = c("No", "Pond", "Rivr", "Pond", "Rivr")
-  levels(data$VillOD) = c("Most", "None", "Some")
-  levels(data$RDefBefor) = c("Bsh/Fld", "Bsh/Fld;NA/AlwysToi", "Bsh/Fld;Othr",
+  levels(d.surv$IDPoorTyp) = c("IDP1", "IDP2", "UnkIDP", "No")
+  levels(d.surv$LivRP) = c("No", "Pond", "Rivr", "Pond", "Rivr")
+  levels(d.surv$VillOD) = c("Most", "None", "Some")
+  levels(d.surv$RDefBefor) = c("Bsh/Fld", "Bsh/Fld;NA/AlwysToi", "Bsh/Fld;Othr",
                              "NeiToi", "NeiToi;Bsh/Fld", "NeiToi;Bsh/Fld;Othr",
                              "NeiToi;NA/AlwysToi", "NeiToi;Othr", 
                              "NA/AlwysToi", "Othr", "NA/AlwysToi", "Riv/Pnd",
                              "Riv/Pnd;Bsh/Fld", "Riv/Pnd;NeiToi;Bsh/Fld",
                              "Riv/Pnd;Othr")
-  levels(data$FreqNeiToi) = c("Freq", "Freq", "Nevr", "NA/AlwysToi",
+  levels(d.surv$FreqNeiToi) = c("Freq", "Freq", "Nevr", "NA/AlwysToi",
                               "NA/AlwysToi", "Some")
-  levels(data$WhoInstLat) = c("Self/Fam", "Self/Fam", "Gov", "Friend$",
+  levels(d.surv$WhoInstLat) = c("Self/Fam", "Self/Fam", "Gov", "Friend$",
                               "Mason", "LBO", "NGO")
-  levels(data$RecSubsdy) = c("DK", "No", "Yfull", "Ypart", "Yfull", "Ypart")
-  levels(data$BorwLat) = c("Yes", "DK", "No", "Yes")
-  levels(data$IntndChng) = c("Shltr", "Shltr;Othr", "Shwr", "Shltr;Shwr",
+  levels(d.surv$RecSubsdy) = c("DK", "No", "Yfull", "Ypart", "Yfull", "Ypart")
+  levels(d.surv$BorwLat) = c("Yes", "DK", "No", "Yes")
+  levels(d.surv$IntndChng) = c("Shltr", "Shltr;Othr", "Shwr", "Shltr;Shwr",
                              "Shltr;Shwr;Othr", "Shwr;Sink", 
                              "Shltr;Shwr;Sink", "Shwr;Sink;Othr",
                              "Shwr;Othr", "WtrRes", "Shltr;WtrRes",
@@ -140,13 +142,13 @@ if (clean.raw.data != 1) {
                              "Shltr;Shwr;Sink;WtrRes;Pit", "Sink;Pit",
                              "Shltr;Sink;Pit", "Pit;Othr", "NA/AlwysToi",
                              "Othr")
-  levels(data$AdltUseLat) = c("Freq", "Freq", "DK", "Rare", "Some")
-  levels(data$ChldUseLat) = c("Freq", "NoChld", "DK/NA", "DK/NA", "Rare",
+  levels(d.surv$AdltUseLat) = c("Freq", "Freq", "DK", "Rare", "Some")
+  levels(d.surv$ChldUseLat) = c("Freq", "NoChld", "DK/NA", "DK/NA", "Rare",
                               "Some")
-  levels(data$InfLatDump) = c("Freq", "NoInf", "DK/NA", "DK/NA", "Rare",
+  levels(d.surv$InfLatDump) = c("Freq", "NoInf", "DK/NA", "DK/NA", "Rare",
                               "Some")
-  levels(data$IntndPitFull) = c("DK", "EmpSlf", "Pit", "Othr", "Pay", "Stop")
-  levels(data$Chlngs) = c("NoFlsh", "NoFlsh;Flood", "NoFlsh;Othr",
+  levels(d.surv$IntndPitFull) = c("DK", "EmpSlf", "Pit", "Othr", "Pay", "Stop")
+  levels(d.surv$Chlngs) = c("NoFlsh", "NoFlsh;Flood", "NoFlsh;Othr",
                           "NoFlsh;Ful/OvrFlw", "NoFlsh;Ful/OvrFlw;Flood",
                           "Flood", "NoWtr", "NoFlsh;NoWtr", 
                           "NoFlsh;Ful/OvrFlw;NoWtr", "NoWtr;Smels",
@@ -155,14 +157,14 @@ if (clean.raw.data != 1) {
                           "NoFlsh;Smels", "NoFlsh;Flood;Smels",
                           "NoFlsh;Ful/OvrFlw;Smels", "Flood;Smels", 
                           "Smels;Othr", "Ful/OvrFlw;Flood;Smels")
-  levels(data$Satis) = c("DK", 3, 2, 4, 1, 5)
-  levels(data$SatisSup) = c("DK", 3, 2, 4, 1, 5)
-  levels(data$WallMat) = c("Bamboo / Palm Leaves / Thatch", 
+  levels(d.surv$Satis) = c("DK", 3, 2, 4, 1, 5)
+  levels(d.surv$SatisSup) = c("DK", 3, 2, 4, 1, 5)
+  levels(d.surv$WallMat) = c("Bamboo / Palm Leaves / Thatch", 
                            "Bamboo / Palm Leaves / Thatch",
                            "Concrete / Brick", "Concrete / Brick",
                            "Galvanized steel", "No walls",
                            "Other", "Plastic Sheet", "Wood")
-  levels(data$RoofMat) = c("No roof", "Plastic Sheet", "Galvanized steel",
+  levels(d.surv$RoofMat) = c("No roof", "Plastic Sheet", "Galvanized steel",
                            "Bamboo / Palm Leaves / Thatch",
                            "Bamboo / Palm Leaves / Thatch",
                            "Concrete / Brick", "Concrete / Brick",
@@ -170,142 +172,155 @@ if (clean.raw.data != 1) {
                            "Other", "Plastic Sheet", "Tiles", "Wood")
   
   # If IDPoor is No and IDPoorType is NA, then copy IDPoor to IDPoorTyp
-  for (row in 1:length(data$IDPoor)) {
-    if (data[row,]$IDPoor == "No" & is.na(data[row,]$IDPoorTyp)) {
-      data[row,]$IDPoorTyp = data[row,]$IDPoor
+  for (row in 1:length(d.surv$IDPoor)) {
+    if (d.surv[row,]$IDPoor == "No" & is.na(d.surv[row,]$IDPoorTyp)) {
+      d.surv[row,]$IDPoorTyp = d.surv[row,]$IDPoor
     }
   }
   
   # Create new variables based on RDefBefor
-  data$RDefBefor_BshFld = ifelse(is.na(data$RDefBefor), NA,
-                                 ifelse(grepl("Bsh/Fld", data$RDefBefor,
+  d.surv$RDefBefor_BshFld = ifelse(is.na(d.surv$RDefBefor), NA,
+                                 ifelse(grepl("Bsh/Fld", d.surv$RDefBefor,
                                               fixed = TRUE), 1, 0))
-  data$RDefBefor_RivPnd = ifelse(is.na(data$RDefBefor), NA,
-                                 ifelse(grepl("Riv/Pnd", data$RDefBefor,
+  d.surv$RDefBefor_RivPnd = ifelse(is.na(d.surv$RDefBefor), NA,
+                                 ifelse(grepl("Riv/Pnd", d.surv$RDefBefor,
                                               fixed = TRUE), 1, 0))
-  data$RDefBefor_NeiToi = ifelse(is.na(data$RDefBefor), NA,
-                                 ifelse(grepl("NeiToi", data$RDefBefor,
+  d.surv$RDefBefor_NeiToi = ifelse(is.na(d.surv$RDefBefor), NA,
+                                 ifelse(grepl("NeiToi", d.surv$RDefBefor,
                                               fixed = TRUE), 1, 0))
-  data$RDefBefor_Othr = ifelse(is.na(data$RDefBefor), NA,
-                               ifelse(grepl("Othr", data$RDefBefor,
+  d.surv$RDefBefor_Othr = ifelse(is.na(d.surv$RDefBefor), NA,
+                               ifelse(grepl("Othr", d.surv$RDefBefor,
                                             fixed = TRUE), 1, 0))
-  data$RDefBefor_NAAlwysToi = ifelse(is.na(data$RDefBefor), NA,
-                                     ifelse(grepl("AlwysToi", data$RDefBefor,
+  d.surv$RDefBefor_NAAlwysToi = ifelse(is.na(d.surv$RDefBefor), NA,
+                                     ifelse(grepl("AlwysToi", d.surv$RDefBefor,
                                                   fixed = TRUE), 1, 0))
-  data$RDefBefor_BshFld = as.factor(data$RDefBefor_BshFld)
-  data$RDefBefor_RivPnd = as.factor(data$RDefBefor_RivPnd)
-  data$RDefBefor_NeiToi = as.factor(data$RDefBefor_NeiToi)
-  data$RDefBefor_Othr = as.factor(data$RDefBefor_Othr)
-  data$RDefBefor_NAAlwysToi = as.factor(data$RDefBefor_NAAlwysToi)
+  d.surv$RDefBefor_BshFld = as.factor(d.surv$RDefBefor_BshFld)
+  d.surv$RDefBefor_RivPnd = as.factor(d.surv$RDefBefor_RivPnd)
+  d.surv$RDefBefor_NeiToi = as.factor(d.surv$RDefBefor_NeiToi)
+  d.surv$RDefBefor_Othr = as.factor(d.surv$RDefBefor_Othr)
+  d.surv$RDefBefor_NAAlwysToi = as.factor(d.surv$RDefBefor_NAAlwysToi)
   
   # Create new variables based on IntndChng
-  data$IntndChng_Shltr = ifelse(is.na(data$IntndChng), NA,
-                                ifelse(grepl("Shltr", data$IntndChng,
+  d.surv$IntndChng_Shltr = ifelse(is.na(d.surv$IntndChng), NA,
+                                ifelse(grepl("Shltr", d.surv$IntndChng,
                                              fixed = TRUE), "1", "0"))
-  data$IntndChng_Shwr = ifelse(is.na(data$IntndChng), NA,
-                               ifelse(grepl("Shwr", data$IntndChng,
+  d.surv$IntndChng_Shwr = ifelse(is.na(d.surv$IntndChng), NA,
+                               ifelse(grepl("Shwr", d.surv$IntndChng,
                                             fixed = TRUE), 1, 0))
-  data$IntndChng_Sink = ifelse(is.na(data$IntndChng), NA,
-                               ifelse(grepl("Sink", data$IntndChng,
+  d.surv$IntndChng_Sink = ifelse(is.na(d.surv$IntndChng), NA,
+                               ifelse(grepl("Sink", d.surv$IntndChng,
                                             fixed = TRUE), 1, 0))
-  data$IntndChng_WtrRes = ifelse(is.na(data$IntndChng), NA,
-                                 ifelse(grepl("WtrRes", data$IntndChng,
+  d.surv$IntndChng_WtrRes = ifelse(is.na(d.surv$IntndChng), NA,
+                                 ifelse(grepl("WtrRes", d.surv$IntndChng,
                                               fixed = TRUE), 1, 0))
-  data$IntndChng_Pit = ifelse(is.na(data$IntndChng), NA,
-                              ifelse(grepl("Pit", data$IntndChng,
+  d.surv$IntndChng_Pit = ifelse(is.na(d.surv$IntndChng), NA,
+                              ifelse(grepl("Pit", d.surv$IntndChng,
                                            fixed = TRUE), 1, 0))
-  data$IntndChng_Othr = ifelse(is.na(data$IntndChng), NA,
-                               ifelse(grepl("Othr", data$IntndChng,
+  d.surv$IntndChng_Othr = ifelse(is.na(d.surv$IntndChng), NA,
+                               ifelse(grepl("Othr", d.surv$IntndChng,
                                             fixed = TRUE), 1, 0))
-  data$IntndChng_NAAlwysToi = ifelse(is.na(data$IntndChng), NA,
+  d.surv$IntndChng_NAAlwysToi = ifelse(is.na(d.surv$IntndChng), NA,
                                      ifelse(grepl("NA/AlwysToi", 
-                                                  data$IntndChng,
+                                                  d.surv$IntndChng,
                                                   fixed = TRUE), 1, 0))
-  data$IntndChng_Shltr = as.factor(data$IntndChng_Shltr)
-  data$IntndChng_Shwr = as.factor(data$IntndChng_Shwr)
-  data$IntndChng_Sink = as.factor(data$IntndChng_Sink)
-  data$IntndChng_WtrRes = as.factor(data$IntndChng_WtrRes)
-  data$IntndChng_Pit = as.factor(data$IntndChng_Pit)
-  data$IntndChng_Othr = as.factor(data$IntndChng_Othr)
-  data$IntndChng_NAAlwysToi = as.factor(data$IntndChng_NAAlwysToi)
+  d.surv$IntndChng_Shltr = as.factor(d.surv$IntndChng_Shltr)
+  d.surv$IntndChng_Shwr = as.factor(d.surv$IntndChng_Shwr)
+  d.surv$IntndChng_Sink = as.factor(d.surv$IntndChng_Sink)
+  d.surv$IntndChng_WtrRes = as.factor(d.surv$IntndChng_WtrRes)
+  d.surv$IntndChng_Pit = as.factor(d.surv$IntndChng_Pit)
+  d.surv$IntndChng_Othr = as.factor(d.surv$IntndChng_Othr)
+  d.surv$IntndChng_NAAlwysToi = as.factor(d.surv$IntndChng_NAAlwysToi)
   
   # Create new variables based on IntndPitFull
-  data$IntndPitFullDes = ifelse(is.na(data$IntndPitFull), NA,
-                                ifelse(grepl("Pit", data$IntndPitFull,
+  d.surv$IntndPitFullDes = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                ifelse(grepl("Pit", d.surv$IntndPitFull,
                                              fixed = TRUE) |
-                                         grepl("Pay", data$IntndPitFull,
+                                         grepl("Pay", d.surv$IntndPitFull,
                                                fixed = TRUE), "1", "0"))
-  data$IntndPitFullDes = as.factor(data$IntndPitFullDes)
-  data$IntndPitFullPit = ifelse(is.na(data$IntndPitFull), NA,
-                                ifelse(grepl("Pit", data$IntndPitFull,
+  d.surv$IntndPitFullDes = as.factor(d.surv$IntndPitFullDes)
+  d.surv$IntndPitFullPit = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                ifelse(grepl("Pit", d.surv$IntndPitFull,
                                              fixed = TRUE), "1", "0"))
-  data$IntndPitFullPit = as.factor(data$IntndPitFullPit)
-  data$IntndPitFullEmpSlf = ifelse(is.na(data$IntndPitFull), NA,
-                                   ifelse(grepl("EmpSlf", data$IntndPitFull,
+  d.surv$IntndPitFullPit = as.factor(d.surv$IntndPitFullPit)
+  d.surv$IntndPitFullEmpSlf = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                   ifelse(grepl("EmpSlf", d.surv$IntndPitFull,
                                                 fixed = TRUE), "1", "0"))
-  data$IntndPitFullEmpSlf = as.factor(data$IntndPitFullEmpSlf)
-  data$IntndPitFullDK = ifelse(is.na(data$IntndPitFull), NA,
-                               ifelse(grepl("DK", data$IntndPitFull,
+  d.surv$IntndPitFullEmpSlf = as.factor(d.surv$IntndPitFullEmpSlf)
+  d.surv$IntndPitFullDK = ifelse(is.na(d.surv$IntndPitFull), NA,
+                               ifelse(grepl("DK", d.surv$IntndPitFull,
                                             fixed = TRUE), "1", "0"))
-  data$IntndPitFullDK = as.factor(data$IntndPitFullDK)
-  data$IntndPitFullOthr = ifelse(is.na(data$IntndPitFull), NA,
-                                 ifelse(grepl("Othr", data$IntndPitFull,
+  d.surv$IntndPitFullDK = as.factor(d.surv$IntndPitFullDK)
+  d.surv$IntndPitFullOthr = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                 ifelse(grepl("Othr", d.surv$IntndPitFull,
                                               fixed = TRUE), "1", "0"))
-  data$IntndPitFullOthr = as.factor(data$IntndPitFullOthr)
-  data$IntndPitFullPay = ifelse(is.na(data$IntndPitFull), NA,
-                                ifelse(grepl("Pay", data$IntndPitFull,
+  d.surv$IntndPitFullOthr = as.factor(d.surv$IntndPitFullOthr)
+  d.surv$IntndPitFullPay = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                ifelse(grepl("Pay", d.surv$IntndPitFull,
                                              fixed = TRUE), "1", "0"))
-  data$IntndPitFullPay = as.factor(data$IntndPitFullPay)
-  data$IntndPitFullStop = ifelse(is.na(data$IntndPitFull), NA,
-                                 ifelse(grepl("Stop", data$IntndPitFull,
+  d.surv$IntndPitFullPay = as.factor(d.surv$IntndPitFullPay)
+  d.surv$IntndPitFullStop = ifelse(is.na(d.surv$IntndPitFull), NA,
+                                 ifelse(grepl("Stop", d.surv$IntndPitFull,
                                               fixed = TRUE), "1", "0"))
-  data$IntndPitFullStop = as.factor(data$IntndPitFullStop)
+  d.surv$IntndPitFullStop = as.factor(d.surv$IntndPitFullStop)
   
   # Create new variables based on Chlngs
-  data$ChlngsNoFlsh = ifelse(is.na(data$Chlngs), NA,
-                             ifelse(grepl("NoFlsh", data$Chlngs,
+  d.surv$ChlngsNoFlsh = ifelse(is.na(d.surv$Chlngs), NA,
+                             ifelse(grepl("NoFlsh", d.surv$Chlngs,
                                           fixed = TRUE), "1", "0"))
-  data$ChlngsNoFlsh = as.factor(data$ChlngsNoFlsh)
-  data$ChlngsFlood = ifelse(is.na(data$Chlngs), NA,
-                            ifelse(grepl("Flood", data$Chlngs,
+  d.surv$ChlngsNoFlsh = as.factor(d.surv$ChlngsNoFlsh)
+  d.surv$ChlngsFlood = ifelse(is.na(d.surv$Chlngs), NA,
+                            ifelse(grepl("Flood", d.surv$Chlngs,
                                          fixed = TRUE), "1", "0"))
-  data$ChlngsFlood = as.factor(data$ChlngsFlood)
-  data$ChlngsOthr = ifelse(is.na(data$Chlngs), NA,
-                           ifelse(grepl("Othr", data$Chlngs,
+  d.surv$ChlngsFlood = as.factor(d.surv$ChlngsFlood)
+  d.surv$ChlngsOthr = ifelse(is.na(d.surv$Chlngs), NA,
+                           ifelse(grepl("Othr", d.surv$Chlngs,
                                         fixed = TRUE), "1", "0"))
-  data$ChlngsOthr = as.factor(data$ChlngsOthr)
-  data$ChlngsFulOvrFlw = ifelse(is.na(data$Chlngs), NA,
-                                ifelse(grepl("Ful/OvrFlw", data$Chlngs,
+  d.surv$ChlngsOthr = as.factor(d.surv$ChlngsOthr)
+  d.surv$ChlngsFulOvrFlw = ifelse(is.na(d.surv$Chlngs), NA,
+                                ifelse(grepl("Ful/OvrFlw", d.surv$Chlngs,
                                              fixed = TRUE), "1", "0"))
-  data$ChlngsFulOvrFlw = as.factor(data$ChlngsFulOvrFlw)
-  data$ChlngsNoWtr = ifelse(is.na(data$Chlngs), NA,
-                            ifelse(grepl("NoWtr", data$Chlngs,
+  d.surv$ChlngsFulOvrFlw = as.factor(d.surv$ChlngsFulOvrFlw)
+  d.surv$ChlngsNoWtr = ifelse(is.na(d.surv$Chlngs), NA,
+                            ifelse(grepl("NoWtr", d.surv$Chlngs,
                                          fixed = TRUE), "1", "0"))
-  data$ChlngsNoWtr = as.factor(data$ChlngsNoWtr)
-  data$ChlngsSmels = ifelse(is.na(data$Chlngs), NA,
-                            ifelse(grepl("Smels", data$Chlngs,
+  d.surv$ChlngsNoWtr = as.factor(d.surv$ChlngsNoWtr)
+  d.surv$ChlngsSmels = ifelse(is.na(d.surv$Chlngs), NA,
+                            ifelse(grepl("Smels", d.surv$Chlngs,
                                          fixed = TRUE), "1", "0"))
-  data$ChlngsSmels = as.factor(data$ChlngsSmels)
-  data$ChlngsOK = ifelse(is.na(data$Chlngs), NA,
-                         ifelse(grepl("OK", data$Chlngs,
+  d.surv$ChlngsSmels = as.factor(d.surv$ChlngsSmels)
+  d.surv$ChlngsOK = ifelse(is.na(d.surv$Chlngs), NA,
+                         ifelse(grepl("OK", d.surv$Chlngs,
                                       fixed = TRUE), "1", "0"))
-  data$ChlngsOK = as.factor(data$ChlngsOK)
+  d.surv$ChlngsOK = as.factor(d.surv$ChlngsOK)
   
   # Create collapsed satisfaction variables for latrine and supplier
-  data$SatisColaps = recode(data$Satis, 
+  d.surv$SatisColaps = recode(d.surv$Satis, 
                             "'DK' = 'DK'; 1 = 1; 2 = 1; 3 = 2; 4 = 3; 5 = 3")
-  data$SatisSupColaps = recode(data$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
+  d.surv$SatisSupColaps = recode(d.surv$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
                                3 = 2; 4 = 3; 5 = 3")
-  data$SatisColapsMore = recode(data$Satis, "'DK' = 'DK'; 1 = 1; 2 = 1; 3 = 1;
+  d.surv$SatisColapsMore = recode(d.surv$Satis, "'DK' = 'DK'; 1 = 1; 2 = 1; 3 = 1;
                                 4 = 2; 5 = 2")
-  data$SatisSupColapsMore = recode(data$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
+  d.surv$SatisSupColapsMore = recode(d.surv$SatisSup, "'DK' = 'DK'; 1 = 1; 2 = 1; 
                                    3 = 1; 4 = 2; 5 = 2")
   
-  # Drop empty levels from data
-  data = droplevels(data)
+  # Drop empty levels from data variables
+  d.surv = droplevels(d.surv)
   
-  # Save data to disk
-  save(data,
+  # Create d.sets.prov for provincial-level data from other datasets
+  d.sets.prov = data.frame(Prov = levels(d.surv$Prov))
+  d.sets.prov$Pop13 =                                          # NIS CIPS, 2013
+    c(729569, 690414, 1115965, 231390, 1156739, 922982, 578380)
+  d.sets.prov$PopGrow08to13Perc =                              # NIS CIPS, 2013
+    c(1.47, 1.79, 0.45, 4.39, 3.99, 0.58, 3.61)
+  d.sets.prov$PopDens2013 =                                    # NIS CIPS, 2013
+    c(109, 50, 343, 38, 237, 90, 195)
+  d.sets.prov$PopDenseChng08to13 =                             # NIS CIPS, 2013
+    d.sets.prov$PopDens2013 - c(101, 46, 335, 30, 194, 87, 163)
+  d.sets.prov$NatvLng_Khmer =                                  # NIS CIPS, 2013
+    c(99.7, 98.8, 99.2, 99.7, 98.8, 99.7, 99.8)
+  
+  # Save data variables to disk
+  save(d.surv,
        file = 
          paste(getwd(),"/data/raw/surveys/",
                "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData", 
@@ -313,139 +328,160 @@ if (clean.raw.data != 1) {
 }
 ```
 ```{r summarize, include = FALSE}
-# summary(data)
-# names(data)
-# print(sapply(data, function(x) sum(is.na(x))))
-# missmap(data, main = "Missing Values in Variables", legend = F)
+# summary(d.surv)
+# names(d.surv)
+# print(sapply(d.surv, function(x) sum(is.na(x))))
+# missmap(d.surv, main = "Missing Values in Variables", legend = F)
 ```
 ```{r MCA_setup, include = FALSE}
 # Select relevant data
-# names(data)
-select = c("Prov", "IDPoor", "LivRP", "VillOD", 
-           "FreqNeiToi", "WhoInstLat", "KnwSubsdy", "RecSubsdy", "BorwLat", 
-           "SlabTil", "WallMat", "RoofMat", 
-           "AdltUseLat", "ChldUseLat", "InfLatDump", "Yr", "Mnth", 
-           "RDefBefor_BshFld", "RDefBefor_RivPnd", "RDefBefor_NeiToi",
-           "IntndPitFull", 
-           "ChlngsNoFlsh", "ChlngsFlood", "ChlngsOthr", "ChlngsFulOvrFlw", 
-           "ChlngsNoWtr", "ChlngsSmels", "ChlngsOK",
-           "SatisColapsMore", "SatisSupColapsMore", "Rec", "RecSup",
-           "M01", "M1824", "M217", "M2559", "M60", "F01", "F1824", "F217", 
-           "F2559", "F60")
-exclude = c("IntndChng_Shltr", "IntndChng_Shwr", 
-            "IntndChng_Sink", "IntndChng_WtrRes", "IntndChng_Pit",
-            "IntndChng_Othr", "IntndChng_NAAlwysToi",
-            "RDefBefor_Othr", "RDefBefor_NAAlwysToi")
-data.mca = subset(data, select = select)
-data.mca = subset(data.mca, !is.na(IntndPitFull))
+# names(d.surv)
+select = c("Prov", "Dist", "IDPoor", "LivRP", "VillOD", 
+            "FreqNeiToi", "WhoInstLat", "KnwSubsdy", "RecSubsdy", "BorwLat", 
+            "SlabTil", "WallMat", "RoofMat", 
+            "AdltUseLat", "ChldUseLat", "InfLatDump", "Yr", "Mnth", "YrMnth",
+            "RDefBefor_BshFld", "RDefBefor_RivPnd", "RDefBefor_NeiToi",
+            "IntndPitFull", 
+            "ChlngsNoFlsh", "ChlngsFlood", "ChlngsOthr", "ChlngsFulOvrFlw", 
+            "ChlngsNoWtr", "ChlngsSmels", "ChlngsOK",
+            "SatisColapsMore", "SatisSupColapsMore", "Rec", "RecSup",
+            "M01", "M1824", "M217", "M2559", "M60", "F01", "F1824", "F217", 
+            "F2559", "F60")
+other = c("IntndChng_Shltr", "IntndChng_Shwr", 
+          "IntndChng_Sink", "IntndChng_WtrRes", "IntndChng_Pit",
+          "IntndChng_Othr", "IntndChng_NAAlwysToi",
+          "RDefBefor_Othr", "RDefBefor_NAAlwysToi")
+d.surv.mca = subset(d.surv, select = select)
+d.surv.mca = subset(d.surv.mca, !is.na(IntndPitFull))
+d.surv.mca = subset(d.surv.mca, YrMnth == 201610 | YrMnth == 201611 |
+                    YrMnth == 201612 | YrMnth == 201701 |
+                    YrMnth == 201702 | YrMnth == 201703 |
+                    YrMnth == 201704 | YrMnth == 201705 |
+                    YrMnth == 201706 | YrMnth == 201707 |
+                    YrMnth == 201708 | YrMnth == 201709)
+d.surv.mca = subset(d.surv.mca, select = -c(YrMnth))
 # Summarize data, visualize missing data, and modify as needed
-# par(mfrow = c(2,2))
-# for (i in 1:length(data.mca)) {
-#   if (i %% 4 == 0) {par(mfrow = c(2,2))}
-#   plot(data.mca[,i], main = colnames(data.mca)[i],
+# par(mfrow = c(2,1))
+# for (i in 1:length(d.surv.mca)) {
+#   if (i %% 2 == 0) {par(mfrow = c(2,1))}
+#   plot(d.surv.mca[,i], main = colnames(d.surv.mca)[i],
 #        ylab = "Count", col = "steelblue", las = 2)
 # }
-levels(data.mca$Prov) = c("BM", "KT", "K", "OM", "PV", "SR", "SG")
-levels(data.mca$IDPoor) = c("NotIDPoor", "IDPoor")
-colnames(data.mca)[which(names(data.mca) == "LivRP")] = "LivWtr"
-data.mca$LivWtr = recode(data.mca$LivWtr, "'No' = 'NoLivWtr'; 
+levels(d.surv.mca$Prov) = c("BM", "KT", "K", "OM", "PV", "SR", "SG")
+levels(d.surv.mca$IDPoor) = c("NotIDPoor", "IDPoor")
+colnames(d.surv.mca)[which(names(d.surv.mca) == "LivRP")] = "LivWtr"
+d.surv.mca$LivWtr = recode(d.surv.mca$LivWtr, "'No' = 'NoLivWtr'; 
                          'Pond' = 'LivWtr'; 'Rivr' = 'LivWtr'")
-levels(data.mca$VillOD) = c("MostVillOD", "NoVillOD" ,"SomeVillOD")
-levels(data.mca$FreqNeiToi) = c("FreqNeiToi", "NoNeiToi" ,"AlwysToi",
+levels(d.surv.mca$VillOD) = c("MostVillOD", "NoVillOD" ,"SomeVillOD")
+levels(d.surv.mca$FreqNeiToi) = c("FreqNeiToi", "NoNeiToi" ,"AlwysToi",
                                 "SomeNeiToi")
-levels(data.mca$WhoInstLat) = c("Slf/FamInstLat", "GovInstLat",
+levels(d.surv.mca$WhoInstLat) = c("Slf/FamInstLat", "GovInstLat",
                                 "FrndInstLat", "MasonInstLat",
                                 "LBOInstLat", "NGOInstLat",
                                 "DKWhoInstLat")
-data.mca$WhoInstLat[is.na(data.mca$WhoInstLat)] = "DKWhoInstLat"
-levels(data.mca$KnwSubsdy) = c("KnwSubsdy", "DKSubsdy")
-levels(data.mca$RecSubsdy) = c("UnkSubsdy", "NoSubsdy", "FulSubsdy",
+d.surv.mca$WhoInstLat[is.na(d.surv.mca$WhoInstLat)] = "DKWhoInstLat"
+levels(d.surv.mca$KnwSubsdy) = c("KnwSubsdy", "DKSubsdy")
+levels(d.surv.mca$RecSubsdy) = c("UnkSubsdy", "NoSubsdy", "FulSubsdy",
                                "PrtSubsdy")
-levels(data.mca$BorwLat) = c("Borw", "NoBorw", "NoBorw", "UnkBorw")
-data.mca$BorwLat[is.na(data.mca$BorwLat)] = "UnkBorw"
-levels(data.mca$SlabTil) = c("NoSlabTil", "SlabTil", "UnkSlabTil")
-data.mca$SlabTil[is.na(data.mca$SlabTil)] = "UnkSlabTil"
-levels(data.mca$WallMat) = c("WoodWal", "MasnWal", "StelWal", "NoWal",
+levels(d.surv.mca$BorwLat) = c("Borw", "NoBorw", "NoBorw", "UnkBorw")
+d.surv.mca$BorwLat[is.na(d.surv.mca$BorwLat)] = "UnkBorw"
+levels(d.surv.mca$SlabTil) = c("NoSlabTil", "SlabTil", "UnkSlabTil")
+d.surv.mca$SlabTil[is.na(d.surv.mca$SlabTil)] = "UnkSlabTil"
+levels(d.surv.mca$WallMat) = c("WoodWal", "MasnWal", "StelWal", "NoWal",
                              "OthrWal", "PlstcWal", "WoodWal", "UnkWal")
-data.mca$WallMat[is.na(data.mca$WallMat)] = "UnkWal"
-levels(data.mca$RoofMat) = c("NoRoof", "PlstcRoof", "StelRoof", "WoodRoof",
+d.surv.mca$WallMat[is.na(d.surv.mca$WallMat)] = "UnkWal"
+levels(d.surv.mca$RoofMat) = c("NoRoof", "PlstcRoof", "StelRoof", "WoodRoof",
                              "MasnRoof", "OthrRoof", "OthrRoof", "WoodRoof",
                              "UnkRoof")
-data.mca$RoofMat[is.na(data.mca$RoofMat)] = "UnkRoof"
-levels(data.mca$AdltUseLat) = c("AdltFreqLat", "AdltDKLat", "AdltRarLat", 
+d.surv.mca$RoofMat[is.na(d.surv.mca$RoofMat)] = "UnkRoof"
+levels(d.surv.mca$AdltUseLat) = c("AdltFreqLat", "AdltDKLat", "AdltRarLat", 
                                 "AdltSomLat")
-data.mca$AdltUseLat[is.na(data.mca$AdltUseLat)] = "AdltDKLat"
-levels(data.mca$ChldUseLat) = c("ChldFreqLat", "ChldDKLat", "ChldDKLat", 
+d.surv.mca$AdltUseLat[is.na(d.surv.mca$AdltUseLat)] = "AdltDKLat"
+levels(d.surv.mca$ChldUseLat) = c("ChldFreqLat", "ChldDKLat", "ChldDKLat", 
                                 "ChldRarLat", "ChldSomLat")
-data.mca$ChldUseLat[is.na(data.mca$ChldUseLat)] = "ChldDKLat"
-levels(data.mca$InfLatDump) = c("InfFreqLat", "InfDKLat", "InfDKLat", 
+d.surv.mca$ChldUseLat[is.na(d.surv.mca$ChldUseLat)] = "ChldDKLat"
+levels(d.surv.mca$InfLatDump) = c("InfFreqLat", "InfDKLat", "InfDKLat", 
                                 "InfRarLat", "InfSomLat")
-data.mca$InfLatDump[is.na(data.mca$InfLatDump)] = "InfDKLat"
-data.mca$ODBefor = 0
-data.mca$ODBefor =
-  ifelse(data.mca$RDefBefor_BshFld == 1 | data.mca$RDefBefor_RivPnd == 1, 1, 0)
-data.mca$ODBefor = as.factor(data.mca$ODBefor)
-levels(data.mca$ODBefor) = c("NoODBefor", "ODBefor")
-levels(data.mca$RDefBefor_NeiToi) = c("NoDefBeforNeiToi", "DefBeforNeiToi")
-levels(data.mca$ChlngsNoFlsh) = c("FlshOK", "NoFlsh", "DKFlsh")
-data.mca$ChlngsNoFlsh[is.na(data.mca$ChlngsNoFlsh)] = "DKFlsh"
-levels(data.mca$ChlngsFlood) = c("NoFlood", "Flood", "DKFlood")
-data.mca$ChlngsFlood[is.na(data.mca$ChlngsFlood)] = "DKFlood"
-levels(data.mca$ChlngsOthr) = c("NoOthrChlngs", "OthrChlngs", "DKOthrChlngs")
-data.mca$ChlngsOthr[is.na(data.mca$ChlngsOthr)] = "DKOthrChlngs"
-levels(data.mca$ChlngsFulOvrFlw) = c("NoFulOvrflw", "FulOvrflw", "DKFulOvrflw")
-data.mca$ChlngsFulOvrFlw[is.na(data.mca$ChlngsFulOvrFlw)] = "DKFulOvrflw"
-levels(data.mca$ChlngsNoWtr) = c("WtrOK", "NoWtr", "DKWtr")
-data.mca$ChlngsNoWtr[is.na(data.mca$ChlngsNoWtr)] = "DKWtr"
-levels(data.mca$ChlngsSmels) = c("NoSmel", "Smel", "DKSmel")
-data.mca$ChlngsSmels[is.na(data.mca$ChlngsSmels)] = "DKSmel"
-levels(data.mca$ChlngsOK) = c("Chlngs", "NoChlngs", "DKChlngs")
-data.mca$ChlngsOK[is.na(data.mca$ChlngsOK)] = "DKChlngs"
-colnames(data.mca)[which(names(data.mca) == "SatisColapsMore")] = "Satis"
-levels(data.mca$Satis) = c("UnsatLat", "SatLat", "DKSatLat")
-data.mca$Satis[is.na(data.mca$Satis)] = "DKSatLat"
-colnames(data.mca)[which(names(data.mca) == "SatisSupColapsMore")] = "SatisSup"
-levels(data.mca$SatisSup) = c("UnsatSup", "SatSup", "DKSatSup")
-data.mca$SatisSup[is.na(data.mca$SatisSup)] = "DKSatSup"
-levels(data.mca$Rec) = c("NoRecLat", "RecLat", "DKRecLat")
-data.mca$Rec[is.na(data.mca$Rec)] = "DKRecLat"
-levels(data.mca$RecSup) = c("NoRecSup", "RecSup")
-data.mca = subset(data.mca, WhoInstLat != "GovInstLat")
-data.mca = subset(data.mca, !is.na(KnwSubsdy))
-data.mca = subset(data.mca, Yr != 2014)
-data.mca = subset(data.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
-data.mca = subset(data.mca, !is.na(RecSup))
-data.mca = subset(data.mca, ChlngsOK != "DKChlngs")
-data.mca = subset(data.mca, SlabTil != "UnkSlabTil")
-data.mca = subset(data.mca, RoofMat != "UnkRoof")
-data.mca = subset(data.mca, AdltUseLat != "AdltDKLat")
-data.mca = subset(data.mca, Rec != "DKRecLat")
-data.mca = subset(data.mca, BorwLat != "UnkBorw")
-data.mca$F217[is.na(data.mca$F217)] = 
-  mean(data.mca$F217[!is.na(data.mca$F217)])
-data.mca$M1824[is.na(data.mca$M1824)] = 
-  mean(data.mca$M1824[!is.na(data.mca$M1824)])
-data.mca = droplevels(data.mca)
-# summary(data.mca, maxsum = 12)
-# print(sapply(data.mca, function(x) sum(is.na(x))))
+d.surv.mca$InfLatDump[is.na(d.surv.mca$InfLatDump)] = "InfDKLat"
+d.surv.mca$ODBefor = 0
+d.surv.mca$ODBefor =
+  ifelse(d.surv.mca$RDefBefor_BshFld == 1 | d.surv.mca$RDefBefor_RivPnd == 1, 1, 0)
+d.surv.mca$ODBefor = as.factor(d.surv.mca$ODBefor)
+levels(d.surv.mca$ODBefor) = c("NoODBefor", "ODBefor")
+levels(d.surv.mca$RDefBefor_NeiToi) = c("NoDefBeforNeiToi", "DefBeforNeiToi")
+levels(d.surv.mca$ChlngsNoFlsh) = c("FlshOK", "NoFlsh", "DKFlsh")
+d.surv.mca$ChlngsNoFlsh[is.na(d.surv.mca$ChlngsNoFlsh)] = "DKFlsh"
+levels(d.surv.mca$ChlngsFlood) = c("NoFlood", "Flood", "DKFlood")
+d.surv.mca$ChlngsFlood[is.na(d.surv.mca$ChlngsFlood)] = "DKFlood"
+levels(d.surv.mca$ChlngsOthr) = c("NoOthrChlngs", "OthrChlngs", "DKOthrChlngs")
+d.surv.mca$ChlngsOthr[is.na(d.surv.mca$ChlngsOthr)] = "DKOthrChlngs"
+levels(d.surv.mca$ChlngsFulOvrFlw) = c("NoFulOvrflw", "FulOvrflw", "DKFulOvrflw")
+d.surv.mca$ChlngsFulOvrFlw[is.na(d.surv.mca$ChlngsFulOvrFlw)] = "DKFulOvrflw"
+levels(d.surv.mca$ChlngsNoWtr) = c("WtrOK", "NoWtr", "DKWtr")
+d.surv.mca$ChlngsNoWtr[is.na(d.surv.mca$ChlngsNoWtr)] = "DKWtr"
+levels(d.surv.mca$ChlngsSmels) = c("NoSmel", "Smel", "DKSmel")
+d.surv.mca$ChlngsSmels[is.na(d.surv.mca$ChlngsSmels)] = "DKSmel"
+levels(d.surv.mca$ChlngsOK) = c("Chlngs", "NoChlngs", "DKChlngs")
+d.surv.mca$ChlngsOK[is.na(d.surv.mca$ChlngsOK)] = "DKChlngs"
+colnames(d.surv.mca)[which(names(d.surv.mca) == "SatisColapsMore")] = "Satis"
+levels(d.surv.mca$Satis) = c("UnsatLat", "SatLat", "DKSatLat")
+d.surv.mca$Satis[is.na(d.surv.mca$Satis)] = "DKSatLat"
+colnames(d.surv.mca)[which(names(d.surv.mca) == "SatisSupColapsMore")] = "SatisSup"
+levels(d.surv.mca$SatisSup) = c("UnsatSup", "SatSup", "DKSatSup")
+d.surv.mca$SatisSup[is.na(d.surv.mca$SatisSup)] = "DKSatSup"
+levels(d.surv.mca$Rec) = c("NoRecLat", "RecLat", "DKRecLat")
+d.surv.mca$Rec[is.na(d.surv.mca$Rec)] = "DKRecLat"
+levels(d.surv.mca$RecSup) = c("NoRecSup", "RecSup")
+d.surv.mca = subset(d.surv.mca, WhoInstLat != "GovInstLat")
+d.surv.mca = subset(d.surv.mca, !is.na(KnwSubsdy))
+d.surv.mca = subset(d.surv.mca, Yr != 2014)
+d.surv.mca = subset(d.surv.mca, select = -c(RDefBefor_BshFld, RDefBefor_RivPnd))
+d.surv.mca = subset(d.surv.mca, !is.na(RecSup))
+d.surv.mca = subset(d.surv.mca, ChlngsOK != "DKChlngs")
+d.surv.mca = subset(d.surv.mca, SlabTil != "UnkSlabTil")
+d.surv.mca = subset(d.surv.mca, RoofMat != "UnkRoof")
+d.surv.mca = subset(d.surv.mca, AdltUseLat != "AdltDKLat")
+d.surv.mca = subset(d.surv.mca, Rec != "DKRecLat")
+d.surv.mca = subset(d.surv.mca, BorwLat != "UnkBorw")
+d.surv.mca$F217[is.na(d.surv.mca$F217)] = 
+  mean(d.surv.mca$F217[!is.na(d.surv.mca$F217)])
+d.surv.mca$M1824[is.na(d.surv.mca$M1824)] = 
+  mean(d.surv.mca$M1824[!is.na(d.surv.mca$M1824)])
+d.surv.mca = droplevels(d.surv.mca)
+# summary(d.surv.mca, maxsum = 12)
+# print(sapply(d.surv.mca, function(x) sum(is.na(x))))
 ```
 ```{r MCA_analyze, include = FALSE}
-# varTable(data.mca)
-quali.sup = c(1, 16:17)
-quanti.sup = c(31:40)
-res.mca = MCA(data.mca, quanti.sup = quanti.sup, quali.sup = quali.sup,
+varTable(d.surv.mca)
+quali.sup1 = c(1:2, 17:18)
+quanti.sup1 = c(32:41)
+quali.sup2 = c(2, 4:16, 19, 21, 23:27, 30)
+quanti.sup2 = c(32:41)
+res.mca = MCA(d.surv.mca, quanti.sup = quanti.sup1, quali.sup = quali.sup1,
               na.method = "NA", graph = FALSE)
 ```
 
-The data analyzed with multiple correspondence analysis is first summarized by frequency using bar charts of each variable.
+The data analyzed with multiple correspondence analysis were first summarized by frequency using bar charts of each variable.
 
-```{r MCA_summarize, echo = FALSE}
-par(mfrow = c(3,1))
-for (i in 1:length(data.mca)) {
-  if (i %% 3 == 0) {par(mfrow = c(3,1))}
-  plot(data.mca[,i], main = colnames(data.mca)[i],
+```{r MCA_summarize, echo = FALSE, fig.height = 2.5, fig.align = "center"}
+par(mfrow = c(1,3), mar = c(6.5,4,3,1))
+for (i in 1:length(d.surv.mca)) {
+  plot(d.surv.mca[,i], main = colnames(d.surv.mca)[i],
        ylab = "Count", col = "steelblue", las = 2)
 }
+
+# plot(d.surv.mca[,1], main = colnames(d.surv.mca)[1],
+#        ylab = "Count", col = "steelblue", las = 2)
+# plot(d.surv.mca[,2], main = colnames(d.surv.mca)[2],
+#        ylab = "Count", col = "steelblue", las = 2)
+# plot(d.surv.mca[,3], main = colnames(d.surv.mca)[3],
+#        ylab = "Count", col = "steelblue", las = 2)
+
+# d.surv.mca %>%
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#     facet_wrap(~ key, scales = "free") +
+#     geom_bar()
 ```
 
 The eigenvalues of the first six dimensions are shown below and describe the proportion of variances retained by each dimension.  A scree plot shows the percentages of inertia explained by each MCA dimension.
@@ -562,7 +598,7 @@ fviz_mca_var(res.mca, alpha.var = "contrib",
 <!-- #              ggtheme = theme_minimal()) -->
 <!-- fviz_mca_ind(res.mca, -->
 <!--              label = "none", # hide individual labels -->
-<!--              habillage = data.mca$Prov, # color by groups -->
+<!--              habillage = d.surv.mca$Prov, # color by groups -->
 <!--              # palette = c("#00AFBB", "#E7B800"), -->
 <!--              addEllipses = TRUE, ellipse.type = "confidence", -->
 <!--              ggtheme = theme_minimal()) -->
