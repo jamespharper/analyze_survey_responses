@@ -319,6 +319,7 @@ if (clean.raw.data != 1) {
   d.sets.prov$PopChng08to13 =                        # NIS CIPS, Report 1, 2013
     d.sets.prov$Pop13 - c(677872, 631409, 1091170, 185819, 947372, 
                           896443, 482788)
+  d.sets.prov$PopChng08to13Perc = d.sets.prov$PopChng08to13 / d.sets.prov$Pop13
   
   d.sets.prov$PopChng08to13M =                       # NIS CIPS, Report 2, 2013
     d.sets.prov$Pop13 - c(331715, 307724, 529433, 93646, 453082, 439982, 231578)
@@ -582,6 +583,67 @@ if (clean.raw.data != 1) {
     c(78.5, 65.5, 86.8, 73.9, 55.7, 67.2, 65.4)
   d.sets.prov$BldngsPermRoofwallFlorPerc =           # NIS CIPS, Report 9, 2014
     c(27.3, 11.2, 28.4, 18.1, 5.6, 24.3, 13.7)
+  d.sets.prov$HshldsAvgNumPpl =                      # NIS CIPS, Report 9, 2014
+    c(4.52, 4.62, 4.68, 4.60, 4.52, 4.87, 4.42)
+  d.sets.prov$HshldsAvgNumPplPerRoom =               # NIS CIPS, Report 9, 2014
+    c(3.38, 3.49, 3.28, 3.40, 3.44, 3.55, 2.90)
+  d.sets.prov$HshldsLightElecPerc =                  # NIS CIPS, Report 9, 2014
+    c(52.5, 22.9, 79.6, 26.3, 18.0, 46.2, 36.7)
+  d.sets.prov$HshldsLightKeroPerc =                  # NIS CIPS, Report 9, 2014
+    c(14.1, 27.8, 3.4, 16.9, 11.5, 32.4, 6.5)
+  d.sets.prov$HshldsLightBattPerc =                  # NIS CIPS, Report 9, 2014
+    c(27.5, 47.8, 14.8, 51.7, 69.3, 20.7, 55.9)
+  d.sets.prov$HshldsCookFuelWoodPerc =               # NIS CIPS, Report 9, 2014
+    c(66.8, 92.8, 85.1, 68.7, 96.2, 80.4, 91.9)
+  d.sets.prov$HshldsCookFuelCharPerc =               # NIS CIPS, Report 9, 2014
+    c(25.0, 5.2, 3.8, 27.2, 0.9, 12.1, 0.7)
+  d.sets.prov$HshldsCookFuelLPGPerc =                # NIS CIPS, Report 9, 2014
+    c(4.2, 1.4, 10.2, 2.5, 2.7, 6.4, 7.1)
+  d.sets.prov$HshldsDrnkWtrPipedPerc =               # NIS CIPS, Report 9, 2014
+    c(10.7, 6.9, 35.3, 2.2, 7.0, 1.5, 5.8)
+  d.sets.prov$HshldsDrnkWtrTubPipWelPerc =           # NIS CIPS, Report 9, 2014
+    c(9.7, 18.1, 10.9, 20.7, 70.1, 46.2, 91.2)
+  d.sets.prov$HshldsDrnkWtrProtDugWelPerc =          # NIS CIPS, Report 9, 2014
+    c(1.6, 13.9, 5.4, 7.4, 2.5, 8.5, 0.4)
+  d.sets.prov$HshldsDrnkWtrUnprotDugWelPerc =        # NIS CIPS, Report 9, 2014
+    c(7.2, 47.7, 4.2, 9.5, 1.4, 36.1, 0.3)
+  d.sets.prov$HshldsDrnkWtrRainPerc =                # NIS CIPS, Report 9, 2014
+    c(7.2, 0.4, 0.4, 0.9, 0.1, 0.1, 0.1)
+  d.sets.prov$HshldsDrnkWtrSprngRivrPerc =           # NIS CIPS, Report 9, 2014
+    c(46.6, 8.2, 20.8, 35.6, 14.2, 4.9, 1.7)
+  d.sets.prov$HshldsDrnkWtrPurchsdPerc =             # NIS CIPS, Report 9, 2014
+    c(15.5, 3.1, 21.3, 19.3, 0.7, 1.5, 0.0)
+  d.sets.prov$HshldsDrnkWtrOthrPerc =                # NIS CIPS, Report 9, 2014
+    c(1.4, 1.7, 1.8, 4.4, 4.1, 1.4, 0.5)
+  d.sets.prov$HshldsDrnkWtrOnSitePerc =              # NIS CIPS, Report 9, 2014
+    c(32.5, 35.3, 38.2, 13.5, 54.8, 46.3, 75.1)
+  d.sets.prov$HshldsDrnkWtrNearPerc =                # NIS CIPS, Report 9, 2014
+    c(29.8, 39.1, 35.8, 24.6, 30.5, 26.4, 19.3)
+  d.sets.prov$HshldsDrnkWtrAwayPerc =                # NIS CIPS, Report 9, 2014
+    c(37.7, 25.7, 26.0, 61.8, 14.7, 27.3, 5.6)
+  d.sets.prov$HshldsToi13Perc =                      # NIS CIPS, Report 9, 2014
+    c(55.9, 37.7, 58.2, 34.8, 34.6, 37.5, 46.1)
+  d.sets.prov$HshldsToiChng08to13Perc =              # NIS CIPS, Report 9, 2014
+    d.sets.prov$HshldsToi13Perc - c(35.0, 27.8, 45.8, 21.4, 16.8, 27.1, 21.3)
+  d.sets.prov$HshldsToiSewer13Perc =                 # NIS CIPS, Report 9, 2014
+    c(31.2, 11.3, 17.1, 20.0, 3.7, 13.0, 20.3)
+  d.sets.prov$HshldsToiSeptc13Perc =                 # NIS CIPS, Report 9, 2014
+    c(22.3, 19.8, 40.2, 14.1, 25.4, 24.2, 21.2)
+  d.sets.prov$HshldsToiLatrn13Perc =                 # NIS CIPS, Report 9, 2014
+    c(2.4, 5.3, 0.9, 0.4, 3.5, 0.2, 4.5)
+  d.sets.prov$HshldsImprvdWtr =                      # NIS CIPS, Report 9, 2014
+    c(29.3, 39.3, 51.9, 31.2, 79.6, 56.2, 97.4)
+  d.sets.prov$HshldsImprvdToi =                      # NIS CIPS, Report 9, 2014
+    c(55.9, 37.7, 58.2, 34.8, 34.6, 37.5, 46.1)
+  d.sets.prov$HshldsElec =                           # NIS CIPS, Report 9, 2014
+    c(57.1, 23.6, 81.4, 30.2, 18.4, 46.5, 37.3)
+  d.sets.prov$HshldsImprvdWtrToiElec =               # NIS CIPS, Report 9, 2014
+    c(14.8, 9.2, 33.0, 6.0, 8.3, 24.2, 24.1)
+  
+  d.sets.prov$PopAnulGrowRate =                     # NIS CIPS, Report 10, 2014
+    c()
+  
+  
   
   d.sets.prov$IDPoorPopPerc =                              # IDPoor Atlas, 2012
     c(0.26, NA, 0.21, 0.30, 0.27, 0.31, 0.21)
