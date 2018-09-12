@@ -34,7 +34,7 @@ source(paste("C:/Users/James Harper/Documents/Github/", # Load custom functions
 load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
     "FactoMineR", "factoextra", "lavaan", "corrplot", "purrr", "tidyr",
-    "ggplot2"))
+    "ggplot2", "ltm"))
 ```
 ```{r load_clean, include = FALSE}
 # Load, clean, and summarize data
@@ -334,7 +334,7 @@ if (clean.raw.data != 1) {
   d.sets.prov$PopDens13 =                                      # NIS CIPS, 2013
     c(109, 50, 343, 38, 237, 90, 195)
   d.sets.prov$PopDensChng08to13 =                              # NIS CIPS, 2013
-    d.sets.prov$PopDens2013 - c(101, 46, 335, 30, 194, 87, 163)
+    d.sets.prov$PopDens13 - c(101, 46, 335, 30, 194, 87, 163)
   d.sets.prov$MigrntIn =                             # NIS CIPS, Report 2, 2013
     c(76469, 84012, 263040, 11572, 145758, 57475, 62351)
   d.sets.prov$MigrntOut =                            # NIS CIPS, Report 2, 2013
@@ -408,19 +408,19 @@ if (clean.raw.data != 1) {
   d.sets.prov$MeanAgeMaridDiffMF =                           # + value = F more
     d.sets.prov$MeanAgeMaridF - d.sets.prov$MeanAgeMaridM
   
-  d.set.prov$DisabPerc =                             # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabPerc =                             # NIS CIPS, Report 5, 2013
     c(1.90, 3.36, 1.60, 3.54, 2.19, 2.43, 1.88)
-  d.set.prov$DisabMPerc =                            # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabMPerc =                            # NIS CIPS, Report 5, 2013
     c(1.98, 3.56, 1.54, 4.43, 2.03, 2.86, 2.45)
-  d.set.prov$DisabFPerc =                            # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabFPerc =                            # NIS CIPS, Report 5, 2013
     c(1.83, 3.17, 1.65, 2.34, 2.03, 1.32, 2.65)
-  d.set.prov$DisabMedAge =                           # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabMedAge =                           # NIS CIPS, Report 5, 2013
     c(43.91, 48.52, 45.77, 47.65, 46.00, 37.93, 46.40)
-  d.set.prov$DisabMedAgeM =                          # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabMedAgeM =                          # NIS CIPS, Report 5, 2013
     c(47.84, 39.58, 35.99, 47.92, 40.40, 39.69, 45.02)
-  d.set.prov$DisabMedAgeF =                          # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabMedAgeF =                          # NIS CIPS, Report 5, 2013
     c(39.56, 53.06, 47.90, 46.36, 51.64, 32.77, 48.97)
-  d.set.prov$DisabEconAct1564Perc =                  # NIS CIPS, Report 5, 2013
+  d.sets.prov$DisabEconAct1564Perc =                  # NIS CIPS, Report 5, 2013
     c(79.4, 73.1, 75.0, 85.6, 63.7, 59.1, 65.9)
   
   d.sets.prov$NatvLng_Khmer =                        # NIS CIPS, Report 7, 2014
@@ -640,13 +640,16 @@ if (clean.raw.data != 1) {
   d.sets.prov$HshldsImprvdWtrToiElec =               # NIS CIPS, Report 9, 2014
     c(14.8, 9.2, 33.0, 6.0, 8.3, 24.2, 24.1)
   
-  d.sets.prov$PopAnulGrowRate =                     # NIS CIPS, Report 10, 2014
-    c() # Start at p. 29
+  # d.sets.prov$PopAnulGrowRate =                     # NIS CIPS, Report 10, 2014
+    # c() # Start at p. 29
   
   
   
   d.sets.prov$IDPoorPopPerc =                              # IDPoor Atlas, 2012
     c(0.26, NA, 0.21, 0.30, 0.27, 0.31, 0.21)
+  
+  d.sets.prov$LatCovPerc =                               # iDE, 2016 ?????
+    c(57, 46, 69, 35, 53, 48, 65)
   
   # Save data variables to disk
   save(d.surv, d.sets.prov,
@@ -655,6 +658,20 @@ if (clean.raw.data != 1) {
                "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData", 
                sep = ""))
 }
+
+# Combine d.surv and d.sets.prov into d
+d = d.surv
+d[names(d.sets.prov)[2:length(names(d.sets.prov))]] = NA
+for (i in 2:length(d.sets.prov)) {
+  print(names(d.sets.prov)[i])
+  for (j in 1:length(d$Prov)) {
+    d[length(d.surv) + i - 1][j, 1] = d.sets.prov[[i]][d$Prov[j] == d.sets.prov$Prov]
+  }
+}
+# head(data.frame(d$Prov, d$Pop13, d$Pop13M, d$Pop13MPerc), n = 10)
+# head(d.sets.prov[1:4], n = 7)
+# names(d)
+# varTable(d[158:length(d)])
 ```
 ```{r summarize, include = FALSE}
 # summary(d.surv)
@@ -909,7 +926,68 @@ fviz_mca_var(res.mca, alpha.var = "contrib",
              ggtheme = theme_minimal())
 ```
 
+## Point-Biserial Correlations between Census Data and FSM Intentions
+```{r point-biserial1, include = FALSE}
+A = d$MigrntNetPercPop
+B = d$IntndPitFullDes
+biserial.cor(A, B, use = "complete.obs")
+# aov(IntndPitFullDes ~ MigrntNetPercPop, data = data.frame(A, B))
+```
 
+# By rainfall
+summary(as.factor(data$Rain.mm))
+length(data$Rain.mm)
+# missmap(data[45], main = "Missing values vs observed", legend = F)
+biserial.cor(data$Rain.mm, data$IntndPitFullDes, use = "complete.obs")
+ggplot(data = data, aes(x = as.numeric(Mnth), y = Rain.mm, colour = Prov)) +
+  geom_line(aes(colour = Prov), size = 1.5) +
+  theme_minimal() +
+  labs(x = "Month", y = "Rainfall (mm)", colour = "Provinces") +
+  scale_x_continuous(breaks = c(1:12)) +
+  coord_cartesian(xlim = c(1, 12), ylim = c(0, max(data$Rain.mm) + 30))
+data.sub = subset(data, select = c(Rain.mm, IntndPitFullDes))
+model = glm(formula = IntndPitFullDes ~ Rain.mm,
+            data = data.sub,
+            family = binomial(link = "logit"),
+            na.action = na.omit)
+plot(data.sub$IntndPitFullDes, data.sub$Rain.mm)
+biserial.cor(data.sub$Rain.mm, data.sub$IntndPitFullDes, use = "complete.obs")
+anova(model, test = "Chisq")
+summary(data.sub)
+plot(data$IntndPitFullDes, data$Rain.mm)
+df = data.frame(Prov = factor(), PtBisCor = double(), P = double())
+levels(df$Prov) = unique(data$Prov)
+# for (i in 1:1) {
+for (i in 1:length(unique(data$Prov))) {
+  data.sub = subset(data, Prov == unique(data$Prov)[i],
+                    select = c(Rain.mm, IntndPitFullDes))
+  model = glm(formula = IntndPitFullDes ~ Rain.mm,
+              data = data.sub,
+              family = binomial(link = "logit"),
+              na.action = na.omit)
+  plot(data.sub$IntndPitFullDes, data.sub$Rain.mm, main = unique(data$Prov)[i])
+  prov = unique(data$Prov)[i]
+  ptbiscor = biserial.cor(data.sub$Rain.mm, data.sub$IntndPitFullDes, 
+                          use = "complete.obs")
+  p = anova(model, test = "Chisq")$`Pr(>Chi)`[2]
+  df = rbind(df, data.frame(Prov = prov, PtBisCor = ptbiscor, P = p))
+}
+df
+summary(data$Prov)
+mean(df$P[!is.na(df$P)])
+
+# With latrine coverage
+provs = c("OddM", "BanM", "SieR", "KamT", "KanL", "PreV", "SvaG")
+perc_des_by_prov = c(67, 76, 33, 54, 71, 48, 56)
+perc_latcov_by_prov_2016 = c(35, 57, 48, 46, 69, 53, 65)
+data.sub = data.frame(Des = perc_des_by_prov, LatCov = perc_latcov_by_prov_2016)
+p.mat = cor.mtest(data.sub)
+print(p.mat)
+cor(data.sub)
+corrplot(cor(data.sub), method = "pie", type = "lower", order = "original",
+         diag = FALSE, p.mat = p.mat, sig.level = 0.05, 
+         addCoef.col = "black", tl.col = "black", tl.srt = 45,
+         family = "serif", number.font = 1)
 
 
              
