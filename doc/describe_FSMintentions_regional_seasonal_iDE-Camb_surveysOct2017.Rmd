@@ -38,7 +38,7 @@ load_libraries(                                      # Install & load libraries
 ```
 ```{r load_clean, include = FALSE}
 # Load, clean, and summarize data
-clean.raw.data = 1                                    # Clean raw data: 1 = yes
+clean.raw.data = 0                                    # Clean raw data: 1 = yes
 if (clean.raw.data != 1) {
   load(file = 
          paste("C:/Users/James Harper/Documents/Github/",
@@ -655,27 +655,172 @@ if (clean.raw.data != 1) {
   d.sets.prov$LatCovPerc =                               # iDE, 2016 ?????
     c(57, 46, 69, 35, 53, 48, 65)
   
+  # Load raw IDPoor data
+  file_to_import = 
+    paste("C:/Users/James Harper/Documents/Github/",
+          "analyze_survey_responses/data/raw/idpoor/",
+          "IDPoor_2015_districts.xlsx", sep = "")
+  d.idpoor_dist = import(file_to_import)
+  
+  file_to_import = 
+    paste("C:/Users/James Harper/Documents/Github/",
+          "analyze_survey_responses/data/raw/idpoor/",
+          "IDPoor_2015_communes.xlsx", sep = "")
+  d.idpoor_comm = import(file_to_import)
+  
+  file_to_import = 
+    paste("C:/Users/James Harper/Documents/Github/",
+          "analyze_survey_responses/data/raw/idpoor/",
+          "IDPoor_2015_villages.xlsx", sep = "")
+  d.idpoor_vill = import(file_to_import)
+  
+  # Clean d.idpoor_dist
+  names(d.idpoor_dist) = c("GeoCode", "Prov", "Dist", "IDPoor1HHnum", 
+                           "IDPoor2HHnum", "IDPoor1HHperc", 
+                           "IDPoor2HHperc", "IDPoorHHperc", "IDPoorHHnum")
+  d.idpoor_dist = subset(d.idpoor_dist, select = -c(GeoCode, IDPoor1HHnum,
+                                                    IDPoor2HHnum, IDPoorHHnum))
+  d.idpoor_dist$Prov = as.factor(d.idpoor_dist$Prov)
+  d.idpoor_dist$Dist = as.factor(d.idpoor_dist$Dist)
+  d.idpoor_dist$IDPoor1HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_dist$IDPoor1HHperc)))
+  d.idpoor_dist$IDPoor2HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_dist$IDPoor2HHperc)))
+  d.idpoor_dist$IDPoorHHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_dist$IDPoorHHperc)))
+  d.idpoor_dist = subset(d.idpoor_dist, !is.na(Prov))
+  
+  # Clean d.idpoor_comm
+  summary(d.idpoor_comm)
+  names(d.idpoor_comm) = c("GeoCode", "Prov", "Dist", "Comm", "IDPoor1HHnum", 
+                           "IDPoor2HHnum", "IDPoor1HHperc", 
+                           "IDPoor2HHperc", "IDPoorHHperc", "IDPoorHHnum")
+  d.idpoor_comm = subset(d.idpoor_comm, select = -c(GeoCode, IDPoor1HHnum,
+                                                    IDPoor2HHnum, IDPoorHHnum))
+  d.idpoor_comm$Prov = as.factor(d.idpoor_comm$Prov)
+  d.idpoor_comm$Dist = as.factor(d.idpoor_comm$Dist)
+  d.idpoor_comm$Comm = as.factor(d.idpoor_comm$Comm)
+  d.idpoor_comm$IDPoor1HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_comm$IDPoor1HHperc)))
+  d.idpoor_comm$IDPoor2HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_comm$IDPoor2HHperc)))
+  d.idpoor_comm$IDPoorHHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_comm$IDPoorHHperc)))
+  d.idpoor_comm = subset(d.idpoor_comm, !is.na(Prov))
+  
+  # Clean d.idpoor_vill
+  summary(d.idpoor_vill)
+  names(d.idpoor_vill) = c("GeoCode", "Prov", "Dist", "Comm", "Vill",
+                           "IDPoor1HHnum", "IDPoor2HHnum", "IDPoor1HHperc", 
+                           "IDPoor2HHperc", "IDPoorHHperc", "IDPoorHHnum")
+  d.idpoor_vill = subset(d.idpoor_vill, select = -c(GeoCode, IDPoor1HHnum,
+                                                    IDPoor2HHnum, IDPoorHHnum))
+  d.idpoor_vill$Prov = as.factor(d.idpoor_vill$Prov)
+  d.idpoor_vill$Dist = as.factor(d.idpoor_vill$Dist)
+  d.idpoor_vill$Comm = as.factor(d.idpoor_vill$Comm)
+  d.idpoor_vill$Vill = as.factor(d.idpoor_vill$Vill)
+  d.idpoor_vill$IDPoor1HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_vill$IDPoor1HHperc)))
+  d.idpoor_vill$IDPoor2HHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_vill$IDPoor2HHperc)))
+  d.idpoor_vill$IDPoorHHperc = 
+    as.numeric(as.character(gsub("[^0-9.]", "", d.idpoor_vill$IDPoorHHperc)))
+  d.idpoor_vill = subset(d.idpoor_vill, !is.na(Prov))
+  
+  # Combine d.surv and d.sets.prov into d
+  d = d.surv
+  d[names(d.sets.prov)[2:length(names(d.sets.prov))]] = NA
+  for (i in 2:length(d.sets.prov)) {
+    # print(names(d.sets.prov)[i])
+    for (j in 1:length(d$Prov)) {
+      d[length(d.surv) + i - 1][j, 1] = d.sets.prov[[i]][d$Prov[j] == d.sets.prov$Prov]
+    }
+  }
+  # head(data.frame(d$Prov, d$Pop13, d$Pop13M, d$Pop13MPerc), n = 10)
+  # head(d.sets.prov[1:4], n = 7)
+  # names(d)
+  # varTable(d[158:length(d)])
+  
+  # Combine d and d.idpoor_dist
+  new_cols = c("IDPoor1HHpercDist", "IDPoor2HHpercDist", "IDPoorHHpercDist")
+  names(d)
+  d[new_cols] = NA
+  for (j in 1:length(d$Prov)) {
+    if (any(as.character(d$Prov[j]) == as.character(d.idpoor_dist$Prov) &
+            as.character(d$Dist[j]) == as.character(d.idpoor_dist$Dist))) {
+      d$IDPoor1HHpercDist[j] = d.idpoor_dist$IDPoor1HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_dist$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_dist$Dist)]
+      d$IDPoor2HHpercDist[j] = d.idpoor_dist$IDPoor2HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_dist$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_dist$Dist)]
+      d$IDPoorHHpercDist[j] = d.idpoor_dist$IDPoorHHperc[as.character(d$Prov[j]) == as.character(d.idpoor_dist$Prov) &
+                                                           as.character(d$Dist[j]) == as.character(d.idpoor_dist$Dist)]
+    } 
+  }
+  head(data.frame(d$IDPoor1HHpercDist, d$IDPoor2HHpercDist, d$IDPoorHHpercDist))
+  summary(d$IDPoor1HHpercDist)
+  summary(d$IDPoor2HHpercDist)
+  summary(d$IDPoorHHpercDist)
+  
+  # Combine d and d.idpoor_comm
+  new_cols = c("IDPoor1HHpercComm", "IDPoor2HHpercComm", "IDPoorHHpercComm")
+  names(d)
+  d[new_cols] = NA
+  for (j in 1:length(d$Prov)) {
+    if (any(as.character(d$Prov[j]) == as.character(d.idpoor_comm$Prov) &
+            as.character(d$Dist[j]) == as.character(d.idpoor_comm$Dist) &
+            as.character(d$Comm[j]) == as.character(d.idpoor_comm$Comm))) {
+      d$IDPoor1HHpercComm[j] = d.idpoor_comm$IDPoor1HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_comm$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_comm$Dist) &
+                                                             as.character(d$Comm[j]) == as.character(d.idpoor_comm$Comm)]
+      d$IDPoor2HHpercComm[j] = d.idpoor_comm$IDPoor2HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_comm$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_comm$Dist) &
+                                                             as.character(d$Comm[j]) == as.character(d.idpoor_comm$Comm)]
+      d$IDPoorHHpercComm[j] = d.idpoor_comm$IDPoorHHperc[as.character(d$Prov[j]) == as.character(d.idpoor_comm$Prov) &
+                                                           as.character(d$Dist[j]) == as.character(d.idpoor_comm$Dist) &
+                                                           as.character(d$Comm[j]) == as.character(d.idpoor_comm$Comm)]
+    } 
+  }
+  head(data.frame(d$IDPoor1HHpercComm, d$IDPoor2HHpercComm, d$IDPoorHHpercComm))
+  summary(d$IDPoor1HHpercComm)
+  summary(d$IDPoor2HHpercComm)
+  summary(d$IDPoorHHpercComm)
+  
+  # Combine d and d.idpoor_comm
+  new_cols = c("IDPoor1HHpercVill", "IDPoor2HHpercVill", "IDPoorHHpercVill")
+  names(d)
+  d[new_cols] = NA
+  for (j in 1:length(d$Prov)) {
+    if (any(as.character(d$Prov[j]) == as.character(d.idpoor_vill$Prov) &
+            as.character(d$Dist[j]) == as.character(d.idpoor_vill$Dist) &
+            as.character(d$Comm[j]) == as.character(d.idpoor_vill$Comm) &
+            as.character(d$Vill[j]) == as.character(d.idpoor_vill$Vill))) {
+      d$IDPoor1HHpercVill[j] = d.idpoor_vill$IDPoor1HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_vill$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_vill$Dist) &
+                                                             as.character(d$Comm[j]) == as.character(d.idpoor_vill$Comm) &
+                                                             as.character(d$Vill[j]) == as.character(d.idpoor_vill$Vill)]
+      d$IDPoor2HHpercVill[j] = d.idpoor_vill$IDPoor2HHperc[as.character(d$Prov[j]) == as.character(d.idpoor_vill$Prov) &
+                                                             as.character(d$Dist[j]) == as.character(d.idpoor_vill$Dist) &
+                                                             as.character(d$Comm[j]) == as.character(d.idpoor_vill$Comm) &
+                                                             as.character(d$Vill[j]) == as.character(d.idpoor_vill$Vill)]
+      d$IDPoorHHpercVill[j] = d.idpoor_vill$IDPoorHHperc[as.character(d$Prov[j]) == as.character(d.idpoor_vill$Prov) &
+                                                           as.character(d$Dist[j]) == as.character(d.idpoor_vill$Dist) &
+                                                           as.character(d$Comm[j]) == as.character(d.idpoor_vill$Comm) &
+                                                           as.character(d$Vill[j]) == as.character(d.idpoor_vill$Vill)]
+    } 
+  }
+  head(data.frame(d$IDPoor1HHpercVill, d$IDPoor2HHpercVill, d$IDPoorHHpercVill))
+  summary(d$IDPoor1HHpercVill)
+  summary(d$IDPoor2HHpercVill)
+  summary(d$IDPoorHHpercVill)
+  
   # Save data variables to disk
-  save(d.surv, d.sets.prov,
-       file = 
+  save(d, file = 
          paste(getwd(),"/data/raw/surveys/",
                "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData", 
                sep = ""))
 }
 
-# Combine d.surv and d.sets.prov into d
-d = d.surv
-d[names(d.sets.prov)[2:length(names(d.sets.prov))]] = NA
-for (i in 2:length(d.sets.prov)) {
-  print(names(d.sets.prov)[i])
-  for (j in 1:length(d$Prov)) {
-    d[length(d.surv) + i - 1][j, 1] = d.sets.prov[[i]][d$Prov[j] == d.sets.prov$Prov]
-  }
-}
-# head(data.frame(d$Prov, d$Pop13, d$Pop13M, d$Pop13MPerc), n = 10)
-# head(d.sets.prov[1:4], n = 7)
-# names(d)
-# varTable(d[158:length(d)])
+
 ```
 ```{r summarize, include = FALSE}
 # summary(d.surv)
