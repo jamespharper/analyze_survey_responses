@@ -33,10 +33,12 @@ source(paste("C:/Users/James Harper/Documents/Github/", # Load custom functions
                "analyze_survey_responses/functions.R", sep = ""))
 load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "corrplot",
-    "FactoMineR", "factoextra", "lavaan", "corrplot", "purrr", "tidyr",
-    "ggplot2", "ltm"))
+    "FactoMineR", "factoextra", "lavaan", "purrr", "tidyr",
+    "ggplot2", "ltm", "vcd", "gmodels", "pscl", "DescTools", "ROCR",
+    "nnet", "tidyverse", "caret", "MASS", "mda", "mvtnorm", "klaR",
+    "scales", "gridExtra"))
 ```
-```{r load_clean, include = FALSE}
+```{r load&clean, include = FALSE}
 # Load, clean, and summarize data
 clean.raw.data = 0                                    # Clean raw data: 1 = yes
 if (clean.raw.data != 1) {
@@ -819,15 +821,520 @@ if (clean.raw.data != 1) {
                "describe_FSMintentions_regional_seasonal_iDE_Oct2017.RData", 
                sep = ""))
 }
-
-
 ```
 ```{r summarize, include = FALSE}
-# summary(d.surv)
-# names(d.surv)
-# print(sapply(d.surv, function(x) sum(is.na(x))))
-# missmap(d.surv, main = "Missing Values in Variables", legend = F)
+options(max.print = 1000000)
+summary(d)
+# names(d)
+print(sapply(d, function(x) sum(is.na(x))))
+# missmap(d, main = "Missing Values in Variables", legend = F)
 ```
+```{r analyze, include = FALSE}
+names(d)
+boxplot(IDPoorHHpercDist ~ IntndPitFull, data = d, 
+        ylab = "IDPoorHHpercDist vs. IntndPitFull")
+d$IDPoorHHpercDist = d$IDPoorHHpercDist/100
+summary(d$SatisSup)
+
+# DISCRIMINANT ANALYSIS
+# formulae:
+# IntndPitFull ~ Prov + Satis + Mnth + RecSup + Yr + SatisSup + RDefBefor_BshFld + ChlngsFlood + IDPoor
+# IntndPitFull ~ Prov
+# test = paste(names(d), collapse = " + ")
+d.backup = d
+# d = d.backup
+options(max.print = 5.5E5)
+d = subset(d, !is.na(IntndPitFull) & 
+             !is.na(Prov) & 
+             !is.na(Satis) & 
+             !is.na(Mnth) & 
+             !is.na(RecSup) & 
+             !is.na(Yr) & 
+             !is.na(SatisSup) & 
+             !is.na(RDefBefor_BshFld) & 
+             !is.na(ChlngsFlood) & 
+             !is.na(IDPoor) )
+d = subset(d, select = -c(Date, LBO, Dist, Comm, Vill, IDPoorTyp,
+                          M01, M1824, M217, M2559, M60, 
+                          F01, F1824, F217, F2559, F60,  
+                          DateSlabPur, LatInst, BelowGrndInst,
+                          DateBelowGrndInst, ShltrInst,
+                          DateInstComp, RDefBefor, RDefBeforOthr,
+                          FreqNeiToi,  
+                          KnwSubsdy, BorwLat, 
+                          CanBuyLat, UseFincOthr, SlabTil, 
+                          Npits, PitConfig, NringsDir, 
+                          NringsOff, NringsOthr, WallMatOthr,
+                          RoofMatOthr,
+                          MatsPurTgthr, Cost,
+                          CostInclInst, CostPitSlab, 
+                          CostPitSlabKnwn, CostShltrMats,
+                          CostShltrMatsKnwn, 
+                          LabPitShltrPurTgthr, CostLabLat,
+                          CostLabPitSlab, CostLabPitSlabKnwn,
+                          CostLabShltr, CostLabShltrKnwn,
+                          LatTypOwndBefor, IntndChngDich,
+                          IntndChng,
+                          IntndChngOthr, AdltUseLat,
+                          ChldUseLat, InfLatDump, 
+                          IntndPitFullOthrAns,
+                          Chlngs, Satis, SatisSup,
+                          DateSurvCreated, YrMnth,
+                          RDefBefor_RivPnd, RDefBefor_NeiToi,
+                          RDefBefor_Othr, RDefBefor_NAAlwysToi,
+                          IntndChng_Shltr, IntndChng_Shwr,
+                          IntndChng_Sink, IntndChng_WtrRes,
+                          IntndChng_Pit, IntndChng_Othr, 
+                          IntndChng_NAAlwysToi, IntndPitFullDes,
+                          IntndPitFullPit, IntndPitFullEmpSlf,
+                          IntndPitFullDK, IntndPitFullOthr,
+                          IntndPitFullPay, IntndPitFullStop,
+                          SatisColapsMore, SatisSupColapsMore,
+                          Pop13, Pop13M, Pop13F, PopChng08to13,
+                          PopChng08to13M, PopChng08to13F,
+                          MigrntIn, MigrntOut, MigrntNet,
+                          AreaKm2))
+# additional options to remove: Prov
+d = subset(d, !is.na(RoofMat) &
+             !is.na(Rec) &
+             Yr != 2014 &
+             !is.na(IDPoor1HHpercDist) &
+             !is.na(IDPoor1HHpercComm) &
+             !is.na(IDPoor1HHpercVill) &
+             !is.na(IDPoor2HHpercVill) &
+             !is.na(IDPoorPopPerc))
+# & IntndPitFull != "Othr"
+d = subset(d, select = -c(IDPoorHHpercDist, IDPoorHHpercComm,
+                          IDPoor1HHpercDist, IDPoor2HHpercDist, 
+                          IDPoor1HHpercComm, IDPoor2HHpercComm, 
+                          IDPoor1HHpercVill, IDPoor2HHpercVill))
+print(sapply(d, function(x) sum(is.na(x))))
+# Check for colinear (correlated) variables
+varTable(d)
+d = subset(d, select = -c(Pop13MPerc, 
+                          PopChng08to13MPerc,
+                          PopChng08to13FPerc,
+                          PopGrow08to13Perc,
+                          MedAge13M, MedAge13F,
+                          AgedChildRatio, AgeDepRatio,
+                          MaridNevrM, MaridNevr2024M,
+                          MaridNevrF, MaridNevr2024F,
+                          MaridNevr4549F,
+                          MaridM,
+                          WidwdM, Widwd60upM,
+                          Widwd60upF,
+                          MeanAgeMaridM,
+                          DisabFPerc,
+                          GenLitRat13M, GenLitRat13F,
+                          GenLitRatChng08to13M,
+                          EducLowSecndComp,
+                          EducSecndCompNAbov,
+                          SchlAttnd13,
+                          SchlAttndChng08to13M,
+                          SchlAttndChng08to13F,
+                          FertRatChng08to13,
+                          JobIndstryTer13,
+                          JobAgForFshM13, JobAgForFshF13,
+                          JobManufctrM13, JobManufctrF13,
+                          JobWhlslRetlTradOthrM13,
+                          JobWhlslRetlTradOthrF13,
+                          BldngsPermWallPerc,
+                          BldngsPermFlorPerc,
+                          BldngsPermRoofWallPerc
+                          ))
+x = 145 - 34
+length(d[1,])
+corrplot(cor(d[,(24 + x):(34 + x)]))
+d = droplevels(d)
+summary(d)
+# Create formula for discriminant analysis
+indep_vars = subset(data.frame(vars = names(d)),
+                    vars != "IntndPitFull")
+dep_var = "IntndPitFull"
+formula = paste(dep_var, " ~ ", paste(indep_vars$vars, collapse = " + "), sep = "")
+# Create training and testing data sets
+set.seed(123)
+training.samples = d$IntndPitFull %>% createDataPartition(p = 0.80, list = FALSE)
+train.data = d[training.samples, ]
+test.data <- d[-training.samples, ]
+# Normalize data (categorical vars automatically ignored)
+preproc.param = train.data %>%    # Estimate preprocessing parameters
+  preProcess(method = c("center", "scale"))
+train.transformed = preproc.param %>% predict(train.data)  # Transform data
+test.transformed = preproc.param %>% predict(test.data)    # using the estimated parameters
+# Linear, Quadratic, Mixture, and Flexible models
+lda_model = lda(as.formula(formula), data = train.transformed)  # Proportion of trace = Percent between-group variance explained by each linear discriminant
+qda_model = qda(as.formula(formula), data = train.transformed)
+mda_model = mda(as.formula(formula), data = train.transformed)
+fda_model = fda(as.formula(formula), data = train.transformed)
+rda_model = rda(as.formula(formula), data = train.transformed)
+lda_model
+qda_model
+mda_model
+fda_model
+rda_model
+plot(lda_model)  # TAKES FOREVER TO RENDER
+plot(qda_model)  # NOT WORKING
+plot(mda_model)  # NOT WORKING
+plot(fda_model)  # NOT WORKING
+plot(rda_model)  # NOT WORKING
+str(lda_model)
+str(qda_model)
+str(mda_model)
+str(fda_model)
+str(rda_model)
+# contour_data <- expand.grid(X1 = seq(-8, 8, length = 300),
+#                             X2 = seq(-8, 8, length = 300))
+print(sapply(test.transformed, function(x) sum(is.na(x))))
+varTable(test.transformed)
+lda_prediction = predict(lda_model, test.transformed)
+qda_prediction = predict(qda_model, test.transformed)
+mda_prediction = predict(mda_model, test.transformed)
+fda_prediction = predict(fda_model, test.transformed)
+rda_prediction = predict(rda_model, test.transformed)
+mean(lda_prediction$class == test.transformed$IntndPitFull)
+mean(qda_prediction$class == test.transformed$IntndPitFull)
+mean(mda_prediction == test.transformed$IntndPitFull)
+mean(fda_prediction == test.transformed$IntndPitFull)
+mean(rda_prediction$class == test.transformed$IntndPitFull)
+str(lda_prediction)
+str(qda_prediction)
+str(mda_prediction)
+str(fda_prediction)
+str(rda_prediction)
+
+# Plotting discriminant analyses
+par(mar = c(1,1,1,1))
+ldahist(data = lda_prediction$x[,1], g = test.transformed$IntndPitFull)
+lda_dataset = data.frame(intent = test.transformed[,"IntndPitFull"],
+                         lda = lda_prediction$x)
+prop.lda = lda_model$svd^2/sum(lda_model$svd^2)
+plot1 = ggplot(lda_dataset) + 
+  geom_point(aes(lda.LD1, lda.LD2, colour = intent, shape = intent), size = 2.5) + 
+  labs(x = paste("LD1 (", percent(prop.lda[1]), ")", sep = ""),
+       y = paste("LD2 (", percent(prop.lda[2]), ")", sep = ""))
+plot2 = ggplot(lda_dataset) + 
+  geom_point(aes(lda.LD2, lda.LD3, colour = intent, shape = intent), size = 2.5) + 
+  labs(x = paste("LD2 (", percent(prop.lda[2]), ")", sep = ""),
+       y = paste("LD3 (", percent(prop.lda[3]), ")", sep = ""))
+plot3 = ggplot(lda_dataset) + 
+  geom_point(aes(lda.LD3, lda.LD4, colour = intent, shape = intent), size = 2.5) + 
+  labs(x = paste("LD3 (", percent(prop.lda[3]), ")", sep = ""),
+       y = paste("LD4 (", percent(prop.lda[4]), ")", sep = ""))
+grid.arrange(plot1, plot2, plot3)
+
+
+# Other functions
+names(predictions)
+head(predictions$class, 6)   # Predicted classes
+head(predictions$posterior, 6)    # Predicted probabilities of class memebership
+head(predictions$x, 3)    # Linear discriminants
+lda.data <- cbind(train.transformed, predict(model)$x)
+ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = Species))
+mean(predictions$class[!is.na(predictions$class)] == 
+       test.transformed$IntndPitFull[!is.na(predictions$class)])
+mean(predicted.classes == test.transformed$IntndPitFull)
+
+
+# Example from https://www.r-bloggers.com/a-brief-look-at-mixture-discriminant-analysis/
+set.seed(42)
+n <- 500
+x11 <- rmvnorm(n = n, mean = c(-4, -4))
+x12 <- rmvnorm(n = n, mean = c(0, 4))
+x13 <- rmvnorm(n = n, mean = c(4, -4))
+x21 <- rmvnorm(n = n, mean = c(-4, 4))
+x22 <- rmvnorm(n = n, mean = c(4, 4))
+x23 <- rmvnorm(n = n, mean = c(0, 0))
+x31 <- rmvnorm(n = n, mean = c(-4, 0))
+x32 <- rmvnorm(n = n, mean = c(0, -4))
+x33 <- rmvnorm(n = n, mean = c(4, 0))
+x <- rbind(x11, x12, x13, x21, x22, x23, x31, x32, x33)
+train_data <- data.frame(x, y = gl(3, 3 * n))
+lda_out <- lda(y ~ ., data = train_data)
+qda_out <- qda(y ~ ., data = train_data)
+mda_out <- mda(y ~ ., data = train_data)
+contour_data <- expand.grid(X1 = seq(-8, 8, length = 300),
+                            X2 = seq(-8, 8, length = 300))
+lda_predict <- data.frame(contour_data, y = as.numeric(predict(lda_out, contour_data)$class))
+qda_predict <- data.frame(contour_data, y = as.numeric(predict(qda_out, contour_data)$class))
+mda_predict <- data.frame(contour_data, y = as.numeric(predict(mda_out, contour_data)))
+p <- ggplot(train_data, aes(x = X1, y = X2, color = y)) + geom_point()
+p + stat_contour(aes(x = X1, y = X2, z = y), data = lda_predict) + 
+  ggtitle("LDA Decision Boundaries")
+p + stat_contour(aes(x = X1, y = X2, z = y), data = qda_predict) + 
+  ggtitle("QDA Decision Boundaries")
+p + stat_contour(aes(x = X1, y = X2, z = y), data = mda_predict) + 
+  ggtitle("MDA Decision Boundaries")
+
+
+# Example from https://gist.github.com/thigm85/8424654
+require(MASS)
+require(ggplot2)
+require(scales)
+require(gridExtra)
+pca <- prcomp(iris[,-5],
+              center = TRUE,
+              scale. = TRUE) 
+prop.pca = pca$sdev^2/sum(pca$sdev^2)
+lda <- lda(Species ~ ., 
+           iris, 
+           prior = c(1,1,1)/3)
+str(lda)
+prop.lda = lda$svd^2/sum(lda$svd^2)
+plda <- predict(object = lda,
+                newdata = iris)
+dataset = data.frame(species = iris[,"Species"],
+                     pca = pca$x, lda = plda$x)
+p1 <- ggplot(dataset) + 
+  geom_point(aes(lda.LD1, lda.LD2, colour = species, shape = species), size = 2.5) + 
+  labs(x = paste("LD1 (", percent(prop.lda[1]), ")", sep=""),
+       y = paste("LD2 (", percent(prop.lda[2]), ")", sep=""))
+p2 <- ggplot(dataset) + geom_point(aes(pca.PC1, pca.PC2, colour = species, shape = species), size = 2.5) +
+  labs(x = paste("PC1 (", percent(prop.pca[1]), ")", sep=""),
+       y = paste("PC2 (", percent(prop.pca[2]), ")", sep=""))
+grid.arrange(p1, p2)
+
+# Other good sources
+# https://www.r-bloggers.com/computing-and-visualizing-lda-in-r/
+
+
+# KMEANS CLUSTERING
+set.seed(20)
+cluster <- kmeans(data.frame(d$Prov, d$IDPoor), 5, nstart = 20)
+irisCluster
+table(irisCluster$cluster, iris$Species)
+irisCluster$cluster <- as.factor(irisCluster$cluster)
+ggplot(iris, aes(Petal.Length, Petal.Width, color = iris$cluster)) + geom_point()
+
+# Example from https://www.r-bloggers.com/k-means-clustering-in-r/
+set.seed(20)
+irisCluster <- kmeans(iris[, 3:4], 3, nstart = 20)
+irisCluster
+table(irisCluster$cluster, iris$Species)
+irisCluster$cluster <- as.factor(irisCluster$cluster)
+ggplot(iris, aes(Petal.Length, Petal.Width, color = iris$cluster)) + geom_point()
+
+
+# MULTINOMIAL LOGISTIC REGRESSION
+# Split data into training and test data sets
+set.seed(123)
+training.samples = d$IntndPitFull %>% createDataPartition(p = 0.8, list = FALSE)
+train.data  = d[training.samples, ]
+test.data = d[-training.samples, ]
+# formulae: IntndPitFull ~ IDPoorHHpercDist
+model = nnet::multinom(IntndPitFull ~ Prov + Satis + Mnth + RecSup + Yr + 
+                         SatisSup + RDefBefor_BshFld + ChlngsFlood + IDPoor, 
+                       data = train.data, maxit = 300)
+summary(model)
+predicted.classes = model %>% predict(test.data)
+head(predicted.classes)
+mean(na.omit(predicted.classes == test.data$IntndPitFull))
+
+# ml$prog2 <- relevel(ml$prog, ref = "academic")   # Set baseline factor if needed
+# summary(d$IntndPitFull)
+results = multinom(formula = IntndPitFull ~ Prov + Satis + Mnth + RecSup + Yr + SatisSup + RDefBefor_BshFld + ChlngsFlood + IDPoor, data = d, maxit = 300)
+summary(results)
+z = summary(results)$coefficients/summary(results)$standard.errors; print(z)
+(1 - pnorm(abs(z), 0, 1)) * 2                                    # 2-tailed z test
+exp(coef(results))
+head(pp <- fitted(results))
+
+
+# LOGISTIC REGRESSION (requires binary dep var: Desirability of FSM Intentions)
+# d.backup = d
+d = d.backup
+options(max.print = 5.5E5)
+d = subset(d, !is.na(IntndPitFull) & 
+             !is.na(Prov) & 
+             !is.na(Satis) & 
+             !is.na(Mnth) & 
+             !is.na(RecSup) & 
+             !is.na(Yr) & 
+             !is.na(SatisSup) & 
+             !is.na(RDefBefor_BshFld) & 
+             !is.na(ChlngsFlood) & 
+             !is.na(IDPoor) )
+d = subset(d, select = -c(Date, LBO, Dist, Comm, Vill, IDPoorTyp,
+                          M01, M1824, M217, M2559, M60, 
+                          F01, F1824, F217, F2559, F60,  
+                          DateSlabPur, LatInst, BelowGrndInst,
+                          DateBelowGrndInst, ShltrInst,
+                          DateInstComp, RDefBefor, RDefBeforOthr,
+                          FreqNeiToi,  
+                          KnwSubsdy, BorwLat, 
+                          CanBuyLat, UseFincOthr, SlabTil, 
+                          Npits, PitConfig, NringsDir, 
+                          NringsOff, NringsOthr, WallMatOthr,
+                          RoofMatOthr,
+                          MatsPurTgthr, Cost,
+                          CostInclInst, CostPitSlab, 
+                          CostPitSlabKnwn, CostShltrMats,
+                          CostShltrMatsKnwn, 
+                          LabPitShltrPurTgthr, CostLabLat,
+                          CostLabPitSlab, CostLabPitSlabKnwn,
+                          CostLabShltr, CostLabShltrKnwn,
+                          LatTypOwndBefor, IntndChngDich,
+                          IntndChng,
+                          IntndChngOthr, AdltUseLat,
+                          ChldUseLat, InfLatDump, 
+                          IntndPitFullOthrAns,
+                          Chlngs, Satis, SatisSup,
+                          DateSurvCreated, YrMnth,
+                          RDefBefor_RivPnd, RDefBefor_NeiToi,
+                          RDefBefor_Othr, RDefBefor_NAAlwysToi,
+                          IntndChng_Shltr, IntndChng_Shwr,
+                          IntndChng_Sink, IntndChng_WtrRes,
+                          IntndChng_Pit, IntndChng_Othr, 
+                          IntndChng_NAAlwysToi, IntndPitFull,
+                          IntndPitFullPit, IntndPitFullEmpSlf,
+                          IntndPitFullDK, IntndPitFullOthr,
+                          IntndPitFullPay, IntndPitFullStop,
+                          SatisColapsMore, SatisSupColapsMore,
+                          Pop13, Pop13M, Pop13F, PopChng08to13,
+                          PopChng08to13M, PopChng08to13F,
+                          MigrntIn, MigrntOut, MigrntNet,
+                          AreaKm2))
+# not removed: IntndPitFullDes
+# is removed: IntndPitFull
+d = subset(d, select = -c(IDPoorHHpercDist, IDPoorHHpercComm,
+                          IDPoor1HHpercDist, IDPoor2HHpercDist, 
+                          IDPoor1HHpercComm, IDPoor2HHpercComm, 
+                          IDPoor1HHpercVill, IDPoor2HHpercVill))
+# d = subset(d, !is.na(RoofMat) &
+#              !is.na(Rec) &
+#              Yr != 2014 &
+#              !is.na(IDPoorPopPerc))
+# & IntndPitFull != "Othr"
+print(sapply(d, function(x) sum(is.na(x))))
+# Check for colinear (correlated) variables
+varTable(d)
+d = subset(d, select = -c(Pop13MPerc, 
+                          PopChng08to13MPerc,
+                          PopChng08to13FPerc,
+                          PopGrow08to13Perc,
+                          MedAge13M, MedAge13F,
+                          AgedChildRatio, AgeDepRatio,
+                          MaridNevrM, MaridNevr2024M,
+                          MaridNevrF, MaridNevr2024F,
+                          MaridNevr4549F,
+                          MaridM,
+                          WidwdM, Widwd60upM,
+                          Widwd60upF,
+                          MeanAgeMaridM,
+                          DisabFPerc,
+                          GenLitRat13M, GenLitRat13F,
+                          GenLitRatChng08to13M,
+                          EducLowSecndComp,
+                          EducSecndCompNAbov,
+                          SchlAttnd13,
+                          SchlAttndChng08to13M,
+                          SchlAttndChng08to13F,
+                          FertRatChng08to13,
+                          JobIndstryTer13,
+                          JobAgForFshM13, JobAgForFshF13,
+                          JobManufctrM13, JobManufctrF13,
+                          JobWhlslRetlTradOthrM13,
+                          JobWhlslRetlTradOthrF13,
+                          BldngsPermWallPerc,
+                          BldngsPermFlorPerc,
+                          BldngsPermRoofWallPerc
+                          ))
+x = 145 - 34
+length(d[1,])
+corrplot(cor(d[,(24 + x):(34 + x)]))
+d = droplevels(d)
+summary(d)
+# Create formula for discriminant analysis
+dep_var = "IntndPitFullDes"
+indep_vars = subset(data.frame(vars = names(d)),
+                    vars != dep_var)
+formula = paste(dep_var, " ~ ", paste(indep_vars$vars, collapse = " + "), sep = "")
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor +",
+                                    "RDefBefor_BshFld + ",
+                                    "InfLatDump + ChlngsFlood + ",
+                                    "Satis + SatisSup + RecSup"),
+                    iter = 1000, perc_train = 0.95, return = 1)
+# ALL FACTORS that showed statistically significant and important associations with the desirability of FSM intentions
+# Removed Dist because it created too many errors
+# IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor + RDefBefor_BshFld + FreqNeiToi + InfLatDump + ChlngsFlood + ChlngsNoWtr + Satis + SatisSup + Rec + RecSup + Rain.mm
+# LESS FACTORS WITH LOW P IN ABOVE MODEL: Rec, ChlngsNoWtr, Rain.mm, FreqNeiToi
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+# FINAL MODEL
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor +",
+                                    "RDefBefor_BshFld + ",
+                                    "ChlngsFlood + ",
+                                    "Satis + SatisSup + RecSup"),
+                    iter = 1, perc_train = 1, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+print(confint(results[[2]]))
+# FINAL MODEL WITH FACTORS REORDERED BY DECREASING DEVIANCE
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                                    "RecSup + Yr + SatisSup + ",
+                                    "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+                    iter = 1000, perc_train = 0.95, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+# pR2(results[[2]])
+PseudoR2(results[[2]])
+print(confint(results[[2]]))
+
+# NULL MODEL
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ 1"),
+                    iter = 1000, perc_train = 0.95, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+
+model = glm(formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                            "RecSup + Yr + SatisSup + ",
+                            "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+            data = data.sub,
+            family = binomial(link = "logit"),
+            na.action = na.omit)
+print(model)
+print(summary(model))
+print(anova(model, test = "Chisq"))
+pR2(model)
+PseudoR2(model, which = "all")
+print(confint(model))
+# IMPROVED MODEL WITH INTNDCHNG VARS
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                                    "RecSup + Yr + SatisSup + ",
+                                    "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+                    iter = 1, perc_train = 1, return = 1)
+print(results)
+# results = genlinmod(data = d, 
+#                     formula = paste("IDPoorHHpercDist ~ IntndPitFull"),
+#                     iter = 1, perc_train = 0.70, return = 1)
+# print(results[[2]])
+# summary(results[[2]])
+# print(anova(results[[2]], test = "Chisq"))
+# pR2(results[[2]])
+# PseudoR2(results[[2]], which = "all")
+# print(confint(results[[2]]))
+
+# POINT-BISERIAL CORRELATION (function requires continuous dep var and binary indep var)
+# biserial.cor(x = d$IDPoorHHpercDist, y = d$IntndPitFull, use = "complete.obs")
+
+# FREQUENCY ANALYSIS (only for categorical vars)
+# freqs.2way(data = d, metric1 = "IntndPitFull", metric2 = "IDPoorHHpercDist")
+
+
+```
+```{r glm, include = FALSE}
+
+```
+
 ```{r MCA_setup, include = FALSE}
 # Select relevant data
 # names(d.surv)
