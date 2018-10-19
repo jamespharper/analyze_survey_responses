@@ -362,50 +362,50 @@ if (clean.raw.data != 1) {
   d.sets.prov$MedAge13F =                            # NIS CIPS, Report 3, 2013
     c(26.25, 24.52, 27.06, 22.68, 26.33, 23.64, 27.44)
   d.sets.prov$Pop014Perc =                           # NIS CIPS, Report 3, 2013
-    c(28.49, 31.56, 26.80, 32.17, 31.01, 33.95, 27.20)
+    c(28.49, 31.56, 26.80, 32.17, 31.01, 33.95, 27.20)/100
   d.sets.prov$Pop1549Perc =                          # NIS CIPS, Report 3, 2013
-    c(53.89, 54.13, 55.89, 55.86, 53.00, 53.62, 57.22)
+    c(53.89, 54.13, 55.89, 55.86, 53.00, 53.62, 57.22)/100
   d.sets.prov$Pop5064Perc =                          # NIS CIPS, Report 3, 2013
-    c(12.68, 10.15, 11.16, 9.67, 10.49, 8.93, 10.75)
+    c(12.68, 10.15, 11.16, 9.67, 10.49, 8.93, 10.75)/100
   d.sets.prov$Pop65upPerc =                          # NIS CIPS, Report 3, 2013
-    c(4.95, 4.16, 6.14, 2.30, 5.50, 3.50, 4.83)
+    c(4.95, 4.16, 6.14, 2.30, 5.50, 3.50, 4.83)/100
   d.sets.prov$AgedChildRatio =                       # NIS CIPS, Report 3, 2013
     c(17.36, 13.19, 22.92, 7.16, 17.75, 10.31, 17.76)
   d.sets.prov$AgeDepRatio =                          # NIS CIPS, Report 3, 2013
     c(50.23, 55.58, 49.13, 52.60, 57.51, 59.87, 47.13)
   
-  d.sets.prov$MaridNevrM =                           # NIS CIPS, Report 4, 2014
-    c(33.2, 32.6, 37.3, 34.4, 29.5, 34.2, 32.0)
-  d.sets.prov$MaridNevr2024M =                       # NIS CIPS, Report 4, 2014
-    c(70.79, 71.02, 81.85, 61.32, 67.00, 69.45, 65.75)
-  d.sets.prov$MaridNevrF =                           # NIS CIPS, Report 4, 2014
-    c(26.9, 25.6, 29.4, 25.6, 24.6, 28.8, 24.5)
-  d.sets.prov$MaridNevr2024F =                       # NIS CIPS, Report 4, 2014
-    c(54.40, 40.84, 60.29, 42.70, 40.60, 49.58, 37.70)
-  d.sets.prov$MaridNevr2024DiffMF =                          # + value = F more
+  d.sets.prov$MaridNevrMPerc =                       # NIS CIPS, Report 4, 2014
+    c(33.2, 32.6, 37.3, 34.4, 29.5, 34.2, 32.0)/100
+  d.sets.prov$MaridNevr2024MPerc =                   # NIS CIPS, Report 4, 2014
+    c(70.79, 71.02, 81.85, 61.32, 67.00, 69.45, 65.75)/100
+  d.sets.prov$MaridNevrFPerc =                       # NIS CIPS, Report 4, 2014
+    c(26.9, 25.6, 29.4, 25.6, 24.6, 28.8, 24.5)/100
+  d.sets.prov$MaridNevr2024FPerc =                   # NIS CIPS, Report 4, 2014
+    c(54.40, 40.84, 60.29, 42.70, 40.60, 49.58, 37.70)/100
+  d.sets.prov$MaridNevr2024DiffMFPerc =              # + value = F more
     d.sets.prov$MaridNevr2024F - d.sets.prov$MaridNevr2024M
-  d.sets.prov$MaridNevr4549F =                       # NIS CIPS, Report 4, 2014
-    c(4.38, 5.26, 7.32, 0.67, 6.09, 4.37, 5.87)
-  d.sets.prov$MaridM =                               # NIS CIPS, Report 4, 2014
-    c(64.7, 65.0, 59.9, 64.2, 67.9, 63.5, 66.5)
-  d.sets.prov$MaridF =                               # NIS CIPS, Report 4, 2014
-    c(64.5, 62.5, 58.0, 66.3, 65.4, 59.5, 64.2)
-  d.sets.prov$WidwdM =                               # NIS CIPS, Report 4, 2014
-    c(1.38, 1.75, 1.72, 0.93, 1.30, 1.46, 1.03)
-  d.sets.prov$Widwd60upM =                           # NIS CIPS, Report 4, 2014
-    c(8.54, 11.17, 28.23, 7.54, 5.94, 12.54, 6.18)
-  d.sets.prov$WidwdF =                               # NIS CIPS, Report 4, 2014
-    c(6.76, 8.93, 9.31, 6.60, 7.49, 8.67, 9.14)
-  d.sets.prov$Widwd60upF =                           # NIS CIPS, Report 4, 2014
-    c(33.10, 48.92, 39.62, 32.94, 31.77, 38.33, 38.63)
-  d.sets.prov$Widwd60upDiffMF =                              # + value = F more
+  d.sets.prov$MaridNevr4549FPerc =                   # NIS CIPS, Report 4, 2014
+    c(4.38, 5.26, 7.32, 0.67, 6.09, 4.37, 5.87)/100
+  d.sets.prov$MaridMPerc =                           # NIS CIPS, Report 4, 2014
+    c(64.7, 65.0, 59.9, 64.2, 67.9, 63.5, 66.5)/100
+  d.sets.prov$MaridFPerc =                           # NIS CIPS, Report 4, 2014
+    c(64.5, 62.5, 58.0, 66.3, 65.4, 59.5, 64.2)/100
+  d.sets.prov$WidwdMPerc =                           # NIS CIPS, Report 4, 2014
+    c(1.38, 1.75, 1.72, 0.93, 1.30, 1.46, 1.03)/100
+  d.sets.prov$Widwd60upMPerc =                       # NIS CIPS, Report 4, 2014
+    c(8.54, 11.17, 28.23, 7.54, 5.94, 12.54, 6.18)/100
+  d.sets.prov$WidwdFPerc =                           # NIS CIPS, Report 4, 2014
+    c(6.76, 8.93, 9.31, 6.60, 7.49, 8.67, 9.14)/100
+  d.sets.prov$Widwd60upFPerc =                       # NIS CIPS, Report 4, 2014
+    c(33.10, 48.92, 39.62, 32.94, 31.77, 38.33, 38.63)/100
+  d.sets.prov$Widwd60upDiffMFPerc =                  # + value = F more
     d.sets.prov$Widwd60upF - d.sets.prov$Widwd60upM
-  d.sets.prov$DvrcdSepM =                            # NIS CIPS, Report 4, 2014
-    c(0.73, 0.62, 1.06, 0.47, 1.30, 0.82, 0.43)
-  d.sets.prov$DvrcdSepF =                            # NIS CIPS, Report 4, 2014
-    c(1.80, 2.99, 3.30, 1.44, 2.50, 3.07, 2.10)
-  d.sets.prov$DvrcdSep60upF =                        # NIS CIPS, Report 4, 2014
-    c(1.07, 3.67, 1.48, 3.15, 3.11, 4.09, 2.41)
+  d.sets.prov$DvrcdSepMPerc =                        # NIS CIPS, Report 4, 2014
+    c(0.73, 0.62, 1.06, 0.47, 1.30, 0.82, 0.43)/100
+  d.sets.prov$DvrcdSepFPerc =                            # NIS CIPS, Report 4, 2014
+    c(1.80, 2.99, 3.30, 1.44, 2.50, 3.07, 2.10)/100
+  d.sets.prov$DvrcdSep60upFPerc =                        # NIS CIPS, Report 4, 2014
+    c(1.07, 3.67, 1.48, 3.15, 3.11, 4.09, 2.41)/100
   d.sets.prov$MeanAgeMaridM =                        # NIS CIPS, Report 4, 2014
     c(26.2, 24.9, 26.7, 24.6, 25.1, 25.6, 24.9)
   d.sets.prov$MeanAgeMaridF =                        # NIS CIPS, Report 4, 2014
@@ -414,11 +414,11 @@ if (clean.raw.data != 1) {
     d.sets.prov$MeanAgeMaridF - d.sets.prov$MeanAgeMaridM
   
   d.sets.prov$DisabPerc =                             # NIS CIPS, Report 5, 2013
-    c(1.90, 3.36, 1.60, 3.54, 2.19, 2.43, 1.88)
+    c(1.90, 3.36, 1.60, 3.54, 2.19, 2.43, 1.88)/100
   d.sets.prov$DisabMPerc =                            # NIS CIPS, Report 5, 2013
-    c(1.98, 3.56, 1.54, 4.43, 2.03, 2.86, 2.45)
+    c(1.98, 3.56, 1.54, 4.43, 2.03, 2.86, 2.45)/100
   d.sets.prov$DisabFPerc =                            # NIS CIPS, Report 5, 2013
-    c(1.83, 3.17, 1.65, 2.34, 2.03, 1.32, 2.65)
+    c(1.83, 3.17, 1.65, 2.34, 2.03, 1.32, 2.65)/100
   d.sets.prov$DisabMedAge =                           # NIS CIPS, Report 5, 2013
     c(43.91, 48.52, 45.77, 47.65, 46.00, 37.93, 46.40)
   d.sets.prov$DisabMedAgeM =                          # NIS CIPS, Report 5, 2013
@@ -428,7 +428,7 @@ if (clean.raw.data != 1) {
   d.sets.prov$DisabEconAct1564Perc =                  # NIS CIPS, Report 5, 2013
     c(79.4, 73.1, 75.0, 85.6, 63.7, 59.1, 65.9)
   
-  d.sets.prov$NatvLng_Khmer =                        # NIS CIPS, Report 7, 2014
+  d.sets.prov$NatvLng_KhmerPerc =                        # NIS CIPS, Report 7, 2014
     c(99.7, 98.8, 99.2, 99.7, 98.8, 99.7, 99.8)
   d.sets.prov$GenLitRat13 =                          # NIS CIPS, Report 7, 2014
     c(77.4, 68.8, 86.7, 71.6, 79.7, 75.3, 83.3)
@@ -646,16 +646,19 @@ if (clean.raw.data != 1) {
     c(14.8, 9.2, 33.0, 6.0, 8.3, 24.2, 24.1)
   
   d.sets.prov$PopAnulGrowRate =                      # NIS CIPS, Report 10, 2014
-    c(1.47, 1.79, -2.51, 4.39, 3.99, 0.58, 3.61)
+    c(1.47, 1.79, -2.51, 4.39, 3.99, 0.58, 3.61)/100
   d.sets.prov$AreaKm2 =                              # NIS CIPS, Report 10, 2014
     c(6679, 13814, 3253, 6158, 4883, 10299, 2966)
   d.sets.prov$FHeadHHPerc =                          # NIS CIPS, Report 10, 2014
-    c(20.6, 24.6, 25.8, 23.8, 33.6, 24.9, 27.6)
+    c(20.6, 24.6, 25.8, 23.8, 33.6, 24.9, 27.6)/100
   d.sets.prov$NuclrFamPerc =                         # NIS CIPS, Report 10, 2014
-    c(65.9, 66.5, 66.3, 74.0, 61.1, 64.5, 68.4)
+    c(65.9, 66.5, 66.3, 74.0, 61.1, 64.5, 68.4)/100
   
-  d.sets.prov$IDPoorPopPerc =                              # IDPoor Atlas, 2012
-    c(0.26, NA, 0.21, 0.30, 0.27, 0.31, 0.21)
+  d.sets.prov$IDPoorHHPerc =                        # IDPoor reports, 2015
+    c(17.5, 22.5, 17.7, 17.1, 23.6, 17.7, 17.3)/100
+  
+  d.sets.prov$IDPoorPopPerc =                        # IDPoor reports, 2015
+    c(17.3, 20.3, 16.0, 16.7, 20.7, 16.2, 14.9)/100
   
   d.sets.prov$LatCovPerc =                               # iDE, 2016 ?????
     c(57, 46, 69, 35, 53, 48, 65)
@@ -836,47 +839,77 @@ print(sapply(d, function(x) sum(is.na(x))))
 ```{r analyze_prov_intentions, include = FALSE}
 # Frequency Analysis of Intentions by Province
 # d.backup = d
+# d.sets.prov.backup = d.sets.prov
 # d = d.backup
+# d.sets.prov = d.sets.prov.backup
 d = subset(d, !is.na(IntndPitFull) & !is.na(Prov))
 # print(sapply(d, function(x) sum(is.na(x))))
 # Check for colinear (correlated) variables
 # varTable(d)
-# x = 0
-# length(d.sets.prov[1,])
-# corrplot(cor(d.sets.prov[,(2 + x):(12 + x)]))
-# summary(d.sets.prov, maxsum = 500)
+length(d.sets.prov[1,])
+x = 68
+corrplot(cor(d.sets.prov[,(2 + x):(12 + x)]))
+# summary(d.sets.prov$IDPoorPopPerc, maxsum = 500)
+names(d.sets.prov)
 d.sets.prov = subset(d.sets.prov, 
-                     select = -c(Pop13M, Pop13F, Pop13MPerc, 
-                          PopChng08to13MPerc,
-                          PopChng08to13FPerc,
-                          PopGrow08to13Perc,
-                          MedAge13M, MedAge13F,
-                          AgedChildRatio, AgeDepRatio,
-                          MaridNevrM, MaridNevr2024M,
-                          MaridNevrF, MaridNevr2024F,
-                          MaridNevr4549F,
-                          MaridM,
-                          WidwdM, Widwd60upM,
-                          Widwd60upF,
-                          MeanAgeMaridM,
-                          DisabFPerc,
-                          GenLitRat13M, GenLitRat13F,
-                          GenLitRatChng08to13M,
-                          EducLowSecndComp,
-                          EducSecndCompNAbov,
-                          SchlAttnd13,
-                          SchlAttndChng08to13M,
-                          SchlAttndChng08to13F,
-                          FertRatChng08to13,
-                          JobIndstryTer13,
-                          JobAgForFshM13, JobAgForFshF13,
-                          JobManufctrM13, JobManufctrF13,
-                          JobWhlslRetlTradOthrM13,
-                          JobWhlslRetlTradOthrF13,
-                          BldngsPermWallPerc,
-                          BldngsPermFlorPerc,
-                          BldngsPermRoofWallPerc
-                          ))
+                     select = c(Prov, Pop13FPerc, PopChng08to13Perc,
+                                PopDens13, PopDensChng08to13,
+                                MigrntNet, GndrRatio1564,
+                                MedAge13, Pop1549Perc,
+                                MaridNevrMPerc, MaridNevr2024DiffMFPerc,
+                                MaridFPerc,
+                                DvrcdSepMPerc, DvrcdSepFPerc,
+                                MeanAgeMaridF, MeanAgeMaridDiffMF,
+                                DisabPerc, DisabMedAge,
+                                DisabEconAct1564Perc,
+                                NatvLng_KhmerPerc, GenLitRat13,
+                                GenLitRatChng08to13,
+                                GenLitRatDiffChng08to13MF,
+                                EducPrimIncomp, EducPrimComp,
+                                EducLowSecndComp, EducSecndCompNAbov,
+                                SchlAttnd13, SchlAttndChng08to13,
+                                SchlAttndDiffChng08to13MF,
+                                SchlAttndPerc5dwn, SchlAttndPerc614,
+                                SchlAttndPerc2024, SchlAttndPerc25up,
+                                FertRat13, 
+                                EconAct15up13, EconAct15upChng08to13,
+                                JobEmplyr13, JobEmplye13, JobSlfEmplyd13,
+                                JobSectrGov13, JobSectrStateEntrprs13,
+                                JobSectrCambPrivEntrprs13,
+                                JobSectrNonProfOthr13,
+                                JobManufctr13,
+                                JobWhlslRetlTradOthr13, JobManagr, 
+                                JobProfsnl, JobServcSals, JobCraft,
+                                JobElementry, JobSecndJobPerc,
+                                JobChld514Perc, JobUnemply1524Perc,
+                                BldngsPermRoofwallFlorPerc, 
+                                HshldsAvgNumPpl, 
+                                HshldsLightElecPerc, HshldsLightKeroPerc,
+                                HshldsCookFuelWoodPerc,
+                                HshldsCookFuelLPGPerc,
+                                HshldsDrnkWtrPipedPerc,
+                                HshldsDrnkWtrTubPipWelPerc,
+                                HshldsDrnkWtrProtDugWelPerc,
+                                HshldsDrnkWtrRainPerc, 
+                                HshldsDrnkWtrSprngRivrPerc,
+                                HshldsDrnkWtrPurchsdPerc,
+                                HshldsDrnkWtrOnSitePerc,
+                                HshldsDrnkWtrNearPerc,
+                                HshldsToi13Perc,
+                                HshldsToiChng08to13Perc,
+                                HshldsToiSewer13Perc, HshldsToiSeptc13Perc, 
+                                HshldsToiLatrn13Perc, HshldsImprvdWtr,
+                                HshldsImprvdToi, HshldsImprvdWtrToiElec,
+                                FHeadHHPerc, NuclrFamPerc,
+                                IDPoorPopPerc, LatCovPerc
+                                ))
+summary(d.sets.prov)
+print(sapply(d.sets.prov, function(x) sum(is.na(x))))
+
+# Correlation of IntndPitFull(Des) with census and other provincial-level data
+
+
+# d.sets.prov = subset(d.sets.prov, !is.na(IDPoorPopPerc))
 d.sets.prov = droplevels(d.sets.prov)
 # Analyze frequencies
 freqs.2way.IntndPitFull.Prov = freqs.2way(d, "IntndPitFull", "Prov", 1)
@@ -892,120 +925,180 @@ order2 = c("Oddar Meanchey", "Banteay Meanchey", "Siem Reap", "Kampong Thom",
            "Kandal", "Prey Veng", "Svay Rieng")
 prop.col = prop.col[,match(order2, colnames(prop.col)),drop = FALSE]
 prop.col = t(prop.col)
-head(d.sets.prov[1:10], n = 10)
+# head(d.sets.prov[1:10], n = 10)
 d.sets.prov = d.sets.prov[match(order2, d.sets.prov$Prov),]
 for (i in 2:length(d.sets.prov)) {
   prop.col = cbind(prop.col, as.table(d.sets.prov[,i]))
   colnames(prop.col)[length(prop.col[1,])] = colnames(d.sets.prov)[i]
 }
+print(prop.col)
+df.wide = data.frame(temp = prop.col)
+names(df.wide) = colnames(prop.col)
+freqs.2way.IntndPitFullDes.Prov = freqs.2way(d, "IntndPitFullDes", "Prov", 1)
+crosstable.IntndPitFullDes.Prov =
+  CrossTable(freqs.2way.IntndPitFullDes.Prov[[2]])
+# print(crosstable.IntndPitFullDes.Prov)
+IntndPitFullDes.prop.col = crosstable.IntndPitFullDes.Prov$prop.col
+# typeof(prop.col)
+order2 = c("Oddar Meanchey", "Banteay Meanchey", "Siem Reap", "Kampong Thom", 
+           "Kandal", "Prey Veng", "Svay Rieng")
+IntndPitFullDes.prop.col = 
+  IntndPitFullDes.prop.col[,match(order2, colnames(IntndPitFullDes.prop.col)),
+                           drop = FALSE]
+IntndPitFullDes.prop.col = t(IntndPitFullDes.prop.col)
+df.wide$IntndPitFullDes = IntndPitFullDes.prop.col[,2]
+df.wide$MultiPovIndex = c(0.233, 0.189, 0.240, 0.271, 0.170, 0.223, 0.229)
+df.long = data.frame(temp = as.table(prop.col))
+names(df.long) = c("Prov", "Variable", "Value")
+# Model intentions in each province using logistic regression
+# Model 0: cbind(IntndPitFullDes.desirable, IntndPitFullDes.undesirable)
+IntndPitFullDes.freqs = t(freqs.2way.IntndPitFullDes.Prov[[2]])
+IntndPitFullDes.freqs = 
+  IntndPitFullDes.freqs[match(order2,
+                                   rownames(IntndPitFullDes.freqs)), ,
+                            drop = FALSE]
+df.wide$IntndPitFullDes.desirable = IntndPitFullDes.freqs[,2]
+df.wide$IntndPitFullDes.undesirable = IntndPitFullDes.freqs[,1]
+names(df.wide)
+dep_var = "cbind(IntndPitFullDes.desirable, IntndPitFullDes.undesirable)"
+indep_vars = subset(data.frame(vars = names(df.wide)),
+                    vars != "IntndPay" & vars != "IntndPit" & 
+                      vars != "IntndSlfEmp" & vars != "IntndDK" & 
+                      vars != "IntndStop" & vars != "IntndOthr" &
+                      vars != "IntndPitFullDes" &
+                      vars != "IntndPitFullDes.desirable" &
+                      vars != "IntndPitFullDes.undesirable")
+formula = paste(dep_var, " ~ ", paste(indep_vars$vars, collapse = " + "), sep = "")
+lrfit = glm(formula = as.formula(formula), data = df.wide, family = binomial)
+1-pchisq(0,0)
+summary(lrfit)
 
-# print(prop.col[,1:length(prop.col[1,])])
 
-df = data.frame(Test5 = prop.col)
+arcene <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/arcene/ARCENE/arcene_train.data", sep = " ",
+ colClasses = c(rep("numeric", 10000), "NULL"))
+# Add the labels as an additional column
+arcene$class <- factor(scan("https://archive.ics.uci.edu/ml/machine-learning-databases/arcene/ARCENE/arcene_train.labels", sep = "\t"))
+any(is.na(arcene))
 
-df = data.frame(temp = prop.col)
-names(df) = c("IntndPitFull", "Prov", "Prop")
-df$Desir = rep(x = c("Des", "Des", "Undes", "Undes", "Undes", "Undes"), times = 7)
+
+# Model 1: IntndPitFullDes
+names(df.wide)
+dep_var = "IntndPitFullDes"
+indep_vars = subset(data.frame(vars = names(df.wide)),
+                    vars != "IntndPay" & vars != "IntndPit" & 
+                      vars != "IntndSlfEmp" & vars != "IntndDK" & 
+                      vars != "IntndStop" & vars != "IntndOthr" &
+                      vars != "IntndPitFullDes")
+formula = paste(dep_var, " ~ ", paste(indep_vars$vars, collapse = " + "), sep = "")
+results = genlinmod(formula = as.formula(formula), data = df.wide, 
+                    iter = 1, perc_train = 1, return = 1)
+# Vars with low p:
+# Vars with low reduction in residual deviance:
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+
+
 # Plot by geographic proximity
-# Horizontal bar chart
-ggplot(df, aes(x = Prov, y = Prop, fill = IntndPitFull)) +
-  geom_col() + 
-  coord_flip()
-# Pyramid plot (used in FSM intentions article)
-title = "                     Desirable                                    Undesirable"
-data.sub.des = subset(df, Desir == "Des")
-data.sub.undes = subset(df, Desir == "Undes")
-perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
-                   data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
-perc_undes = 100 - perc_des
-ggplot(df, aes(x = Prov)) + 
-  geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
-  geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
-  coord_flip() + 
-  geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
-  scale_x_discrete(name = "Province", 
-                   breaks = unique(df$Prov),
-                   limits = rev(unique(df$Prov))) +
-  scale_y_continuous(name = "Percentage of rural latrine owners", 
-                     breaks = round(seq(-0.8, 0.8, 0.1), 1), 
-                     limits = c(-0.8, 0.8),
-                     labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
-  scale_fill_discrete(name = "Intention when Pit Fills: ",
-                      breaks = order,
-                      labels = c("Pay professional",
-                                 "Install a new pit",
-                                 "Self-empty",
-                                 "Undecided",
-                                 "Stop using latrine",
-                                 "Other")) +
-  ggtitle(title) + 
-  theme_bw() +
-  theme(text = element_text(family = "serif", size = 14), 
-        legend.position = "bottom",
-        legend.direction = "horizontal",
-        panel.background = element_blank()) +
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Prov), y = -perc_des/100 - 0.04, 
-           label = paste(as.character(perc_des), "%", sep = "")) + 
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Prov), y = perc_undes/100 + 0.05, 
-           label = paste(as.character(perc_undes), "%", sep = ""))
-# Line plot (BAD)
-ggplot(df, aes(x = Prov, y = Prop, group = IntndPitFull)) + 
-  geom_line(aes(color = IntndPitFull), size = 2) +
-  guides(linetype = guide_legend(override.aes = list(alpha = 1)))
-mean(perc_des)
-sd(perc_des)
-windowsFonts()
-correspondence(data = data.sub, metric1 = "IntndPitFull", metric2 = "Prov")
-# Plot by decreasing desirability
-order2 = c("Banteay Meanchey", "Kandal", "Oddar Meanchey", "Svay Rieng",
-           "Kampong Thom", "Prey Veng", "Siem Reap")
-prop.col = prop.col[,match(order2, colnames(prop.col)),drop = FALSE]
-df = data.frame(IntndPitFull = prop.col)
-names(df) = c("IntndPitFull", "Prov", "Prop")
-df$Desir = rep(x = c("Des", "Des", "Undes", "Undes", "Undes", "Undes"), times = 7)
-ggplot(df, aes(x = Prov, y = Prop, fill = IntndPitFull)) +
-  geom_col() + 
-  coord_flip()
-title = "                     Desirable                                    Undesirable"
-data.sub.des = subset(df, Desir == "Des")
-data.sub.undes = subset(df, Desir == "Undes")
-perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
-                   data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
-perc_undes = 100 - perc_des
-ggplot(df, aes(x = Prov)) + 
-  geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
-  geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
-  coord_flip() + 
-  geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
-  scale_x_discrete(name = "Province", 
-                   breaks = unique(df$Prov),
-                   limits = rev(unique(df$Prov))) +
-  scale_y_continuous(name = "Percentage of rural latrine owners", 
-                     breaks = round(seq(-0.8, 0.8, 0.1), 1), 
-                     limits = c(-0.8, 0.8),
-                     labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
-  scale_fill_discrete(name = "Intention when Pit Fills: ",
-                      breaks = order,
-                      labels = c("Pay professional",
-                                 "Install a new pit",
-                                 "Self-empty",
-                                 "Undecided",
-                                 "Stop using latrine",
-                                 "Other")) +
-  ggtitle(title) + 
-  theme_bw() +
-  theme(text = element_text(family = "serif", size = 14), 
-        legend.position = "bottom",
-        legend.direction = "horizontal",
-        panel.background = element_blank()) +
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Prov), y = -perc_des/100 - 0.04, 
-           label = paste(as.character(perc_des), "%", sep = "")) + 
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Prov), y = perc_undes/100 + 0.05, 
-           label = paste(as.character(perc_undes), "%", sep = ""))
+# # Horizontal bar chart
+# ggplot(df, aes(x = Prov, y = Value, fill = IntndPitFull)) +
+#   geom_col() + 
+#   coord_flip()
+# # Pyramid plot (used in FSM intentions article)
+# title = "                     Desirable                                    Undesirable"
+# data.sub.des = subset(df, Desir == "Des")
+# data.sub.undes = subset(df, Desir == "Undes")
+# perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
+#                    data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
+# perc_undes = 100 - perc_des
+# ggplot(df, aes(x = Prov)) + 
+#   geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
+#   geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
+#   coord_flip() + 
+#   geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
+#   scale_x_discrete(name = "Province", 
+#                    breaks = unique(df$Prov),
+#                    limits = rev(unique(df$Prov))) +
+#   scale_y_continuous(name = "Percentage of rural latrine owners", 
+#                      breaks = round(seq(-0.8, 0.8, 0.1), 1), 
+#                      limits = c(-0.8, 0.8),
+#                      labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
+#   scale_fill_discrete(name = "Intention when Pit Fills: ",
+#                       breaks = order,
+#                       labels = c("Pay professional",
+#                                  "Install a new pit",
+#                                  "Self-empty",
+#                                  "Undecided",
+#                                  "Stop using latrine",
+#                                  "Other")) +
+#   ggtitle(title) + 
+#   theme_bw() +
+#   theme(text = element_text(family = "serif", size = 14), 
+#         legend.position = "bottom",
+#         legend.direction = "horizontal",
+#         panel.background = element_blank()) +
+#   annotate(geom = "text", size = 4, family = "serif",
+#            x = unique(df$Prov), y = -perc_des/100 - 0.04, 
+#            label = paste(as.character(perc_des), "%", sep = "")) + 
+#   annotate(geom = "text", size = 4, family = "serif",
+#            x = unique(df$Prov), y = perc_undes/100 + 0.05, 
+#            label = paste(as.character(perc_undes), "%", sep = ""))
+# # Line plot (BAD)
+# ggplot(df, aes(x = Prov, y = Prop, group = IntndPitFull)) + 
+#   geom_line(aes(color = IntndPitFull), size = 2) +
+#   guides(linetype = guide_legend(override.aes = list(alpha = 1)))
+# mean(perc_des)
+# sd(perc_des)
+# windowsFonts()
+# correspondence(data = data.sub, metric1 = "IntndPitFull", metric2 = "Prov")
+# # Plot by decreasing desirability
+# order2 = c("Banteay Meanchey", "Kandal", "Oddar Meanchey", "Svay Rieng",
+#            "Kampong Thom", "Prey Veng", "Siem Reap")
+# prop.col = prop.col[,match(order2, colnames(prop.col)),drop = FALSE]
+# df = data.frame(IntndPitFull = prop.col)
+# names(df) = c("IntndPitFull", "Prov", "Prop")
+# df$Desir = rep(x = c("Des", "Des", "Undes", "Undes", "Undes", "Undes"), times = 7)
+# ggplot(df, aes(x = Prov, y = Prop, fill = IntndPitFull)) +
+#   geom_col() + 
+#   coord_flip()
+# title = "                     Desirable                                    Undesirable"
+# data.sub.des = subset(df, Desir == "Des")
+# data.sub.undes = subset(df, Desir == "Undes")
+# perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
+#                    data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
+# perc_undes = 100 - perc_des
+# ggplot(df, aes(x = Prov)) + 
+#   geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
+#   geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
+#   coord_flip() + 
+#   geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
+#   scale_x_discrete(name = "Province", 
+#                    breaks = unique(df$Prov),
+#                    limits = rev(unique(df$Prov))) +
+#   scale_y_continuous(name = "Percentage of rural latrine owners", 
+#                      breaks = round(seq(-0.8, 0.8, 0.1), 1), 
+#                      limits = c(-0.8, 0.8),
+#                      labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
+#   scale_fill_discrete(name = "Intention when Pit Fills: ",
+#                       breaks = order,
+#                       labels = c("Pay professional",
+#                                  "Install a new pit",
+#                                  "Self-empty",
+#                                  "Undecided",
+#                                  "Stop using latrine",
+#                                  "Other")) +
+#   ggtitle(title) + 
+#   theme_bw() +
+#   theme(text = element_text(family = "serif", size = 14), 
+#         legend.position = "bottom",
+#         legend.direction = "horizontal",
+#         panel.background = element_blank()) +
+#   annotate(geom = "text", size = 4, family = "serif",
+#            x = unique(df$Prov), y = -perc_des/100 - 0.04, 
+#            label = paste(as.character(perc_des), "%", sep = "")) + 
+#   annotate(geom = "text", size = 4, family = "serif",
+#            x = unique(df$Prov), y = perc_undes/100 + 0.05, 
+#            label = paste(as.character(perc_undes), "%", sep = ""))
 
 ```
 ```{r analyze_surveys, include = FALSE}
@@ -1020,7 +1113,7 @@ summary(d$SatisSup)
 # IntndPitFull ~ Prov + Satis + Mnth + RecSup + Yr + SatisSup + RDefBefor_BshFld + ChlngsFlood + IDPoor
 # IntndPitFull ~ Prov
 # test = paste(names(d), collapse = " + ")
-d.backup = d
+# d.backup = d
 # d = d.backup
 options(max.print = 5.5E5)
 d = subset(d, !is.na(IntndPitFull) & 
@@ -1321,118 +1414,29 @@ head(pp <- fitted(results))
 
 # LOGISTIC REGRESSION (requires binary dep var: Desirability of FSM Intentions)
 # d.backup = d
-d = d.backup
-options(max.print = 5.5E5)
-d = subset(d, !is.na(IntndPitFull) & 
-             !is.na(Prov) & 
-             !is.na(Satis) & 
-             !is.na(Mnth) & 
-             !is.na(RecSup) & 
-             !is.na(Yr) & 
-             !is.na(SatisSup) & 
-             !is.na(RDefBefor_BshFld) & 
-             !is.na(ChlngsFlood) & 
-             !is.na(IDPoor) )
-d = subset(d, select = -c(Date, LBO, Dist, Comm, Vill, IDPoorTyp,
-                          M01, M1824, M217, M2559, M60, 
-                          F01, F1824, F217, F2559, F60,  
-                          DateSlabPur, LatInst, BelowGrndInst,
-                          DateBelowGrndInst, ShltrInst,
-                          DateInstComp, RDefBefor, RDefBeforOthr,
-                          FreqNeiToi,  
-                          KnwSubsdy, BorwLat, 
-                          CanBuyLat, UseFincOthr, SlabTil, 
-                          Npits, PitConfig, NringsDir, 
-                          NringsOff, NringsOthr, WallMatOthr,
-                          RoofMatOthr,
-                          MatsPurTgthr, Cost,
-                          CostInclInst, CostPitSlab, 
-                          CostPitSlabKnwn, CostShltrMats,
-                          CostShltrMatsKnwn, 
-                          LabPitShltrPurTgthr, CostLabLat,
-                          CostLabPitSlab, CostLabPitSlabKnwn,
-                          CostLabShltr, CostLabShltrKnwn,
-                          LatTypOwndBefor, IntndChngDich,
-                          IntndChng,
-                          IntndChngOthr, AdltUseLat,
-                          ChldUseLat, InfLatDump, 
-                          IntndPitFullOthrAns,
-                          Chlngs, 
-                          DateSurvCreated, YrMnth,
-                          RDefBefor_RivPnd, RDefBefor_NeiToi,
-                          RDefBefor_Othr, RDefBefor_NAAlwysToi,
-                          IntndChng_Shltr, IntndChng_Shwr,
-                          IntndChng_Sink, IntndChng_WtrRes,
-                          IntndChng_Pit, IntndChng_Othr, 
-                          IntndChng_NAAlwysToi, IntndPitFull,
-                          IntndPitFullPit, IntndPitFullEmpSlf,
-                          IntndPitFullDK, IntndPitFullOthr,
-                          IntndPitFullPay, IntndPitFullStop,
-                          Pop13, Pop13M, Pop13F, PopChng08to13,
-                          PopChng08to13M, PopChng08to13F,
-                          MigrntIn, MigrntOut, MigrntNet,
-                          AreaKm2))
-# not removed: IntndPitFullDes, Satis, SatisSup
-# is removed: IntndPitFull, SatisColapsMore, SatisSupColapsMore
-d = subset(d, select = -c(IDPoorHHpercDist, IDPoorHHpercComm,
-                          IDPoor1HHpercDist, IDPoor2HHpercDist, 
-                          IDPoor1HHpercComm, IDPoor2HHpercComm, 
-                          IDPoor1HHpercVill, IDPoor2HHpercVill))
-# d = subset(d, !is.na(RoofMat) &
-#              !is.na(Rec) &
-#              Yr != 2014 &
-#              !is.na(IDPoorPopPerc))
-# & IntndPitFull != "Othr"
+# d = d.backup
+summary(d)
+d = subset(d, select = c(IntndPitFullDes, Prov, Satis, Mnth, RecSup, Yr,
+                         SatisSup, RDefBefor_BshFld, ChlngsFlood, IDPoor,
+                         IDPoorHHpercDist))
+d = subset(d, !is.na(IntndPitFullDes) & !is.na(Prov) & !is.na(Satis) & 
+             !is.na(Mnth) & !is.na(RecSup) & !is.na(Yr) & !is.na(SatisSup) & 
+             !is.na(RDefBefor_BshFld) & !is.na(ChlngsFlood) & 
+             !is.na(IDPoor) & !is.na(IDPoorHHpercDist))
 print(sapply(d, function(x) sum(is.na(x))))
-# Check for colinear (correlated) variables
-varTable(d)
-d = subset(d, select = -c(Pop13MPerc, 
-                          PopChng08to13MPerc,
-                          PopChng08to13FPerc,
-                          PopGrow08to13Perc,
-                          MedAge13M, MedAge13F,
-                          AgedChildRatio, AgeDepRatio,
-                          MaridNevrM, MaridNevr2024M,
-                          MaridNevrF, MaridNevr2024F,
-                          MaridNevr4549F,
-                          MaridM,
-                          WidwdM, Widwd60upM,
-                          Widwd60upF,
-                          MeanAgeMaridM,
-                          DisabFPerc,
-                          GenLitRat13M, GenLitRat13F,
-                          GenLitRatChng08to13M,
-                          EducLowSecndComp,
-                          EducSecndCompNAbov,
-                          SchlAttnd13,
-                          SchlAttndChng08to13M,
-                          SchlAttndChng08to13F,
-                          FertRatChng08to13,
-                          JobIndstryTer13,
-                          JobAgForFshM13, JobAgForFshF13,
-                          JobManufctrM13, JobManufctrF13,
-                          JobWhlslRetlTradOthrM13,
-                          JobWhlslRetlTradOthrF13,
-                          BldngsPermWallPerc,
-                          BldngsPermFlorPerc,
-                          BldngsPermRoofWallPerc
-                          ))
-x = 145 - 34
-length(d[1,])
-corrplot(cor(d[,(24 + x):(34 + x)]))
 d = droplevels(d)
 summary(d)
-# Create formula for discriminant analysis
+varTable(d)
+# Create formula for analysis
 dep_var = "IntndPitFullDes"
-indep_vars = subset(data.frame(vars = names(d)),
-                    vars != dep_var)
+indep_vars = subset(data.frame(vars = names(d)), vars != dep_var)
 formula = paste(dep_var, " ~ ", paste(indep_vars$vars, collapse = " + "), sep = "")
-# Formula used in below model:
-# IntndPitFullDes ~ Prov + IDPoor + LivRP + VillOD + WhoInstLat + RecSubsdy + WallMat + RoofMat + Rec + RecSup + Yr + Mnth + RDefBefor_BshFld + ChlngsNoFlsh + ChlngsFlood + ChlngsOthr + ChlngsFulOvrFlw + ChlngsNoWtr + ChlngsSmels + ChlngsOK + SatisColaps + SatisSupColaps + Pop13FPerc + PopChng08to13Perc + PopDens13 + PopDensChng08to13 + MigrntNetPercPop + GndrRatio014 + GndrRatio1564 + GndrRatio65up + MedAge13 + Pop014Perc + Pop1549Perc + Pop5064Perc + Pop65upPerc + MaridNevr2024DiffMF + MaridF + WidwdF + Widwd60upDiffMF + DvrcdSepM + DvrcdSepF + DvrcdSep60upF + MeanAgeMaridF + MeanAgeMaridDiffMF + DisabPerc + DisabMPerc + DisabMedAge + DisabMedAgeM + DisabMedAgeF + DisabEconAct1564Perc + NatvLng_Khmer + GenLitRat13 + GenLitRatChng08to13 + GenLitRatChng08to13F + GenLitRatDiffChng08to13MF + EducNone + EducPrimIncomp + EducPrimComp + EducNoneNPrimIncompM + EducNoneNPrimIncompF + EducPrimCompM + EducPrimCompF + SchlAttnd13M + SchlAttnd13F + SchlAttndChng08to13 + SchlAttndDiffChng08to13MF + SchlAttndPerc5dwn + SchlAttndPerc614 + SchlAttndPerc1519 + SchlAttndPerc2024 + SchlAttndPerc25up + FertRat13 + EconAct15up13 + EconAct15upM13 + EconAct15upF13 + EconAct15upChng08to13 + EconAct15upMChng08to13 + EconAct15upFChng08to13 + JobEmplyr13 + JobEmplye13 + JobSlfEmplyd13 + JobUnpaidFamWrk13 + JobSectrGov13 + JobSectrStateEntrprs13 + JobSectrCambPrivEntrprs13 + JobSectrForgnEntrprs13 + JobSectrNonProfOthr13 + JobIndstryPri13 + JobIndstrySec13 + JobAgForFsh13 + JobManufctr13 + JobWhlslRetlTradOthr13 + JobManagr + JobProfsnl + JobTechAssisProfsnl + JobClericl + JobServcSals + JobCraft + JobMachOprtrs + JobElementry + JobMilitry + JobSecndJobPerc + JobChld514Perc + JobChld514MPerc + JobChld514FPerc + JobUnemply1524Perc + JobUnemply1524MPerc + JobUnemply1524FPerc + BldngsPermRoofPerc + BldngsPermRoofwallFlorPerc + HshldsAvgNumPpl + HshldsAvgNumPplPerRoom + HshldsLightElecPerc + HshldsLightKeroPerc + HshldsLightBattPerc + HshldsCookFuelWoodPerc + HshldsCookFuelCharPerc + HshldsCookFuelLPGPerc + HshldsDrnkWtrPipedPerc + HshldsDrnkWtrTubPipWelPerc + HshldsDrnkWtrProtDugWelPerc + HshldsDrnkWtrUnprotDugWelPerc + HshldsDrnkWtrRainPerc + HshldsDrnkWtrSprngRivrPerc + HshldsDrnkWtrPurchsdPerc + HshldsDrnkWtrOthrPerc + HshldsDrnkWtrOnSitePerc + HshldsDrnkWtrNearPerc + HshldsDrnkWtrAwayPerc + HshldsToi13Perc + HshldsToiChng08to13Perc + HshldsToiSewer13Perc + HshldsToiSeptc13Perc + HshldsToiLatrn13Perc + HshldsImprvdWtr + HshldsImprvdToi + HshldsElec + HshldsImprvdWtrToiElec + PopAnulGrowRate + FHeadHHPerc + NuclrFamPerc + IDPoorPopPerc + LatCovPerc + IDPoorHHpercVill
+# Model 1
+# IntndPitFullDes ~ Prov + Satis + Mnth + RecSup + Yr + SatisSup + RDefBefor_BshFld + ChlngsFlood + IDPoor + IDPoor1HHpercDist + IDPoor2HHpercDist
 results = genlinmod(formula = as.formula(formula), data = d, 
                     iter = 1, perc_train = 1, return = 1)
-# Vars with low p:
-# Vars with low reduction in residual deviance:
+results = genlinmod(formula = as.formula(formula), data = d, 
+                    iter = 100, perc_train = 0.80, return = 1)
 print(results)
 print(summary(results[[2]]))
 print(anova(results[[2]], test = "Chisq"))
