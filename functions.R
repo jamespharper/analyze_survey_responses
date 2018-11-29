@@ -651,7 +651,8 @@ multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
   if (return == 1) {return(list(name, results))}
   
 }
-genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
+genlinmod = function(data, formula, type = "binomial-logit",
+                     iter = 1, perc_train = 0.8, return = 0) {
   iter = 1:iter
   accuracy = rep(0, times = length(iter))
   len = length(data[,1])
@@ -674,17 +675,20 @@ genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
         
         # Check if each variable in training and testing sets has two factors
         continue = 1
-        for (var in 1:(length(data) - 1)) {
-          if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
-          if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
-          if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
-        }
+        # for (var in 1:(length(data) - 1)) {
+        #   if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
+        #   if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
+        #   if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
+        # }
       }
     }
     
     # Run glm model
-    model = glm(formula = formula, data = train,
-                family = binomial(link = "logit"), na.action = na.omit)
+    if (type == "binomial-logit") {
+      model = glm(formula = formula, data = train,
+                  family = binomial(link = "logit"), na.action = na.omit)
+    }
+    
     
     # Analyze model fit
     if (length(iter) == 1) {
@@ -709,27 +713,30 @@ genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
       accuracy[i] = 1 - misclass.error
       
       # Calculate AUC and plot ROC
-      if (length(iter) == 1) {
-        pr = prediction(fitted.results, test$IntndPitFullDes)
-        prf = performance(pr, measure = "tpr", x.measure = "fpr")
-        plot(prf)
-        auc = performance(pr, measure = "auc")
-        auc = auc@y.values[[1]]
-        print(auc)
-      }
+      # if (length(iter) == 1) {
+      #   pr = prediction(fitted.results, test$IntndPitFullDes)
+      #   prf = performance(pr, measure = "tpr", x.measure = "fpr")
+      #   plot(prf)
+      #   auc = performance(pr, measure = "auc")
+      #   auc = auc@y.values[[1]]
+      #   print(auc)
+      # }
     }
     
     
   
   }
   print(accuracy)
-  hist(accuracy)
-  print(mean(accuracy[accuracy != 0]))
+  if (length(accuracy) > 1) {
+    hist(accuracy)
+    print(mean(accuracy[accuracy != 0]))
+  }
   
   # Return correspondence results if user selected
   if (return == 1) {return(list(accuracy, model))}
   
 }
+
 save_text_output_to_file = function(subfolder, name) {
 
   # Name folder to store output

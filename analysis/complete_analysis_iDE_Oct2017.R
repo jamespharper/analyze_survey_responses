@@ -60,6 +60,16 @@ print(sapply(data, function(x) sum(is.na(x))))
 missmap(data, main = "Missing Values in Variables", legend = F)
 summary(data)
 
+# De-identify data and save data file to disk for public release
+levels(data$LBO) = c(1:length(levels(data$LBO)))
+filename = 
+  paste(getwd(),
+        "/data/raw/surveys/FSMintentionsSurveyData_Harper_Nov2018",
+        sep = "")
+save(data, file = paste(filename, ".RData", sep = ""))
+write.csv(data, file = paste(filename, ".csv", sep = ""))
+
+
 ###############################################################################
 # ANALYZE DATA
 ###############################################################################
@@ -286,46 +296,57 @@ ggplot(df, aes(x = Mnth, y = Prop, fill = IntndPitFull)) +
   geom_col() + 
   coord_flip()
 windowsFonts()
-title = "                       Desirable                                             Undesirable"
+title = "                        Desirable                                             Undesirable"
 data.sub.des = subset(df, Desir == "Des")
 data.sub.undes = subset(df, Desir == "Undes")
 perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
                    data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
 perc_undes = 100 - perc_des
-ggplot(df, aes(x = Mnth)) + 
-  geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
-  geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
-  coord_flip() + 
-  geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
-  scale_x_discrete(name = "Month", 
-                   breaks = unique(df$Mnth),
-                   limits = rev(unique(df$Mnth)),
-                   labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
-  scale_y_continuous(name = "Percentage of rural latrine owners", 
-                     breaks = round(seq(-0.8, 0.8, 0.1), 1), 
-                     limits = c(-0.8, 0.8),
-                     labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
-  scale_fill_discrete(name = "Intention when Pit Fills: ",
-                      breaks = order,
-                      labels = c("Pay professional",
-                                 "Install a new pit",
-                                 "Self-empty",
-                                 "Undecided",
-                                 "Stop using latrine",
-                                 "Other")) +
-  ggtitle(title) + 
-  theme_bw() +
-  theme(text = element_text(family = "serif", size = 14), 
-        legend.position = "bottom",
-        legend.direction = "horizontal",
-        panel.background = element_blank()) +
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Mnth), y = -perc_des/100 - 0.04, 
-           label = paste(as.character(perc_des), "%", sep = "")) + 
-  annotate(geom = "text", size = 4, family = "serif",
-           x = unique(df$Mnth), y = perc_undes/100 + 0.05, 
-           label = paste(as.character(perc_undes), "%", sep = ""))
+# undecided, self-empty, other, pay, pit, stop
+cbPalette = c("#F0E442", "#E69F00", "#999999", "#009E73", "#56B4E9", "#D55E00")
+p = ggplot(df, aes(x = Mnth), fill = "transparent") + 
+    geom_col(data = data.sub.des, 
+             aes(y = -Prop, fill = IntndPitFull)) + 
+    geom_col(data = data.sub.undes, 
+             aes(y = Prop, fill = IntndPitFull)) + 
+    coord_flip() +
+    geom_hline(yintercept = 0, colour = "white", lwd = 1) + 
+    scale_x_discrete(name = "Month", 
+                     breaks = unique(df$Mnth),
+                     limits = rev(unique(df$Mnth)),
+                     labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+    scale_y_continuous(name = "Percentage of rural latrine owners", 
+                       breaks = round(seq(-0.8, 0.8, 0.1), 1), 
+                       limits = c(-0.8, 0.8),
+                       labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
+    scale_fill_manual(name = "Intention when Pit Fills: ",
+                        breaks = order, values = cbPalette,
+                        labels = c("Pay professional",
+                                   "Install a new pit",
+                                   "Self-empty",
+                                   "Undecided",
+                                   "Stop using latrine",
+                                   "Other")) +
+    ggtitle(title) + 
+    theme_bw() +
+    theme(text = element_text(family = "serif", size = 14), 
+          legend.position = "bottom",
+          legend.direction = "horizontal",
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "transparent",colour = NA),
+          plot.background = element_rect(fill = "transparent",colour = NA)) +
+    annotate(geom = "text", size = 4, family = "serif",
+             x = unique(df$Mnth), y = -perc_des/100 - 0.04, 
+             label = paste(as.character(perc_des), "%", sep = "")) + 
+    annotate(geom = "text", size = 4, family = "serif",
+             x = unique(df$Mnth), y = perc_undes/100 + 0.05, 
+             label = paste(as.character(perc_undes), "%", sep = ""))
+p
+ggsave(p, filename = "test.png", bg = "transparent",
+       width = 8, height = 5, units = "in")
+
 ggplot(df, aes(x = Mnth, y = Prop, group = IntndPitFull)) + 
   geom_line(aes(color = IntndPitFull), size = 2) +
   guides(linetype = guide_legend(override.aes = list(alpha = 1)))
@@ -419,7 +440,8 @@ data.sub.undes = subset(df, Desir == "Undes")
 perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
                    data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
 perc_undes = 100 - perc_des
-ggplot(df, aes(x = Prov)) + 
+cbPalette = c("#F0E442", "#E69F00", "#999999", "#009E73", "#56B4E9", "#D55E00")
+p = ggplot(df, aes(x = Prov)) + 
   geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
   geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
   coord_flip() + 
@@ -444,13 +466,20 @@ ggplot(df, aes(x = Prov)) +
   theme(text = element_text(family = "serif", size = 14), 
         legend.position = "bottom",
         legend.direction = "horizontal",
-        panel.background = element_blank()) +
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA)) +
   annotate(geom = "text", size = 4, family = "serif",
            x = unique(df$Prov), y = -perc_des/100 - 0.04, 
            label = paste(as.character(perc_des), "%", sep = "")) + 
   annotate(geom = "text", size = 4, family = "serif",
            x = unique(df$Prov), y = perc_undes/100 + 0.05, 
            label = paste(as.character(perc_undes), "%", sep = ""))
+p
+ggsave(p, filename = "Intentions by Province.png", bg = "transparent",
+       width = 8, height = 5, units = "in")
+
 ggplot(df, aes(x = Prov, y = Prop, group = IntndPitFull)) + 
   geom_line(aes(color = IntndPitFull), size = 2) +
   guides(linetype = guide_legend(override.aes = list(alpha = 1)))
@@ -474,7 +503,7 @@ data.sub.undes = subset(df, Desir == "Undes")
 perc_des = round(data.sub.des$Prop[data.sub.des$IntndPitFull == "Pay"] +
                    data.sub.des$Prop[data.sub.des$IntndPitFull == "Pit"], 2)*100
 perc_undes = 100 - perc_des
-ggplot(df, aes(x = Prov)) + 
+p = ggplot(df, aes(x = Prov)) + 
   geom_col(data = data.sub.des, aes(y = -Prop, fill = IntndPitFull)) + 
   geom_col(data = data.sub.undes, aes(y = Prop, fill = IntndPitFull)) + 
   coord_flip() + 
@@ -486,8 +515,8 @@ ggplot(df, aes(x = Prov)) +
                      breaks = round(seq(-0.8, 0.8, 0.1), 1), 
                      limits = c(-0.8, 0.8),
                      labels = paste(as.character(abs(seq(-80, 80, 10))), "%", sep = "")) +
-  scale_fill_discrete(name = "Intention when Pit Fills: ",
-                      breaks = order,
+  scale_fill_manual(name = "Intention when Pit Fills: ",
+                      breaks = order, values = cbPalette,
                       labels = c("Pay professional",
                                  "Install a new pit",
                                  "Self-empty",
@@ -499,13 +528,19 @@ ggplot(df, aes(x = Prov)) +
   theme(text = element_text(family = "serif", size = 14), 
         legend.position = "bottom",
         legend.direction = "horizontal",
-        panel.background = element_blank()) +
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA)) +
   annotate(geom = "text", size = 4, family = "serif",
            x = unique(df$Prov), y = -perc_des/100 - 0.04, 
            label = paste(as.character(perc_des), "%", sep = "")) + 
   annotate(geom = "text", size = 4, family = "serif",
            x = unique(df$Prov), y = perc_undes/100 + 0.05, 
            label = paste(as.character(perc_undes), "%", sep = ""))
+p
+ggsave(p, filename = "Intentions by Province.png", bg = "transparent",
+       width = 8, height = 5, units = "in")
 
 # By rainfall
 summary(as.factor(data$Rain.mm))
