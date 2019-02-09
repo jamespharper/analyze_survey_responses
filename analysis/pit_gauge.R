@@ -17,13 +17,76 @@ loadfonts(device = "win")
 load(file = paste(getwd(),"/data/raw/surveys/pit_gauge/pit_gauge.RData",
                   sep = ""))
 ###############################################################################
-# Summarize Data     ADDED TO FSM 5 PRESENTATION
+# Summarize Data
 ###############################################################################
 # Display data to aid in analysis
 d.ADPsales.PG
 d.ADPsales.villtyp
 summary(d.baseline)
+prop.table(table(d.baseline$LatOwnrIDPoor))
+summary(as.numeric(as.character(d.baseline$NumPplHH)))
+sd(as.numeric(as.character(d.baseline$NumPplHH)))
+prop.table(table(d.baseline$UseLatReg))
+prop.table(table(d.baseline$EmptyBefor))
+prop.table(table(d.baseline$WhyNoEmpty))
+prop.table(table(d.baseline$EmptyMethds))
+prop.table(table(d.baseline$PiercdPit))
+summary(as.numeric(as.character(d.baseline$LatAge[d.baseline$LatAge != 2018])))
+sd(as.numeric(as.character(d.baseline$LatAge[d.baseline$LatAge != 2018 &
+                                               !is.na(d.baseline$LatAge)])))
+prop.table(table(d.baseline$Job))
+# 77% not IDPoor
+# 4.9 ppl in HH mean, max = 14, sd = 2.0
+# 98% use lat reg
+# 16% emptied before, 90% self-emptied with bucket, 9% self-emptied with pump
+# 96% hadn't emptied before because not full
+# 10% had pierced pit
+# 4.6 year old lat mean, max = 33, sd = 3.3
 summary(d.followup)
+prop.table(table(d.followup$IDPoorTyp))
+summary(as.numeric(as.character(d.followup$NumPplHH)))
+sd(as.numeric(as.character(d.followup$NumPplHH[!is.na(d.followup$NumPplHH)])))
+summary(as.numeric(as.character(d.followup$NumPplHHLatUsr)))
+sd(as.numeric(as.character(d.followup$NumPplHHLatUsr[!is.na(d.followup$NumPplHH)])))
+mean(
+  as.numeric(as.character(
+    d.followup$NumPplHHLatUsr[!is.na(d.followup$NumPplHH)])) /
+    as.numeric(as.character(
+      d.followup$NumPplHH[!is.na(d.followup$NumPplHH)])))
+prop.table(table(d.followup$HousFlod))
+prop.table(table(d.followup$RoadAccsTruck))
+prop.table(table(d.followup$PiercdPit))
+prop.table(table(d.followup$NumPits))
+prop.table(table(d.followup$NumRngs))
+prop.table(table(d.followup$NumRngs.Othr))
+prop.table(table(d.followup$EmptyBefor))
+summary(as.numeric(as.character(d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK"])))
+sd(as.numeric(as.character(d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK" &
+                                                    !is.na(d.followup$EmptyWilPay)])))
+prop.table(table(d.followup$FSMServProvdrs))
+prop.table(table(d.followup$FSMServProvdrs.Contact))
+summary(d.followup$FSMServProvdrs.Contact)
+prop.table(table(d.followup$FSMServProvdrs.Cost))
+summary(d.followup$FSMServProvdrs.Cost)
+avg.cost.per.ring = mean(c(10, 40/3, 25/3)); print(avg.cost.per.ring)
+avg.flat.rate = mean(c(150, 50, 50000/4000)); print(avg.flat.rate)
+# 88% not IDPoor
+# 4.7 ppl in HH mean, min = 1, max = 19, sd = 2.2
+# 4.1 ppl using lat mean, min = 1, max = 12, sd = 1.8
+# 90% of household used latrine on average
+# All lived by a field, none by river or pond
+# 24% experienced flooding
+# 89% had good road access
+# 14% had pierced pits
+# 88% had 1 pit, 12% had 2 pits
+# 52% 80-cm rings
+# 93% had 3-6 rings
+# 18% emptied before
+# WTP for emptying 16667 Riel mean, min = 0, max = 200000, sd = 40000
+# 80% believed there were no service providers that served their region, 17%
+#   did not know, 2% said yes. Of the yeses, 7 out of 14 knew how to contact
+#   them, and 11 knew their prices for emptying ($10.56 per ring or $71 flat
+#   rate on average).
 summary(d.custmrsurvs.SvyRng)
 summary(d.custmrsurvs.SvyRng.Rmduol)
 summary(d.sldglvls)
@@ -39,7 +102,7 @@ summary(d.custmrsurvs.SvyRng.Rmduol)
 summary(d.custmrsurvs.SvyRng.Rmduol$Comm)  
 # Only 10 surveys from Comm Chrung Popel and Muen Chey
 ###############################################################################
-# Emptied Before vs. Never Emptied Before
+# Emptied Before vs. Never Emptied Before     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 summary(d.baseline)
 summary(d.baseline$EmptyBefor)
@@ -47,7 +110,7 @@ summary(glm(EmptyBefor ~ LatOwnrIDPoor + NumPplHH + LatStartUseYr + VillTyp +
               Job + PiercdPit,
             data = d.baseline, family = binomial(link = "logit"),
             na.action = na.omit))
-# Treatment group emptied much less likely to be emptied before 
+# Treatment group much less likely to have emptied before 
 #   (-1.16, p = 0.000).
 # Older latrines less likely to be emptied before (-0.13, p = 0.000).
 # Non-poor HHs trended with being emptied before (1.42, p = 0.06).
@@ -95,18 +158,22 @@ cor.test(d.followup$NumPplHHLatUsr, d.followup$NumRngs.Othr)
 # Pits are not installed based on num ppl in HH or using latrine.
 freqs = table(d.followup$EmptyBefor, d.followup$NumPits)
 CrossTable(freqs); assocstats(freqs)
-freqs = table(d.followup$EmptyBefor, d.followup$NumRngs)
+temp = subset(d.followup, !is.na(NumRngs.Othr) & !is.na(EmptyBefor))
+biserial.cor(as.numeric(temp$NumRngs.Othr), 
+             as.numeric(temp$EmptyBefor))
+freqs = table(temp$EmptyBefor, temp$NumRngs.Othr)
 CrossTable(freqs); assocstats(freqs)
-# Number of pits or rings no associated with emptying before.
+# Number of pits not associated with emptying before.
+# Fewer rings associated with empting before (p = 0.005, v = 0.20)
 ###############################################################################
-# Emptied Before
+# Emptied Before     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 dset = subset(d.followup, EmptyBefor == "Yes")
 dset2 = subset(d.followup, EmptyBefor == "No")
 length(dset$EmptyBefor) / (length(dset$EmptyBefor) + length(dset2$EmptyBefor))
 summary(dset)
-# Of the 98 respondents that have emptied before (18% of respondents that answered if they emptied
-# before or not),
+# Of the 98 respondents that have emptied before (18% of respondents that 
+# answered if they emptied before or not),
 # No household was near a river or pond.
 # Every household was near a field.
 prop.table(table(dset$VillTyp))
@@ -123,17 +190,21 @@ t.test(x = dset$NumPplHH, y = dset2$NumPplHH)
 # than average number of people that had not emptied 4.6 (p = 0.07).
 mean(dset$NumPplHHLatUsr)
 mean(dset$NumPplHHLatUsr) / mean(dset$NumPplHH)
+t.test(x = dset$NumPplHHLatUsr, y = dset2$NumPplHHLatUsr)
 # Average number of latrine users per household was 4.4 (88% of household).
+# Statistically more than 4.0 of HHs that had not emptied (p = 0.05).
 prop.table(table(dset$HousFlod))
 prop.table(table(dset$FlodSevrty))
+t.test(x = as.numeric(dset$HousFlod), y = as.numeric(dset2$HousFlod))
 # 30% of households flooded at some time in the year (59% mild, 
 # 41% moderate, 0% severe). CHECK IF WHEN FLOODED ASKED.
 prop.table(table(dset$RoadAccsTruck))
 # 91% were accessible to a large truck via road. CHECK IF SEASONALITY ASKED.
 freqs = table(dset$RoadAccsTruck, dset$EmptyMethds)
 CrossTable(freqs); assocstats(freqs)
+t.test(x = as.numeric(dset$RoadAccsTruck), y = as.numeric(dset2$RoadAccsTruck))
 # No association between RoadAccess and EmptyMthds. Makes sense because
-# no HHs reported VTruckEmptying.
+# no HHs reported VTruckEmptying. p = 0.55
 freqs = table(dset$EmptyWho, dset$RoadAccsTruck)
 CrossTable(freqs); assocstats(freqs)
 freqs = table(dset$EmptyCost, dset$RoadAccsTruck)
@@ -141,7 +212,7 @@ CrossTable(freqs); assocstats(freqs)
 freqs = table(dset$EmptyMethds, dset$RoadAccsTruck)
 CrossTable(freqs); assocstats(freqs)
 # No association between road access and emptying method and who.
-# Trend between road access and empty cost.
+# Trend between road access and empty cost. Not enough data though.
 summary(dset$Date)
 dset$LatAge = as.numeric(difftime(dset$Date, 
                                   dset$LatStartUseDate, units = "days")/365)
@@ -149,15 +220,17 @@ summary(dset$LatAge); sd(dset$LatAge, na.rm = TRUE)
 # Average number of years using latrine was 7.9 years (sd = 5.9, max = 30.8,
 # min = 0.2).
 prop.table(table(dset$PiercdPit))
-# 17% had pierced pits.
+t.test(x = as.numeric(dset$PiercdPit), y = as.numeric(dset2$PiercdPit))
+# 17% had pierced pits. Not stat diff from non-emptiers.
 prop.table(table(dset$NumPits))
 # 92% had only 1 pit, and 8% had 2 pits.
 prop.table(table(dset$NumRngs.Othr))
 summary(dset$NumRngs.Othr)
 hist(dset$NumRngs.Othr)
 sd(dset$NumRngs.Othr, na.rm = TRUE)
+t.test(x = as.numeric(dset$NumRngs.Othr), y = as.numeric(dset2$NumRngs.Othr))
 # Most (85%) had pits with 3 or more rings (mean = 3.5, sd = 1.0, max = 6, 
-# min = 1).
+# min = 1). p = 0.06. Linreg above gives more accurate results.
 prop.table(table(dset$EmptyChlngs))
 # Only 5% reported any challenge with emptying, and all were about 
 # needing to empty too frequently.
@@ -188,8 +261,8 @@ summary(glm(EmptyNum ~ IDPoor + NumPplHHLatUsr + HousFlod +
             data = temp, family = poisson(link = "log"),
             na.action = na.omit,
             control = list(maxit = 50)))
-# Older latrines emptied more.
-# Paying to empty yields less empties.
+# Older latrines emptied more (0.04, p = 0.004).
+# Hiring a service provider emptied less (-1.3, p =...)
 dset$EmptyNumPerYrLatOwn = round(dset$EmptyNum / dset$LatAge, digits = 3)
 summary(dset$EmptyNumPerYrLatOwn)
 summary(as.factor(dset$EmptyNumPerYrLatOwn))
@@ -234,12 +307,23 @@ summary(glm(EmptyNumPerYrLatOwn ~ IDPoor + NumPplHHLatUsr + HousFlod +
 #   Why emptied. 
 gamma_test(dset$EmptyNumPerYrLatOwn)
 # Not gamma.
-subset(dset, EmptyNum > 19)
-# The 2 HHs that empty very frequently not IDPoor, 6 ppl in HH and using lat,
-# 3 rings, 100 cm, 1 pit, self- or family-empty, good and neutral exp, 
-# 4 hrs or 0.5 hrs to empty, lat unusable, buried and in field dispos, 
-# plan to bucket, will pay 0, no FSM serv providrs, lat age 7 yrs and 18 yrs,
-# empties per yr = 61 and 23, yrs between empties 0.33 and 0.89.
+subset(dset, EmptyNumPerYrLatOwn > 1.5 & EmptyNum > 1)
+# The 3 HHs that empty very frequently:
+# 2 not IDPoor, 1 IDPoor2
+# 5, 6, 3 ppl in HH, all using lat
+# All had road access
+# None flooded
+# 1 had a pierced pit
+# 1 pit, 3 rings, 2 had 80 cm rings, 1 had 100 cm rings
+# Self- or family-empty, good and neutral exp
+# No challenges
+# Emptynum 5, 21, 3
+# LatAge 3, 7, 2 years
+# empties per yr lat owned = 1.5, 3, 1.7
+# 2, 4 hrs, 10 mins to empty
+# 2 bucket, 1 pump
+# Lat unusable, dispos in field
+# Plan same, will pay 0 or DK, no FSM serv providrs
 summary(dset$EmptyLast)
 # Lots of missing data.
 # Mean last empty was 1 year prior to survey (min 1 month, max 5.5 years)
@@ -262,11 +346,12 @@ summary(dset$EmptyCost)
 temp = droplevels(subset(dset, EmptyCost != "DK"))
 temp$EmptyCost = as.numeric(as.character(temp$EmptyCost))
 summary(temp$EmptyCost); sd(temp$EmptyCost)
+summary(temp$EmptyCost[temp$EmptyCost != 0]); sd(temp$EmptyCost[temp$EmptyCost != 0])
 hist(temp$EmptyCost, breaks = 50)
 plot(temp$EmptyCost[order(empty.cost, decreasing = TRUE)])
 boxplot(temp$EmptyCost)
 # Mean cost to empty 5344 Riel (sd = 17495, min = 0, max = 120000).
-# Not sure what small costs were for. Fragrances? Paying family members?
+# Thse small costs included bottled water, soda and perhaps fragrances.
 cor.test(temp$EmptyCost, as.numeric(temp$EmptyWho))
 # No association between EmptyCost and EmptyWho.
 num.rngs = droplevels(subset(dset, EmptyCost != "DK"))$NumRngs.Othr
@@ -276,7 +361,7 @@ temp = droplevels(subset(dset, EmptyCost != "DK"))
 freqs = table(temp$EmptyWho, temp$EmptyCost)
 CrossTable(freqs); assocstats(freqs)
 temp2 = as.numeric(as.character(temp$EmptyCost[temp$EmptyWho == "Pro"]))
-mean(temp2); sd(temp2)
+mean(temp2); sd(temp2); summary(temp2); boxplot(temp2)
 # Empty cost strongly associated with who emptied (p = 0.001, v = 0.59).
 # Self and family mostly 0 cost (93% and 71%). Some HHs reported relatively
 #   small costs between 1500 to 20000 Riel.
@@ -315,7 +400,7 @@ summary(glm(EmptyWhy_Unusable ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
             data = dset, family = binomial(link = "logit"),
             na.action = na.omit,
             control = list(maxit = 50)))
-# Long time to empty trends with less likely smell is reason to empty.
+# Long time to empty trends with less likely usuable is reason to empty.
 summary(glm(EmptyWhy_Smell ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
               RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
               EmptyChlngs + EmptyNum + EmptyMethds + EmptyWho + 
@@ -387,15 +472,19 @@ summary(empty.wil.pay); hist(empty.wil.pay, breaks = 50)
 sd(empty.wil.pay)
 empty.wil.pay2 = as.numeric(as.character(
   droplevels(subset(dset, EmptyWilPay != "DK" & EmptyWilPay != 0))$EmptyWilPay))
-summary(empty.wil.pay2); hist(empty.wil.pay2, breaks = 50)
-sd(empty.wil.pay2)
+summary(empty.wil.pay2); hist(empty.wil.pay2, breaks = 50); sd(empty.wil.pay2)
+summary(as.factor(empty.wil.pay2))
 # 61% did not know what they were willing to pay, 24% were not willing to pay.
 # Of everyone that reported a willingness to pay, mean = 10888 Riel, 
 # sd = 25280, max = 100000 Riel.
 # Of those willing to pay anything, mean = 28477, min = 3500.
 summary(dset$FSMServProvdrs); prop.table(table(dset$FSMServProvdrs))
+summary(dset2$FSMServProvdrs); prop.table(table(dset2$FSMServProvdrs))
+t.test(as.numeric(dset$FSMServProvdrs), as.numeric(dset2$FSMServProvdrs))
 # Of people that already emptied, only 3% knew of an FSM service provider,
 # 6% didn't know of any, and 91% said there were none in their area.
+# A lack of emptying experience decreased knowledge of FSM service providers 
+# in the area (p = 0.000).
 summary(dset$FSMServProvdrs.Contact); 2/98
 # 2 of the 4 HHs (2% of HHs that emptied before) that knew an FSM serv 
 # provider knew how to get in contact with them.
@@ -844,7 +933,7 @@ summary(glm(PiercdPit ~ IDPoorTyp + NumPplHH + NumPplHHLatUsr +
 names(d.followup)
 # ...
 ###############################################################################
-# Closing Rates
+# Closing Rates     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 sum(d.ADPsales.villtyp$NumSales) / sum(d.ADPsales.villtyp$NumSalesVisits)
 # Total closing rate = 14%
@@ -865,7 +954,7 @@ prop.test(x = d.ADPsales.PG$NumSales,
 # the engagement of village chief and regular visits by monitoring staff to 
 # households during non-sales months to measure pit fill rates.
 ###############################################################################
-# Delivery and Cancellation Rates
+# Delivery and Cancellation Rates     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 sum(d.ADPsales.villtyp$NumDeliverd) / sum(d.ADPsales.villtyp$NumSales)
 # Total delivery rate = 67%
@@ -897,7 +986,7 @@ prop.test(x = d.ADPsales.PG$NumCanceld,
           n = d.ADPsales.PG$NumSales)
 # p = 0.000 -> Fewer cancellations in HHs with PG
 ###############################################################################
-# Backlog Rates
+# Backlog Rates   OMITTED FROM FSM5 PRESENTATION
 ###############################################################################
 sum(d.ADPsales.villtyp$NumBacklog) / sum(d.ADPsales.villtyp$NumSales)
 # Total backlog rate = 5%
