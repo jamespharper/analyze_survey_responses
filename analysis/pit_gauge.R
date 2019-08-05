@@ -10,18 +10,23 @@ source("functions.R")                                   # Load custom functions
 load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan",
     "extrafont", "gmodels", "vcd", "ltm", "MASS", "ggpubr", "dplyr", "CDFt",
-    "fitdistrplus", "goft", "flexsurv", "reldist"))
+    "fitdistrplus", "goft", "flexsurv", "reldist", "vioplot", "aplpack",
+    "rgdal", "viridis", "lubridate"))
 loadfonts(device = "win")
+options(max.print = 1000)
 ###############################################################################
 # Load cleaned data (If need to clean raw data, open pit_gauge-clean_data.R)
-load(file = paste(getwd(),"/data/raw/surveys/pit_gauge/pit_gauge.RData",
-                  sep = ""))
+load(file = paste(getwd(), 
+        "/analyze_survey_responses/data/raw/surveys/pit_gauge/pit_gauge.RData",
+        sep = ""))
 ###############################################################################
-# Summarize Data
+# Summarize Data                                     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 # Display data to aid in analysis
 d.ADPsales.PG
+colSums(d.ADPsales.PG[,-1])
 d.ADPsales.villtyp
+
 summary(d.baseline)
 prop.table(table(d.baseline$LatOwnrIDPoor))
 summary(as.numeric(as.character(d.baseline$NumPplHH)))
@@ -42,12 +47,14 @@ prop.table(table(d.baseline$Job))
 # 96% hadn't emptied before because not full
 # 10% had pierced pit
 # 4.6 year old lat mean, max = 33, sd = 3.3
+
 summary(d.followup)
 prop.table(table(d.followup$IDPoorTyp))
 summary(as.numeric(as.character(d.followup$NumPplHH)))
 sd(as.numeric(as.character(d.followup$NumPplHH[!is.na(d.followup$NumPplHH)])))
 summary(as.numeric(as.character(d.followup$NumPplHHLatUsr)))
-sd(as.numeric(as.character(d.followup$NumPplHHLatUsr[!is.na(d.followup$NumPplHH)])))
+sd(as.numeric(as.character(
+  d.followup$NumPplHHLatUsr[!is.na(d.followup$NumPplHH)])))
 mean(
   as.numeric(as.character(
     d.followup$NumPplHHLatUsr[!is.na(d.followup$NumPplHH)])) /
@@ -55,14 +62,30 @@ mean(
       d.followup$NumPplHH[!is.na(d.followup$NumPplHH)])))
 prop.table(table(d.followup$HousFlod))
 prop.table(table(d.followup$RoadAccsTruck))
+d.followup$LatAge = 
+  as.numeric(difftime(d.followup$Date, 
+                      d.followup$LatStartUseDate, units = "days")/365)
+summary(d.followup$LatAge); sd(d.followup$LatAge, na.rm = TRUE)
 prop.table(table(d.followup$PiercdPit))
 prop.table(table(d.followup$NumPits))
 prop.table(table(d.followup$NumRngs))
 prop.table(table(d.followup$NumRngs.Othr))
 prop.table(table(d.followup$EmptyBefor))
-summary(as.numeric(as.character(d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK"])))
-sd(as.numeric(as.character(d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK" &
-                                                    !is.na(d.followup$EmptyWilPay)])))
+prop.table(table(d.followup$EmptyPlan))
+prop.table(table(d.followup$EmptyPlanMethds))
+summary(d.followup$EmptyWilPay)
+prop.table(table(d.followup$EmptyWilPay))
+summary(as.numeric(as.character(
+  d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK"])))
+sd(as.numeric(as.character(
+  d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK" &
+                           !is.na(d.followup$EmptyWilPay)])))
+will.pay = as.numeric(as.character(
+  d.followup$EmptyWilPay[d.followup$EmptyWilPay != "DK" &
+                           !is.na(d.followup$EmptyWilPay) &
+                           d.followup$EmptyWilPay != 0]))
+will.pay = will.pay/4000
+summary(will.pay); sd(will.pay); hist(will.pay); boxplot(will.pay)
 prop.table(table(d.followup$FSMServProvdrs))
 prop.table(table(d.followup$FSMServProvdrs.Contact))
 summary(d.followup$FSMServProvdrs.Contact)
@@ -70,6 +93,31 @@ prop.table(table(d.followup$FSMServProvdrs.Cost))
 summary(d.followup$FSMServProvdrs.Cost)
 avg.cost.per.ring = mean(c(10, 40/3, 25/3)); print(avg.cost.per.ring)
 avg.flat.rate = mean(c(150, 50, 50000/4000)); print(avg.flat.rate)
+d.followup$ExtrapolatEmptyCost.perRing = 
+  d.followup$NumRngs.Othr * avg.cost.per.ring
+summary(d.followup$ExtrapolatEmptyCost.perRing)
+will.pay = c(will.pay, 
+             rep(NA, 
+                 length(d.followup$ExtrapolatEmptyCost.perRing[
+                   !is.na(d.followup$ExtrapolatEmptyCost.perRing)]) 
+                 - length(will.pay)))
+df = data.frame(PriceChargedByServiceProviders = 
+                  d.followup$ExtrapolatEmptyCost.perRing[
+                    !is.na(d.followup$ExtrapolatEmptyCost.perRing)],
+                WillingnessToPay = will.pay)
+boxplot(df, ylab = "$ USD", col = c("blue", "green"), 
+        main = "Price Charged by Service Providers and Willingness to Pay",
+        yaxp  = c(0, 90, 9))
+boxplot(df, ylab = "$ USD", col = c("blue", "green"), notch = TRUE,
+        main = "Price Charged by Service Providers and Willingness to Pay")
+vioplot(df$PriceChargedByServiceProviders, df$WillingnessToPay, 
+        names = c("PriceChargedByServiceProviders",
+                  "WillingnessToPay"),
+        ylab = "$ USD", col = c("blue", "green"), yaxp  = c(0, 90, 9),
+        main = "Price Charged by Service Providers and Willingness to Pay")
+bagplot(df$PriceChargedByServiceProviders, df$WillingnessToPay, 
+        ylab = "$ USD", 
+        main = "Price Charged by Service Providers and Willingness to Pay")
 # 88% not IDPoor
 # 4.7 ppl in HH mean, min = 1, max = 19, sd = 2.2
 # 4.1 ppl using lat mean, min = 1, max = 12, sd = 1.8
@@ -77,6 +125,7 @@ avg.flat.rate = mean(c(150, 50, 50000/4000)); print(avg.flat.rate)
 # All lived by a field, none by river or pond
 # 24% experienced flooding
 # 89% had good road access
+# Lat age 0 to 31 years, mean 5.6, sd 4.3
 # 14% had pierced pits
 # 88% had 1 pit, 12% had 2 pits
 # 52% 80-cm rings
@@ -87,6 +136,7 @@ avg.flat.rate = mean(c(150, 50, 50000/4000)); print(avg.flat.rate)
 #   did not know, 2% said yes. Of the yeses, 7 out of 14 knew how to contact
 #   them, and 11 knew their prices for emptying ($10.56 per ring or $71 flat
 #   rate on average).
+
 summary(d.custmrsurvs.SvyRng)
 summary(d.custmrsurvs.SvyRng.Rmduol)
 summary(d.sldglvls)
@@ -102,7 +152,7 @@ summary(d.custmrsurvs.SvyRng.Rmduol)
 summary(d.custmrsurvs.SvyRng.Rmduol$Comm)  
 # Only 10 surveys from Comm Chrung Popel and Muen Chey
 ###############################################################################
-# Emptied Before vs. Never Emptied Before     ADDED TO FSM5 PRESENTATION
+# Emptied Before vs. Never Emptied Before            ADDED TO FSM5 PRESENTATION
 ###############################################################################
 summary(d.baseline)
 summary(d.baseline$EmptyBefor)
@@ -123,8 +173,8 @@ CrossTable(freqs); assocstats(freqs)
 #   Contradicted below.
 summary(d.followup)
 summary(glm(EmptyBefor ~ IDPoorTyp + NumPplHH + NumPplHHLatUsr +
-              HousFlod + RoadAccsTruck + LatStartUseDate + PiercdPit + NumPits + 
-              NumRngs + PGInstld + EmptyPlan + VillTyp,
+              HousFlod + RoadAccsTruck + LatStartUseDate + PiercdPit + 
+              NumPits + NumRngs + PGInstld + EmptyPlan + VillTyp,
             data = d.followup, family = binomial(link = "logit"),
             na.action = na.omit))
 # Compare to above linreg with d.baseline
@@ -166,7 +216,7 @@ CrossTable(freqs); assocstats(freqs)
 # Number of pits not associated with emptying before.
 # Fewer rings associated with empting before (p = 0.005, v = 0.20)
 ###############################################################################
-# Emptied Before     ADDED TO FSM5 PRESENTATION
+# Emptied Before                                     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 dset = subset(d.followup, EmptyBefor == "Yes")
 dset2 = subset(d.followup, EmptyBefor == "No")
@@ -213,9 +263,6 @@ freqs = table(dset$EmptyMethds, dset$RoadAccsTruck)
 CrossTable(freqs); assocstats(freqs)
 # No association between road access and emptying method and who.
 # Trend between road access and empty cost. Not enough data though.
-summary(dset$Date)
-dset$LatAge = as.numeric(difftime(dset$Date, 
-                                  dset$LatStartUseDate, units = "days")/365)
 summary(dset$LatAge); sd(dset$LatAge, na.rm = TRUE)
 # Average number of years using latrine was 7.9 years (sd = 5.9, max = 30.8,
 # min = 0.2).
@@ -346,7 +393,8 @@ summary(dset$EmptyCost)
 temp = droplevels(subset(dset, EmptyCost != "DK"))
 temp$EmptyCost = as.numeric(as.character(temp$EmptyCost))
 summary(temp$EmptyCost); sd(temp$EmptyCost)
-summary(temp$EmptyCost[temp$EmptyCost != 0]); sd(temp$EmptyCost[temp$EmptyCost != 0])
+summary(temp$EmptyCost[temp$EmptyCost != 0])
+sd(temp$EmptyCost[temp$EmptyCost != 0])
 hist(temp$EmptyCost, breaks = 50)
 plot(temp$EmptyCost[order(empty.cost, decreasing = TRUE)])
 boxplot(temp$EmptyCost)
@@ -415,9 +463,9 @@ summary(glm(EmptyWhy_Smell ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
 # More times emptying associated with less likely smell.
 # Dispose in field associated with less likely smell being reason.
 # Having a plan associated with less likely smell.
-summary(glm(EmptyWhy_FertlizCrops ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
-              RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyChlngs + EmptyNum + EmptyMethds + EmptyWho + 
+summary(glm(EmptyWhy_FertlizCrops ~ LatAge + IDPoor + NumPplHHLatUsr + 
+              HousFlod + RoadAccsTruck + PiercdPit + NumPits + NumRngs + 
+              NumRngs.Othr + EmptyChlngs + EmptyNum + EmptyMethds + EmptyWho + 
               EmptyExprience + EmptyTimeHrs + 
               EmptyDispos + EmptyPlan + FSMServProvdrs, 
             data = dset, family = binomial(link = "logit"),
@@ -438,9 +486,9 @@ summary(glm(EmptyDispos_InField ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
             control = list(maxit = 50)))
 # Old latrine associated with less likely to dispos in field.
 # Long time to empty trends with more likely to dispos in field.
-summary(glm(EmptyDispos_FertlizCrops ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
-              RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyChlngs + EmptyNum + EmptyMethds + EmptyWho + 
+summary(glm(EmptyDispos_FertlizCrops ~ LatAge + IDPoor + NumPplHHLatUsr + 
+              HousFlod + RoadAccsTruck + PiercdPit + NumPits + NumRngs + 
+              NumRngs.Othr + EmptyChlngs + EmptyNum + EmptyMethds + EmptyWho + 
               EmptyExprience + EmptyTimeHrs + 
               EmptyWhy + EmptyPlan + FSMServProvdrs, 
             data = dset, family = binomial(link = "logit"),
@@ -471,13 +519,21 @@ empty.wil.pay = as.numeric(as.character(
 summary(empty.wil.pay); hist(empty.wil.pay, breaks = 50)
 sd(empty.wil.pay)
 empty.wil.pay2 = as.numeric(as.character(
-  droplevels(subset(dset, EmptyWilPay != "DK" & EmptyWilPay != 0))$EmptyWilPay))
+  droplevels(subset(dset, 
+                    EmptyWilPay != "DK" & EmptyWilPay != 0))$EmptyWilPay))
 summary(empty.wil.pay2); hist(empty.wil.pay2, breaks = 50); sd(empty.wil.pay2)
 summary(as.factor(empty.wil.pay2))
+t.test(empty.wil.pay2, 
+       as.numeric(as.character(
+         droplevels(subset(dset2, 
+                           EmptyWilPay != "DK" & 
+                             EmptyWilPay != 0))$EmptyWilPay)))
 # 61% did not know what they were willing to pay, 24% were not willing to pay.
 # Of everyone that reported a willingness to pay, mean = 10888 Riel, 
 # sd = 25280, max = 100000 Riel.
 # Of those willing to pay anything, mean = 28477, min = 3500.
+# WTP of HHs that emptied not stat diff than HHs that had not because not 
+# enough data.
 summary(dset$FSMServProvdrs); prop.table(table(dset$FSMServProvdrs))
 summary(dset2$FSMServProvdrs); prop.table(table(dset2$FSMServProvdrs))
 t.test(as.numeric(dset$FSMServProvdrs), as.numeric(dset2$FSMServProvdrs))
@@ -498,7 +554,7 @@ summary(dset$EmptyNumPer20Yr); sd(dset$EmptyNumPer20Yr, na.rm = TRUE)
 summary(dset$YrsBtwnEmpties); sd(dset$YrsBtwnEmpties, na.rm = TRUE)
 # Years between empties ranged from 0.2 to 31 yrs (mean = 4.4, sd = 4.5)
 ###############################################################################
-# Have Not Emptied Before
+# Have Not Emptied Before     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 dset2 = droplevels(subset(d.followup, EmptyBefor == "No"))
 summary(dset2)
@@ -519,7 +575,7 @@ summary(dset$NumPplHH)
 summary(dset2$NumPplHH)
 t.test(x = dset2$NumPplHH, y = dset$NumPplHH)
 # Average number of people per household was 4.6, trending lower
-# than average number of people that hademptied 5.0 (p = 0.07).
+# than average number of people that had emptied 5.0 (p = 0.07).
 mean(dset2$NumPplHHLatUsr)
 mean(dset2$NumPplHHLatUsr) / mean(dset2$NumPplHH)
 t.test(x = dset2$NumPplHHLatUsr, y = dset$NumPplHHLatUsr)
@@ -533,9 +589,6 @@ prop.table(table(dset2$FlodSevrty))
 prop.table(table(dset2$RoadAccsTruck))
 # 88% were accessible to a large truck via road, similar to HHs that emptied.
 # CHECK IF SEASONALITY ASKED.
-summary(dset2$Date)
-dset2$LatAge = as.numeric(difftime(dset2$Date, 
-                                   dset2$LatStartUseDate, units = "days")/365)
 summary(dset2$LatAge); sd(dset2$LatAge, na.rm = TRUE)
 t.test(x = dset2$LatAge, y = dset$LatAge)
 # Average number of years using latrine was 5.1 years (sd = 3.7, max = 23,
@@ -564,9 +617,9 @@ t.test(x = dset2$NumRngs.Othr, y = dset$NumRngs.Othr)
 dset2 = dummy_cols(dset2, select_columns = "EmptyWhyNot")
 summary(dset2)
 sapply(dset2, function(x) sum(is.na(x)))
-summary(glm(EmptyWhyNot_NotFull ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
-              RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
+summary(glm(EmptyWhyNot_NotFull ~ LatAge + IDPoor + NumPplHHLatUsr + 
+              HousFlod + RoadAccsTruck + PiercdPit + NumPits + NumRngs + 
+              NumRngs.Othr + EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
             data = dset2, family = binomial(link = "logit"),
             na.action = na.omit,
             control = list(maxit = 50)))
@@ -575,9 +628,9 @@ summary(glm(EmptyWhyNot_NotFull ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
 # More pits yields more likely to say not full.
 # Small rings yields more likely to say not full. Weird.
 # Plan to empty with vtruck yields less likely to say not full.
-summary(glm(EmptyWhyNot_PreferOvrflw ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
-              RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
+summary(glm(EmptyWhyNot_PreferOvrflw ~ LatAge + IDPoor + NumPplHHLatUsr +
+              HousFlod + RoadAccsTruck + PiercdPit + NumPits + NumRngs + 
+              NumRngs.Othr + EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
             data = dset2, family = binomial(link = "logit"),
             na.action = na.omit,
             control = list(maxit = 50)))
@@ -586,9 +639,9 @@ summary(glm(EmptyWhyNot_PreferOvrflw ~ LatAge + IDPoor + NumPplHHLatUsr + HousFl
 # More pits yields less likely to prefer overflow.
 # Smaller rings yields yields less likely to prefer overflow.
 # Plan to vtruck yields more likely to prefer overflow.
-summary(glm(EmptyWhyNot_WrongEquipment ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
-              RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
+summary(glm(EmptyWhyNot_WrongEquipment ~ LatAge + IDPoor + NumPplHHLatUsr + 
+              HousFlod + RoadAccsTruck + PiercdPit + NumPits + NumRngs + 
+              NumRngs.Othr + EmptyPlan + EmptyPlanMethds + FSMServProvdrs, 
             data = dset2, family = binomial(link = "logit"),
             na.action = na.omit,
             control = list(maxit = 50)))
@@ -603,11 +656,12 @@ summary(glm(EmptyWhyNot_TooBusy ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
 summary(dset2$EmptyPlan); prop.table(table(dset2$EmptyPlan))
 t.test(x = as.numeric(dset2$EmptyPlan), y = as.numeric(dset2$EmptyPlan))
 summary(dset2$EmptyPlanMethds); prop.table(table(dset2$EmptyPlanMethds))
-t.test(x = as.numeric(dset2$EmptyPlanMethds), y = as.numeric(dset2$EmptyPlanMethds))
+t.test(x = as.numeric(dset2$EmptyPlanMethds), 
+       y = as.numeric(dset2$EmptyPlanMethds))
 # 86% planned out how they will empty in the future. Not stat diff (p = 1).
 # Of them, 76% planned to bucket, 12% weren't sure which method they'd use, 
-# 7% planned to use a pump, and 4% planned to use a vacuum truck. (not stat diff
-# p = 1)
+# 7% planned to use a pump, and 4% planned to use a vacuum truck. 
+# (not stat diff, p = 1)
 summary(dset2$EmptyWilPay)
 prop.table(table(dset2$EmptyWilPay))
 empty.wil.pay = as.numeric(as.character(
@@ -622,7 +676,8 @@ t.test(x = as.numeric(as.character(
 # Of everyone that reported a willingness to pay, mean = 19186 Riel, 
 # sd = 44797, max = 200000 Riel. Not stat diff (p = 0.22).
 empty.wil.pay2 = as.numeric(as.character(
-  droplevels(subset(dset2, EmptyWilPay != "DK" & EmptyWilPay != 0))$EmptyWilPay))
+  droplevels(subset(dset2, EmptyWilPay != "DK" & 
+                      EmptyWilPay != 0))$EmptyWilPay))
 summary(empty.wil.pay2); hist(empty.wil.pay2, breaks = 50)
 sd(empty.wil.pay2)
 t.test(x = as.numeric(as.character(droplevels(subset(
@@ -632,6 +687,7 @@ t.test(x = as.numeric(as.character(droplevels(subset(
 # Of those willing to pay anything, mean = 53446, min = 1500, sd = 61840.
 # Not stat diff (p = 0.11).
 summary(dset2$FSMServProvdrs); prop.table(table(dset2$FSMServProvdrs))
+summary(dset$FSMServProvdrs); prop.table(table(dset$FSMServProvdrs))
 t.test(as.numeric(dset$FSMServProvdrs), as.numeric(dset2$FSMServProvdrs))
 # Of HHs that have not emptied, only 2% knew of an FSM service provider,
 # 20% didn't know of any, and 78% said there were none in their area.
@@ -647,7 +703,7 @@ t.test(dset2$LatAge, dset$LatAge)
 # Latrines ranged in age from 0 yrs to 22.8 yrs (mean = 5.1, sd = 3.7).
 # Stat diff (p = 0.000).
 ###############################################################################
-# Flood vs. No Flood
+# Flood vs. No Flood                ADDED AS BACKUP SLIDES TO FSM5 PRESENTATION
 ###############################################################################
 summary(d.followup)
 d.followup$LatAge = as.numeric(difftime(d.followup$Date, 
@@ -681,7 +737,8 @@ dset5 = subset(dset3, EmptyBefor != "Yes")
 summary(dset5)
 summary(glm(HousFlod ~ IDPoor + NumPplHHLatUsr + 
               RoadAccsTruck + PiercdPit + NumPits + NumRngs + NumRngs.Othr +
-              EmptyWhyNot + EmptyPlan + EmptyPlanMethds + FSMServProvdrs + LatAge, 
+              EmptyWhyNot + EmptyPlan + EmptyPlanMethds + FSMServProvdrs + 
+              LatAge, 
             data = dset5, family = binomial(link = "logit"),
             na.action = na.omit,
             control = list(maxit = 50)))
@@ -691,27 +748,28 @@ summary(glm(HousFlod ~ IDPoor + NumPplHHLatUsr +
 # Planning to bucket and not having a plan, more flooding
 # Planning to vtruck trends with more flooding
 ###############################################################################
-# Pierced Pits
+# Pierced Pits     ADDED TO FSM5 PRESENTATION
 ###############################################################################
 freqs = table(d.baseline$PiercdPit, d.baseline$VillTyp)
-CrossTable(freqs)
-assocstats(freqs)  
+CrossTable(freqs); assocstats(freqs)  
 # p = 0.000, v = 0.20 -> Treatment group in baseline survey has more HHs 
 # with pierced pits. This may imply that HHs in treatment group think about 
 # FSM more (more amenable/interested in ADP) or may have already dealt with
 # the FSM problem (less amenable/interest in ADP).
 freqs = table(d.followup$PiercdPit, d.followup$VillTyp)
-CrossTable(freqs)
-assocstats(freqs)
+CrossTable(freqs); assocstats(freqs)
 # p = 0.67 -> No difference in number of HHs with pierced pits in followup.
 dset = subset(d.followup, VillTyp == "Cntrl" | VillTyp == "TreatPG")
 dset = droplevels(dset)
 freqs = table(dset$PiercdPit, dset$VillTyp)
-CrossTable(freqs)
-assocstats(freqs)  
-# p = 0.39 -> No difference in number of HHs with pierced pits in followup.
+CrossTable(freqs); assocstats(freqs)  
+# No diff between PGs and without PGs
+freqs = table(dset$PiercdPit, dset$NumPplHH)
+CrossTable(freqs); assocstats(freqs)  
+freqs = table(dset$PiercdPit, dset$NumPplHHLatUsr)
+CrossTable(freqs); assocstats(freqs) 
+# p = 0.17 -> No difference in number of HHs with pierced pits in followup.
 # Unknown reason for difference in sample between baseline and followup.
-
 summary(d.followup$PiercdPit)
 summary(d.followup$NumPplHH)
 biserial.cor(d.followup$NumPplHH, d.followup$PiercdPit, use = "complete.obs")
@@ -722,27 +780,22 @@ biserial.cor(d.followup$NumPplHHLatUsr, d.followup$PiercdPit,
              use = "complete.obs")
 # r_pb = -0.10 -> Very weak correlation between piercing pit and # ppl in HH
 # using latrine.  NOT SUPPORTED IN LOGISTIC REGRESSION BELOW.
-
 freqs = table(d.baseline$PiercdPit, d.baseline$LatOwnrIDPoor)
-CrossTable(freqs)
-assocstats(freqs)  
+CrossTable(freqs); assocstats(freqs)  
 # p = 0.11 -> Pierced pit not affected by IDPoor status
 freqs = table(d.followup$PiercdPit, d.followup$IDPoor)
-CrossTable(freqs)
-assocstats(freqs)
+CrossTable(freqs); assocstats(freqs)
 # p = 0.69 -> Pierced pit not affected by IDPoor status
 freqs = table(d.followup$PiercdPit, d.followup$IDPoorTyp)
-CrossTable(freqs)
-assocstats(freqs)
+CrossTable(freqs); assocstats(freqs)
 # p = 0.53 -> Pierced pit not affected by IDPoor status
-
+prop.table(table((d.followup$HousFlod)))
 freqs = table(d.followup$PiercdPit, d.followup$HousFlod)
-CrossTable(freqs)
-assocstats(freqs)
-# p = 0.002 -> Pierced pit not affected by IDPoor status
-
+CrossTable(freqs); assocstats(freqs)
+# p = 0.002 -> Pierced pit and flooding associated
 summary(d.baseline$PGid)
 # summary(d.followup$PGid)
+
 summary(d.sldglvls$PGid)
 # paste(d.followup$RespLName[1], d.followup$RespFName[1])
 # test1 = data.frame(Name = paste(d.followup$RespLName, d.followup$RespFName))
@@ -755,21 +808,19 @@ for (row in 1:length(d.sldglvls$PGid)) {
       d.baseline$PiercdPit[grepl(d.sldglvls$PGid[row], d.baseline$PGid)])
 }
 d.sldglvls$PiercdPit = as.factor(d.sldglvls$PiercdPit)
-levels(d.sldglvls$PiercdPit) = c("No", NA, "Yes")
+# levels(d.sldglvls$PiercdPit) = c("No", NA, "Yes")
 summary(d.sldglvls$PiercdPit)
 biserial.cor(d.sldglvls$`LiquidDepth(mm)`, d.sldglvls$PiercdPit, 
              use = "complete.obs")
+cor.test(d.sldglvls$`LiquidDepth(mm)`, as.numeric(d.sldglvls$PiercdPit), 
+         use = "complete.obs")
 # r_pb = 0.00 -> No correlation between liquid depth and pierced pit
-
 freqs = table(d.baseline$PiercdPit, d.baseline$Job)
-CrossTable(freqs)
-assocstats(freqs)
+CrossTable(freqs); assocstats(freqs)
 # p = 0.10 -> No association between job and pierced pit.
-
 freqs = table(d.baseline$PiercdPit, d.baseline$LatInstlYr)
-CrossTable(freqs)
-assocstats(freqs)
-# Unsolvable
+CrossTable(freqs); assocstats(freqs)
+# No association between pierced pit and lat install year
 biserial.cor(as.numeric(d.baseline$LatInstlYr), d.baseline$PiercdPit, 
              use = "complete.obs")
 cor.test(as.numeric(d.baseline$LatInstlYr), as.numeric(d.baseline$PiercdPit))
@@ -778,70 +829,47 @@ cor.test(as.numeric(d.baseline$LatInstlYr), as.numeric(d.baseline$PiercdPit))
 # older latrines.
 biserial.cor(as.numeric(d.baseline$LatStartUseYr), d.baseline$PiercdPit, 
              use = "complete.obs")
-cor.test(as.numeric(d.baseline$LatStartUseYr), as.numeric(d.baseline$PiercdPit))
+cor.test(as.numeric(d.baseline$LatStartUseYr), 
+         as.numeric(d.baseline$PiercdPit))
 # r_pb = 0.08, p = 0.03 -> Very weak significant correlation between year 
 # latrine started use and presence of a pierced pit.  More pierced pits on
 # older latrines.
-
+freqs = table(d.baseline$PiercdPit, d.baseline$LatInstlYr)
+CrossTable(freqs); assocstats(freqs)
+biserial.cor(d.followup$LatAge, d.followup$PiercdPit, 
+             use = "complete.obs")
+cor.test(d.followup$LatAge, as.numeric(d.followup$PiercdPit))
+# p = 0.000, R = 0.23: older lat associated with pierced pit
 freqs = table(d.followup$PiercdPit, d.followup$RoadAccsTruck)
 CrossTable(freqs); assocstats(freqs)
 # No association between road access and pierced pits.
-
 summary(d.baseline)
 summary(glm(PiercdPit ~ VillTyp + LatOwnrIDPoor + NumPplHH + 
               LatStartUseYr + EmptyBefor + Job, 
             data = d.baseline, family = binomial(link = "logit"), 
             na.action = na.omit))
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# with(logit1, null.deviance – deviance)  # Model fit: Chi-square
-# with(logit1, df.null – df.residual)  # Model fit: degree of freedom
-# with(logit1, 
-#      pchisq(null.deviance – deviance, 
-#             df.null – df.residual, lower.tail = FALSE))  # Model fit: p-value
-# plot(logit1)
 # Older latrines trend with more pierced pits (p = 0.07).
 # Technical jobs trend with pierced pits (p = 0.08).
 # Treatment HHs had more pierced pits (p = 0.000)
-
 summary(d.baseline)
 dset = subset(d.baseline, EmptyBefor == "No")
 logit2 = glm(PiercdPit ~ VillTyp + LatOwnrIDPoor + NumPplHH + 
                LatStartUseYr + WhyNoEmpty + Job, 
              data = dset, family = binomial(link = "logit"), 
              na.action = na.omit)
-summary(logit2)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# with(logit1, null.deviance – deviance)  # Model fit: Chi-square
-# with(logit1, df.null – df.residual)  # Model fit: degree of freedom
-# with(logit1, 
-#      pchisq(null.deviance – deviance, 
-#             df.null – df.residual, lower.tail = FALSE))  # Model fit: p-value
-plot(logit2)
+summary(logit2); plot(logit2)
 # Among HHs that have not emptied before,
 # Older latrines had more pierced pits (p = 0.04).
 # Technical jobs had more pierced pits (p = 0.08).
 # Treatment HHs had more pierced pits (p = 0.000)
-
 summary(d.baseline)
 dset = subset(d.baseline, EmptyBefor == "Yes")
 logit3 = glm(PiercdPit ~ VillTyp + LatOwnrIDPoor + NumPplHH + 
                LatStartUseYr + EmptyMethds + Job, 
              data = dset, family = binomial(link = "logit"), 
              na.action = na.omit)
-summary(logit3)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# with(logit1, null.deviance – deviance)  # Model fit: Chi-square
-# with(logit1, df.null – df.residual)  # Model fit: degree of freedom
-# with(logit1, 
-#      pchisq(null.deviance – deviance, 
-#             df.null – df.residual, lower.tail = FALSE))  # Model fit: p-value
-plot(logit3)
-# Among HHs that have not emptied before,
+summary(logit3); plot(logit3)
 # Not enough data.
-
 summary(d.followup)
 logit4 = 
   glm(PiercdPit ~ IDPoorTyp + NumPplHH + NumPplHHLatUsr +
@@ -850,17 +878,10 @@ logit4 =
         EmptyPlan + EmptyPlanMethds + FSMServProvdrs + VillTyp, 
       data = d.followup, family = binomial(link = "logit"), 
       na.action = na.omit)
-summary(logit4)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-plot(logit4)
+summary(logit4) ; plot(logit4)
 # Experiencing flooding (check survey wording!) associated with piercing
 # pit (p = 0.02).
-# Being unwilling to pay to empty (EmptyWilPay0) trends with 
-# piercing pit (p = 0.07).
 # Older latrines had more pierced pits (p = 0.000).
-# Planning to self-empty had more pierced pits (p = 0.02).
-
 summary(d.followup)
 dset = subset(d.followup, HousFlod == "Yes")
 summary(dset)
@@ -872,11 +893,7 @@ logit_flooding =
       data = dset, family = binomial(link = "logit"),
       na.action = na.omit)
 summary(logit_flooding)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# plot(logit_emptied_before)
 # Nothing new.
-
 summary(d.followup)
 dset = subset(d.followup, HousFlod == "No")
 summary(dset)
@@ -888,11 +905,7 @@ logit_noflooding =
       data = dset, family = binomial(link = "logit"),
       na.action = na.omit)
 summary(logit_noflooding)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# plot(logit_emptied_before)
 # Nothing new.
-
 summary(d.followup)
 dset = subset(d.followup, EmptyBefor == "No")
 summary(dset)
@@ -904,11 +917,7 @@ logit_not_emptied_before =
       data = dset, family = binomial(link = "logit"),
       na.action = na.omit)
 summary(logit_not_emptied_before)
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# plot(logit_emptied_before)
 # Nothing new.
-
 summary(d.followup)
 dset = subset(d.followup, EmptyBefor == "Yes")
 summary(dset$PiercdPit)
@@ -919,21 +928,12 @@ summary(glm(PiercdPit ~ IDPoorTyp + NumPplHH + NumPplHHLatUsr +
               EmptyDispos + EmptyPlan,
             data = dset, family = binomial(link = "logit"),
             na.action = na.omit))
-# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
-# confint.default(logit1)  # CIs using standard errors
-# plot(logit_never_emptied_before)
 # Nearly all HHs that emptied before self-emptied, 70 self, 23 family member,
 # and 5 pro.
 # Most emptied by bucket (80), others by pump (18).
 # Nothing else new.
 ###############################################################################
-# Sludge Levels
-###############################################################################
-# Compare 
-names(d.followup)
-# ...
-###############################################################################
-# Closing Rates     ADDED TO FSM5 PRESENTATION
+# Closing Rates                                      ADDED TO FSM5 PRESENTATION
 ###############################################################################
 sum(d.ADPsales.villtyp$NumSales) / sum(d.ADPsales.villtyp$NumSalesVisits)
 # Total closing rate = 14%
@@ -1009,6 +1009,210 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 # Could not describe any meaningful differences because amount of available
 # customers in each wave decreased as ADP sales were made.
 ###############################################################################
+# Sludge Levels     OMITTED FROM FSM5 PRESENTATION (LENGTH), WILL BE IN ARTICLE
+###############################################################################
+summary(d.sldglvls)
+# PGs all installed Aug 1-23 2017
+plot(d.sldglvls$CreatDate, d.sldglvls$MeasurDate)
+summary(d.sldglvls$PGid, maxsum = 1000)
+summary(d.sldglvls$LiquidDepth_mm, maxsum = 1000)
+summary(as.factor(d.sldglvls$LiquidDepth_mm), maxsum = 1000)
+hist(d.sldglvls$LiquidDepth_mm)
+max(d.sldglvls$LiquidDepth_mm)
+dset = droplevels(
+  #subset(d.sldglvls, Vill == "Angk Pok") 
+  #subset(d.sldglvls, PGid == "20V5")
+  subset(d.sldglvls, PGid == "20V5" | PGid == "21V5" | PGid == "22V5"))
+ggplot(dset, aes(x = MeasurDate, y = LiquidDepth_mm, color = PGid)) +
+  ylim(0, 2000) + geom_point() + geom_line()
+# Add data to d.sldglvls from d.baseline and d.followup based on PGid
+summary(d.baseline)
+summary(d.followup)
+summary(d.sldglvls)
+d.sldglvls$Lat = as.numeric(NA)
+d.sldglvls$Lon = as.numeric(NA)
+d.sldglvls$VillTyp = as.factor(NA)
+levels(d.sldglvls$VillTyp) = levels(d.baseline$VillTyp) 
+d.sldglvls$IDPoor = as.factor(NA)
+levels(d.sldglvls$IDPoor) = levels(d.baseline$LatOwnrIDPoor)
+d.sldglvls$NumPplHH = as.numeric(NA)
+d.sldglvls$PiercdPit = as.factor(NA)
+levels(d.sldglvls$PiercdPit) = levels(d.baseline$PiercdPit)
+d.sldglvls$Job = as.factor(NA)
+levels(d.sldglvls$Job) = levels(d.baseline$Job)
+d.sldglvls$IDPoorDiff = as.factor(NA)
+levels(d.sldglvls$IDPoorDiff) = c("Yes", "No")
+d.sldglvls$NumPplHH2 = as.numeric(NA)
+d.sldglvls$NumPplHHLatUsr = as.numeric(NA)
+d.sldglvls$HousFlod = as.factor(NA)
+levels(d.sldglvls$HousFlod) = levels(d.followup$HousFlod)
+d.sldglvls$PiercdPitDiff = as.factor(NA)
+levels(d.sldglvls$PiercdPitDiff) = c("Yes", "No")
+d.sldglvls$NumPits = as.numeric(NA)
+d.sldglvls$NumRngs = as.factor(NA)
+levels(d.sldglvls$NumRngs) = levels(d.followup$NumRngs)
+d.sldglvls$NumRngs.Othr = as.numeric(NA)
+d.sldglvls$EmptyBefor = as.factor(NA)
+levels(d.sldglvls$EmptyBefor) = levels(d.followup$EmptyBefor)
+d.sldglvls$EmptyNum = as.numeric(NA)
+d.sldglvls$EmptyLast = as.Date(NA)
+d.sldglvls$EmptyMethds = as.factor(NA)
+levels(d.sldglvls$EmptyMethds) = levels(d.followup$EmptyMethds)
+d.sldglvls$EmptyWhy = as.factor(NA)
+levels(d.sldglvls$EmptyWhy) = levels(d.followup$EmptyWhy)
+d.sldglvls$VillTyp2 = as.factor(NA)
+levels(d.sldglvls$VillTyp2) = levels(d.followup$VillTyp)
+for (row in 1:length(d.sldglvls$PGid)) {
+  for (row2 in 1:length(d.baseline$PGid)) {
+    if (!is.na(d.baseline$PGid[row2])) {
+      if (d.sldglvls$PGid[row] == d.baseline$PGid[row2]) {
+        d.sldglvls$Lat[row] = d.baseline$Lat[row2]
+        d.sldglvls$Lon[row] = d.baseline$Lon[row2]
+        d.sldglvls$VillTyp[row] = d.baseline$VillTyp[row2]
+        d.sldglvls$IDPoor[row] = d.baseline$LatOwnrIDPoor[row2]
+        d.sldglvls$NumPplHH[row] = d.baseline$NumPplHH[row2]
+        d.sldglvls$PiercdPit[row] = d.baseline$PiercdPit[row2]
+        d.sldglvls$Job[row] = d.baseline$Job[row2]
+      }
+    }
+  }
+  for (row3 in 1:length(d.followup$PGid)) {
+    if (!is.na(d.followup$PGid[row3])) {
+      if (d.sldglvls$PGid[row] == d.followup$PGid[row3]) {
+        d.sldglvls$EmptyLast[row] = d.followup$EmptyLast[row3]
+        # if (d.sldglvls$IDPoor[row] != d.followup$IDPoorTyp[row3]) {
+        #   d.sldglvls$IDPoorDiff = "Yes"
+        # }
+        d.sldglvls$NumPplHH2[row] = d.followup$NumPplHH[row3]
+        d.sldglvls$NumPplHHLatUsr[row] = d.followup$NumPplHHLatUsr[row3]
+        d.sldglvls$HousFlod[row] = d.followup$HousFlod[row3]
+        if (d.sldglvls$PiercdPit[row] != d.followup$PiercdPit[row3]) {
+          d.sldglvls$PiercdPitDiff = "Yes"
+        }
+        d.sldglvls$NumPits[row] = d.followup$NumPits[row3]
+        d.sldglvls$NumRngs[row] = d.followup$NumRngs[row3]
+        d.sldglvls$NumRngs.Othr[row] = d.followup$NumRngs.Othr[row3]
+        d.sldglvls$EmptyBefor[row] = d.followup$EmptyBefor[row3]
+        d.sldglvls$EmptyNum[row] = d.followup$EmptyNum[row3]
+        d.sldglvls$EmptyLast[row] = d.followup$EmptyLast[row3]
+        d.sldglvls$EmptyMethds[row] = d.followup$EmptyMethds[row3]
+        d.sldglvls$EmptyWhy[row] = d.followup$EmptyWhy[row3]
+        d.sldglvls$VillTyp2[row] = d.followup$VillTyp[row3]
+      }
+    }
+  }
+}
+summary(d.sldglvls)
+dset = droplevels(subset(d.sldglvls, EmptyBefor == "Yes"))
+summary(dset)
+summary(dset$PGid)
+summary(dset$EmptyLast)
+unique(dset$EmptyLast)
+# Households with PGs emptied while they had a PG installed
+dset = droplevels(subset(dset, EmptyLast >= "2017-07-01"))
+ggplot(dset, aes(x = MeasurDate, y = LiquidDepth_mm, color = PGid)) +
+  ylim(0, 1500) + geom_line() +
+  geom_point(data = dset, aes(x = EmptyLast, y = 0, color = PGid))
+# Households that emptied show weird sludge levels after emptying
+# Calculate pit volumes
+d.sldglvls$RngSiz = as.numeric(NA)
+for (row in 1:length(d.sldglvls$NumRngs)) {
+  if (!is.na(d.sldglvls$NumRngs[row])) {
+    if (d.sldglvls$NumRngs[row] == "100cm") {d.sldglvls$RngSiz[row] = 100}
+    else if (d.sldglvls$NumRngs[row] == "80cm") {d.sldglvls$RngSiz[row] = 80}
+  }
+}
+# d.sldglvls$RngSiz[is.na(d.sldglvls$RngSiz)] =
+#   mean(d.sldglvls$RngSiz[!is.na(d.sldglvls$RngSiz)])
+d.sldglvls$PitVolMax = 
+  pi * (d.sldglvls$RngSiz/200)^2 * 0.5 * d.sldglvls$NumRngs.Othr
+summary(d.sldglvls$PitVolMax)
+typeof(d.sldglvls$MeasurDate)
+d.sldglvls$MnthYr = as.Date(as.character(d.sldglvls$MeasurDate), "%Y/%m")
+summary(d.sldglvls$MnthYr)
+
+dset = subset(d.sldglvls, NumRngs.Othr == 3 & RngSiz == 80)
+summary(dset)
+hist(dset$LiquidDepth_mm)
+max(dset$LiquidDepth_mm)
+dset$PitVolPerc = (1500 - dset$LiquidDepth_mm) / 1500
+ggplot(dset, aes(x = MeasurDate, y = PitVolPerc, color = PGid)) +
+  ylim(0, 1) + geom_point() + geom_line()
+dset2 = dset
+ggplot(dset2, aes(x = MeasurDate, y = PitVolPerc, color = PGid)) +
+  ylim(0, 1) + geom_point() + geom_line()
+ggplot(dset2, aes(x = MeasurDate, y = PitVolPerc, z = Z)) + 
+  geom_tile(aes(fill = Z)) + 
+  theme_bw()
+ggplot(dset2, aes(x = MeasurDate, y = PGid, fill = PitVolPerc)) +
+  geom_tile(color = "white", size = 0.1) +
+  scale_fill_viridis(name = "PitVolPerc", option = "C")
+dset$PitVol = dset$PitVolMax * dset$PitVolPerc
+ggplot(dset, aes(x = MeasurDate, y = PitVol, color = PGid)) +
+  ylim(0, ) + geom_point() + geom_line()
+
+# Look at change in pit volume
+# Plot sludge levels by PGid
+# Compare across villages
+# Look at solid and liquid sludge levels
+# Look into PG problems briefly
+# Plot heat map of changes in pit fill rates using GPS coords
+# Compare IDPoor?
+# Compare NumPplHH and NumPplHH2
+# Compare PiercdPit
+# Compare Job
+# Compare NumPplHHLatUsr
+# Detect flood events with HousFlod?
+# Calc volume of pit and convert sludge levels
+# Detect empty events when EmptyLast is between 2017-08-01 and 2018-11-28
+
+# Plot sludge levels/pit volume changes on map over time
+subset(d.sldglvls, PGid == "01V1")
+subset(d.sldglvls, PGid == "20V5")$Lat
+d.baseline$Lat[d.baseline$PGid == "20V5"]
+subset(d.sldglvls, PGid == "20V5")$Lon
+d.baseline$Lon[d.baseline$PGid == "20V5"]
+ggplot(d.baseline, aes(x = Lat,
+                       y = Lon)) +
+  xlim(11.12,11.15) + ylim(105.44,105.5) +
+  geom_point()
+
+cord.dec = SpatialPoints(cbind(d.sldglvls$Lon[!is.na(d.sldglvls$Lon)],
+                               d.sldglvls$Lat[!is.na(d.sldglvls$Lat)]), 
+                         proj4string = CRS("+proj=longlat"))
+cord.UTM <- spTransform(cord.dec, CRS("+init=epsg:32748"))
+cord.UTM
+dset10 = data.frame(Lat = cord.UTM[,1], Long = cord.UTM[,2])
+plot(cord.UTM)
+
+dset = subset(d.sldglvls, Vill == "Angk Pok")
+dset = droplevels(dset)
+summary(dset, maxsum = 1000)
+
+summary(d.sldglvls$PGProblem)
+# Problems encountered during sludge level measurements
+# Pit surrounded by water (176)
+# Can't measure solid level (65)
+# Pierced pit (38)
+# PGid not clear (30)
+# Broken pit (27)
+# PG broken (11)
+grepl(d.sldglvls$PGid[89], d.baseline$PGid)
+d.sldglvls$PiercdPit = NA
+for (row in 1:length(d.sldglvls$PGid)) {
+  d.sldglvls$PiercdPit[row] = 
+    as.character(
+      d.baseline$PiercdPit[grepl(d.sldglvls$PGid[row], d.baseline$PGid)])
+}
+d.sldglvls$PiercdPit = as.factor(d.sldglvls$PiercdPit)
+# levels(d.sldglvls$PiercdPit) = c("No", NA, "Yes")
+summary(d.sldglvls$PiercdPit)
+biserial.cor(d.sldglvls$`LiquidDepth(mm)`, d.sldglvls$PiercdPit, 
+             use = "complete.obs")
+cor.test(d.sldglvls$`LiquidDepth(mm)`, as.numeric(d.sldglvls$PiercdPit), 
+         use = "complete.obs")
+# r_pb = 0.00 -> No correlation between liquid depth and pierced pit
+###############################################################################
 # CLEAN UP
 ###############################################################################
 # sink()
@@ -1030,7 +1234,8 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 #                   Q=gengammafit$estimate["Q"])
 # reldist(dset2$YrsBwtwnEmpties, q_rel, 
 #         main = "Relative distribution comp to generalized gamma")
-# gf = goodfit(dset2$YrsBwtwnEmpties, type = "gamma", method = "ML"); gf; summary(gf)
+# gf = goodfit(dset2$YrsBwtwnEmpties, type = "gamma", method = "ML"); gf; 
+# summary(gf)
 # plot(gf, main = "Count data vs Poisson distribution")
 # plot(gf, main = "Count data vs Poisson distribution", type = "dev")
 # ggdensity(dset$EmptyNum)
@@ -1062,7 +1267,8 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 # fit.nbinom$aic
 # #It looks like the last variable in the above model is problematic
 # #Regression Model2 |||| This is a better model
-# logit2 <- glm(Hashtag ~ COMSTRS+COMCOP+ADVSS+BOUND+IDENT+GRPCOM+INFODIS, data = data, family = “binomial”)
+# logit2 <- glm(Hashtag ~ COMSTRS+COMCOP+ADVSS+BOUND+IDENT+GRPCOM+INFODIS, 
+# data = data, family = “binomial”)
 # summary(logit2)
 # ## Confidence intervals (CIs) using profiled log-likelihood
 # confint(logit2)
@@ -1075,4 +1281,14 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 # #Model fit
 # with(logit2, null.deviance – deviance)#Chi-square
 # with(logit2, df.null – df.residual) #degree of freedom
-# with(logit2, pchisq(null.deviance – deviance, df.null – df.residual, lower.tail = FALSE))#p-value
+# with(logit2, pchisq(null.deviance – deviance, df.null – df.residual, 
+# lower.tail = FALSE))#p-value
+# exp(cbind(OR = coef(logit1), confint(logit1)))  # odds ratios and 95% CI
+# confint.default(logit1)  # CIs using standard errors
+# with(logit1, null.deviance – deviance)  # Model fit: Chi-square
+# with(logit1, df.null – df.residual)  # Model fit: degree of freedom
+# with(logit1, 
+#      pchisq(null.deviance – deviance, 
+#             df.null – df.residual, lower.tail = FALSE))  
+          # Model fit: p-value
+# plot(logit1)
