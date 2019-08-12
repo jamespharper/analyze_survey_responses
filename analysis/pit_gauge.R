@@ -1006,8 +1006,28 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 ###############################################################################
 # Sales Waves
 ###############################################################################
-# Could not describe any meaningful differences because amount of available
-# customers in each wave decreased as ADP sales were made.
+customers = data.frame(Poss = c(163+166+170+108+147+178+176+169+129+131,
+                                   NA, NA),
+                       Sales = c(106, 89, 42),
+                       Visits = c(484, 628, 628))
+customers$Poss[2] = customers$Poss[1] - customers$Sales[1]
+customers$Poss[3] = customers$Poss[2] - customers$Sales[2]
+customers$Rate = customers$Sales / customers$Visits
+customers$UnvistdMin = NA   # All visits were to unvisited HHs
+customers$UnvistdMax = NA   # All visits were to visited HHs
+customers$UnvistdMin[1] = customers$Poss[1] - customers$Visits[1] 
+customers$UnvistdMax[1] = customers$UnvistdMin[1]
+customers$UnvistdMin[2] = customers$UnvistdMin[1] - customers$Visits[2]
+customers$UnvistdMax[2] = customers$UnvistdMax[1] - 
+  (customers$Visits[2] - (customers$Visits[1] - customers$Sales[1]))
+customers$UnvistdMin[3] = 0
+customers$UnvistdMax[3] = customers$UnvistdMax[2] - 
+  (customers$Visits[3] - (customers$Visits[2] - customers$Sales[2]))
+customers$RevisitsMin = c(0,0,NA)
+customers$RevisitsMin[3] = -(customers$UnvistdMin[2] - customers$Visits[3])
+customers$RevisitsMax = c(0, customers$Visits[1], customers$Visits[3])
+# Could not describe any meaningful differences because cannot determine 
+# number of revisited households in each wave
 ###############################################################################
 # Sludge Levels     OMITTED FROM FSM5 PRESENTATION (LENGTH), WILL BE IN ARTICLE
 ###############################################################################
