@@ -11,7 +11,7 @@ load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan",
     "extrafont", "gmodels", "vcd", "ltm", "MASS", "ggpubr", "dplyr", "CDFt",
     "fitdistrplus", "goft", "flexsurv", "reldist", "vioplot", "aplpack",
-    "rgdal", "viridis", "lubridate"))
+    "rgdal", "viridis", "lubridate", "citr"))
 loadfonts(device = "win")
 options(max.print = 1000)
 ###############################################################################
