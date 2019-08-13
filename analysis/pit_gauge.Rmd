@@ -1,0 +1,107 @@
+# Pit Gauge Study, May 2017 to June 2018
+# Analyze Survey Responses of Rural Cambodian Latrine Owners
+# Written by James Harper, PE, ENV SP of the University of Colorado Boulder
+# Started October 1, 2017; Last updated Dec 18, 2018
+---
+title: "Pit Gauge Study"
+author: "James Harper, PE, ENV SP"
+date: "December 29, 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())                                      # Clear global environment
+cat("\014")                                              # Clear console window
+source("functions.R")                                   # Load custom functions
+load_libraries(                                      # Install & load libraries
+  c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan",
+    "extrafont"))
+loadfonts(device = "win")
+```
+```{r load, include=FALSE}
+load(file = paste(getwd(),"/data/raw/surveys/pit_gauge/pit_gauge.RData",
+                  sep = ""))
+# If need to clean raw data, open pit_gauge-clean_data.R.
+```
+
+## Introduction
+
+As of June 31, 2018, iDE surpassed 300,000 latrines sold in Cambodia. These latrine are offset, pour-flush latrines, which are improved by MDG standards. Our first focus was to rapidly contain feces from human contact. We have gone from coverage rates of 29% to 67% in the 7provinces we operate. The big question now is how do we safely manage all this waste?
+
+# The Challenge:
+Difficult to develop “safely managed sanitation” solutions with little research and knowledge about:
+consumer attitudes about FSM and willingness to pay for a FSM solution;
+Latrine waste disposal practices;
+Latrine pit fill rates.
+
+# Pilot objectives
+Assess the market viability of an alternating dual-pit (ADP) product through pilot sales tests
+Test the impact of a “pit gauge” product to trigger household demand for FSM
+Gather empirical pit fill rate information via pit gauge field testing
+
+# ADP and Pit Gauge
+
+Here you can see two complementary products that our team in Cambodia developed. First, you can see what we call a “pit gauge”, which is installed in a household’s latrine that provides visibility on something once invisible, how quickly a pit is filling. You can also press the pit gauge down to measure how much sludge is in the latrine.
+
+Second, you see a second pit, which a mason can install and help switch over the PVC pipe for the household once the first pit is full. We had initially developed the pit gauge with the express purpose of measuring pit fill rates, but realized it could also serve as a trigger for purchase of the second alternating pit.
+
+# Project Timeline
+
+[INSERT PICTURE HERE]
+
+# Methodology
+
+We selected two areas in a district in Svay Rieng province. Each area had five villages. In the treatment village, we worked with village chiefs to select 226 households that met our criteria, mainly any household that has owned a latrine for more than 1 year and own a pit latrine with three cement rings.
+
+Both control area has 5 villages with households without the Pit Gauge. We then had three sales waves to see if there are variations based on season and income. The two main KPIs we were testing for are sales numbers and close rates. 
+
+Baseline survey to assess FSM behavior and latrine use
+Free pit gauge installation for 226 households across five villages in treatment group
+Non-treatment group has no pit gauge installed
+ADP sales in treatment and control areas
+Three sales waves to allow for learning and adaptation; understand variations based on season and income
+
+# Results
+
+## Sales
+
+The pilot resulted in 237 ADP sales orders across three sales waves, indicating substantial demand for the product.
+
+
+```{r sales_TvC1}
+d.ADPsales.villtyp
+sum(d.ADPsales.villtyp$NumSales) / sum(d.ADPsales.villtyp$NumSalesVisits)
+prop.test(x = d.ADPsales.villtyp$NumSales,
+          n = d.ADPsales.villtyp$NumSalesVisits)
+```
+
+
+
+```{r analyze_responses}
+# Compare responses between control and treatment groups
+# Variables, d.baseline: Gend, 
+# names(d.baseline)
+# names(d.followup)
+# summary(d.baseline$VillTyp)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
