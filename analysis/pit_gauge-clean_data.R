@@ -9,32 +9,39 @@ cat("\014")                                              # Clear console window
 source("functions.R")                                   # Load custom functions
 load_libraries(                                      # Install & load libraries
   c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan",
-    "extrafont"))
+    "extrafont", "stringr"))
 loadfonts(device = "win")
+options(max.print = 1000000)
 ###############################################################################
 # Load raw data
 file.to.import1 = 
   paste(
     getwd(),
-    "/data/raw/surveys/pit_gauge/pit_gauge_baseline_data_analysis.xlsx",
+    "/data/surveys/pit_gauge/baseline_data_analysis.xlsx",
     sep = "")
 file.to.import2 = 
   paste(
     getwd(),
-    "/data/raw/surveys/pit_gauge/pit_gauge_followup_data_analysis.xlsx",
+    "/data/surveys/pit_gauge/followup_data_analysis.xlsx",
     sep = "")
 file.to.import3 = 
   paste(
     getwd(),
-    "/data/raw/surveys/pit_gauge/pit_gauge_sludge_levels.xlsx",
+    "/data/surveys/pit_gauge/sludge_levels.xlsx",
+    sep = "")
+file.to.import4 = 
+  paste(
+    getwd(),
+    "/data/surveys/pit_gauge/adp_sales.xlsx",
     sep = "")
 d.baseline = import(file.to.import1, which = "Data")
 d.followup = import(file.to.import2, which = "Data")
 d.sldglvls = import(file.to.import3, which = "Data")
+d.adpsales = import(file.to.import4, which = "Data")
 
-###########################################################################
+###############################################################################
 # CLEAN d.baseline
-###########################################################################
+###############################################################################
 # Shorten variable (column) names
 names(d.baseline)
 old.col.names1 = names(d.baseline)
@@ -185,9 +192,9 @@ levels(d.baseline$EmptyMethds) = c("Self-Bucketing", "Self-Pump",
                                    "Self-Bucketing", "Self-Bucketing", 
                                    "Unknown", "Self-Pump")
 
-###########################################################################
+###############################################################################
 # CLEAN d.followup
-###########################################################################
+###############################################################################
 # Shorten variable (column) names
 names(d.followup)
 old.col.names2 = names(d.followup)
@@ -478,9 +485,9 @@ summary(d.followup$RespQuesTopic)
 summary(d.followup$NumRngs)
 levels(d.followup$NumRngs) = c("100cm", "100cm", "Other", "80cm")
 
-###########################################################################
+###############################################################################
 # CLEAN d.sldglvls
-###########################################################################
+###############################################################################
 # Shorten variable (column) names
 names(d.sldglvls)
 old.col.names3 = names(d.sldglvls)
@@ -501,9 +508,9 @@ for (i in 1:length(names(d.sldglvls))) {   # All characters into factors
   }
 }
 
-###########################################################################
+###############################################################################
 # Create d.ADPsales based on correspondence from iDE Cambodia
-###########################################################################
+###############################################################################
 d.ADPsales.villtyp = data.frame(VillTyp = c("Control", "Treatment"),
                                 NumSalesVisits = c(934, 806),
                                 NumSales = c(136, 101),
@@ -519,10 +526,50 @@ d.ADPsales.PG = data.frame(HasPG = c("Yes", "No"),
 
 NumADPSoldByWave = c(106, 89, 42)
 
-###########################################################################
-# Customer Survey data for these villages
-###########################################################################
-load(file = paste(getwd(),"/data/raw/surveys/iDE_Oct2017.Rdata", sep = ""))
+###############################################################################
+# Create d.customers based on iDE Cambodia report
+###############################################################################
+d.customers = data.frame(Poss = c(163+166+170+108+147+178+176+169+129+131,
+                                NA, NA),
+                       Sales = c(106, 89, 42),
+                       Visits = c(484, 628, 628))
+d.customers$Poss[2] = d.customers$Poss[1] - d.customers$Sales[1]
+d.customers$Poss[3] = d.customers$Poss[2] - d.customers$Sales[2]
+d.customers$Rate = d.customers$Sales / d.customers$Visits
+d.customers$UnvistdMin = NA   # All visits were to unvisited HHs
+d.customers$UnvistdMax = NA   # All visits were to visited HHs
+d.customers$UnvistdMin[1] = d.customers$Poss[1] - d.customers$Visits[1] 
+d.customers$UnvistdMax[1] = d.customers$UnvistdMin[1]
+d.customers$UnvistdMin[2] = d.customers$UnvistdMin[1] - d.customers$Visits[2]
+d.customers$UnvistdMax[2] = d.customers$UnvistdMax[1] - 
+  (d.customers$Visits[2] - (d.customers$Visits[1] - d.customers$Sales[1]))
+d.customers$UnvistdMin[3] = 0
+d.customers$UnvistdMax[3] = d.customers$UnvistdMax[2] - 
+  (d.customers$Visits[3] - (d.customers$Visits[2] - d.customers$Sales[2]))
+d.customers$RevisitsMin = c(0,0,NA)
+d.customers$RevisitsMin[3] = -(d.customers$UnvistdMin[2] - d.customers$Visits[3])
+d.customers$RevisitsMax = c(0, d.customers$Visits[1], d.customers$Visits[3])
+
+###############################################################################
+# Create d.households based on iDE Cambodia report
+###############################################################################
+d.households = data.frame(VillTyp = c("Cntrl", "Intrv", "Nei-Intrv"),
+                          HHs = c(178+176+169+129+131,
+                                  163+166+170+108+147,
+                                  NA),
+                          LatCov = c(mean(0.97, 0.98, 0.85, 0.85, 0.95),
+                                     mean(0.98, 0.95, 0.94, 0.91, 0.97),
+                                     NA))
+num_PGs = 44+47+54+30+51
+d.households$HHs[3] = d.households$HHs[2] - num_PGs
+d.households$HHs[2] = num_PGs
+d.households$LatCov[3] = d.households$LatCov[2]
+
+###############################################################################
+# Gather customer survey data from old study for these villages
+###############################################################################
+load(file = paste(getwd(),"/data/surveys/iDEcustomer/iDE_Oct2017.Rdata", 
+                  sep = ""))
 d.custmrsurvs = data
 rm(data)
 d.custmrsurvs.SvyRng = subset(d.custmrsurvs, Prov == "Svay Rieng")
@@ -532,12 +579,151 @@ d.custmrsurvs.SvyRng = droplevels(d.custmrsurvs.SvyRng)
 d.custmrsurvs.SvyRng.Rmduol = droplevels(d.custmrsurvs.SvyRng.Rmduol)
 
 ###############################################################################
+# Add ADP sales data to d.baseline and d.followup
+###############################################################################
+summary(d.adpsales)
+
+# Rename columns, make variables factors, and remove irrelevant columns
+colnames(d.adpsales) = c("ID", "Name", "Phone", "Vill", "Comm", "Dist", "Prov",
+                         "VillTyp", "SalesAgent", "OrderStatus", "OrderDate",
+                         "HasPG")
+for (col in 1:length(d.adpsales)) {
+  d.adpsales[,col] = as.factor(d.adpsales[,col])
+}
+d.adpsales = subset(d.adpsales, select = -c(ID, Name))
+
+# Add ADP sales data to d.baseline using phone as customer identifier
+summary(d.adpsales$Phone)
+summary(subset(d.adpsales, Phone == "016704485" | Phone == "0884896342"))
+summary(d.baseline)
+summary(d.baseline$Phone, maxsum = 1000)
+d.baseline$Phone = gsub("N/A", NA, d.baseline$Phone, fixed = TRUE)
+d.baseline$Phone = gsub(" ", "", d.baseline$Phone, fixed = TRUE)
+d.baseline$Phone = as.factor(d.baseline$Phone)
+d.baseline$ADPorderStatus = NA
+d.baseline$ADPorderDate = NA
+d.baseline$SalesAgent = NA
+d.baseline$HasPGcheck = NA
+for (row1 in 1:length(d.baseline$Phone)) {
+  for (row2 in 1:length(d.adpsales$Phone)) {
+    if (!is.na(as.character(d.baseline$Phone[row1]))) {
+      if (as.character(d.baseline$Phone[row1]) == 
+          as.character(d.adpsales$Phone[row2])) {
+        d.baseline$ADPorderStatus[row1] = 
+          as.character(d.adpsales$OrderStatus[row2])
+        d.baseline$ADPorderDate[row1] = 
+          as.character(d.adpsales$OrderDate[row2])
+        d.baseline$SalesAgent[row1] = as.character(d.adpsales$SalesAgent[row2])
+        d.baseline$HasPGcheck[row1] = as.character(d.adpsales$HasPG[row2])
+      }
+    }
+  }
+  # grepl("016704485", d.adpsales$Phone)
+  # grepl(as.character(d.baseline$Phone[row1]), d.adpsales$Phone)
+}
+d.baseline$ADPorderStatus = as.factor(d.baseline$ADPorderStatus)
+d.baseline$ADPorderDate = as.factor(d.baseline$ADPorderDate)
+d.baseline$SalesAgent = as.factor(d.baseline$SalesAgent)
+d.baseline$HasPGcheck = as.factor(d.baseline$HasPGcheck)
+summary(d.baseline)
+test = data.frame(A = d.baseline$PGid, B = d.baseline$HasPGcheck)
+test = subset(test, !is.na(B))
+length(test[,1])
+# PG check not passed for 2 out of 47 ADP sales in d.baseline.
+for (PGid in c("39V3", "51V5")) {
+  d.baseline$ADPorderStatus[d.baseline$PGid == PGid] = NA
+  d.baseline$ADPorderDate[d.baseline$PGid == PGid] = NA
+  d.baseline$SalesAgent[d.baseline$PGid == PGid] = NA
+  d.baseline$HasPGcheck[d.baseline$PGid == PGid] = NA
+}
+d.baseline$ADPorderStatus[d.baseline$PGid != "39V3"]
+d.baseline$ADPorderStatus[d.baseline$PGid != "51V5"]
+
+# Add ADP sales data to d.followup using phone as customer identifier
+summary(d.adpsales$Phone)
+summary(d.followup)
+summary(d.followup$Phone, maxsum = 1000)
+d.followup$Phone = gsub("Dany", NA, d.followup$Phone, fixed = TRUE)
+d.followup$Phone = gsub("N/A", NA, d.followup$Phone, fixed = TRUE)
+d.followup$Phone = gsub(" ", "", d.followup$Phone, fixed = TRUE)
+d.followup$Phone = as.factor(d.followup$Phone)
+summary(d.followup$Phone2, maxsum = 1000)
+d.followup$Phone2 = gsub("N/A", NA, d.followup$Phone2, fixed = TRUE)
+d.followup$Phone2 = gsub("`", "", d.followup$Phone2, fixed = TRUE)
+d.followup$Phone2 = gsub(" ", "", d.followup$Phone2, fixed = TRUE)
+d.followup$Phone2 = as.factor(d.followup$Phone2)
+d.followup$ADPorderStatus = NA
+d.followup$ADPorderDate = NA
+d.followup$SalesAgent = NA
+d.followup$HasPGcheck = NA
+count = 0
+for (row1 in 1:length(d.followup$Phone)) {
+  for (row2 in 1:length(d.adpsales$Phone)) {
+    if (!is.na(as.character(d.followup$Phone[row1]))) {
+      if (as.character(d.followup$Phone[row1]) == 
+          as.character(d.adpsales$Phone[row2])) {
+        d.followup$ADPorderStatus[row1] = 
+          as.character(d.adpsales$OrderStatus[row2])
+        d.followup$ADPorderDate[row1] = 
+          as.character(d.adpsales$OrderDate[row2])
+        d.followup$SalesAgent[row1] = as.character(d.adpsales$SalesAgent[row2])
+        d.followup$HasPGcheck[row1] = as.character(d.adpsales$HasPG[row2])
+        count = count + 1
+      }
+    }
+  }
+}
+count
+# No ADP sales data found.
+count = 0
+for (row1 in 1:length(d.followup$Phone2)) {
+  for (row2 in 1:length(d.adpsales$Phone)) {
+    if (!is.na(as.character(d.followup$Phone2[row1]))) {
+      if (as.character(d.followup$Phone2[row1]) == 
+          as.character(d.adpsales$Phone[row2])) {
+        d.followup$ADPorderStatus[row1] = 
+          as.character(d.adpsales$OrderStatus[row2])
+        d.followup$ADPorderDate[row1] = 
+          as.character(d.adpsales$OrderDate[row2])
+        d.followup$SalesAgent[row1] = as.character(d.adpsales$SalesAgent[row2])
+        d.followup$HasPGcheck[row1] = as.character(d.adpsales$HasPG[row2])
+        count = count + 1
+      }
+    }
+  }
+}
+count
+d.followup$ADPorderStatus = as.factor(d.followup$ADPorderStatus)
+d.followup$ADPorderDate = as.factor(d.followup$ADPorderDate)
+d.followup$SalesAgent = as.factor(d.followup$SalesAgent)
+d.followup$HasPGcheck = as.factor(d.followup$HasPGcheck)
+summary(d.followup, maxsum = 1000)
+test = data.frame(A = d.followup$PGid, B = d.followup$HasPGcheck)
+test = subset(test, !is.na(B))
+length(test[,1])
+# PG check not passed for 4 out of 58 ADP sales in d.followup.
+for (PGid in c("39V3")) {
+  d.followup$ADPorderStatus[d.followup$PGid == PGid] = NA
+  d.followup$ADPorderDate[d.followup$PGid == PGid] = NA
+  d.followup$SalesAgent[d.followup$PGid == PGid] = NA
+  d.followup$HasPGcheck[d.followup$PGid == PGid] = NA
+}
+d.followup$ADPorderStatus[d.followup$PGid != "39V3"]
+for (row in c(377, 530, 573)) {
+  d.followup$ADPorderStatus[row] = NA
+  d.followup$ADPorderDate[row] = NA
+  d.followup$SalesAgent[row] = NA
+  d.followup$HasPGcheck[row] = NA
+}
+summary(d.followup)
+
+###############################################################################
 # DATA QUALITY CONTROL
 ###############################################################################
 # Dataframes
 dataframes = c(d.baseline, d.followup, d.sldglvls, d.custmrsurvs, 
                d.ADPsales.villtyp, d.ADPsales.PG, d.custmrsurvs.SvyRng, 
-               d.custmrsurvs.SvyRng.Rmduol)
+               d.custmrsurvs.SvyRng.Rmduol, d.customers)
 dset = d.baseline
 summary(dset, maxsum = 5)
 names(dset)
@@ -552,6 +738,6 @@ print(NumADPSoldByWave)
 ###############################################################################
 save(d.baseline, d.followup, d.sldglvls, d.custmrsurvs, d.custmrsurvs.SvyRng,
      d.ADPsales.villtyp, d.ADPsales.PG, d.custmrsurvs.SvyRng.Rmduol, 
-     NumADPSoldByWave,
+     NumADPSoldByWave, d.customers, d.households,
      file = paste(getwd(), "/data/raw/surveys/pit_gauge/pit_gauge.RData", 
                   sep = ""))
