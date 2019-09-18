@@ -1,7 +1,7 @@
 # Pit Gauge Study, May 2017 to June 2018
 # Analyze Survey Responses of Rural Cambodian Latrine Owners
 # Written by James Harper, PE, ENV SP of the University of Colorado Boulder
-# Started October 1, 2017; Last updated Dec 18, 2018
+# Started October 1, 2017; Last updated Aug 14, 2019
 ###############################################################################
 # Initialize environment and user input
 rm(list = ls())                                      # Clear global environment
@@ -17,10 +17,10 @@ options(max.print = 1000)
 ###############################################################################
 # Load cleaned data (If need to clean raw data, open pit_gauge-clean_data.R)
 load(file = paste(getwd(), 
-        "/analyze_survey_responses/data/raw/surveys/pit_gauge/pit_gauge.RData",
+        "/analyze_survey_responses/data/surveys/pit_gauge/pit_gauge.RData",
         sep = ""))
 ###############################################################################
-# Summarize Data                                     ADDED TO FSM5 PRESENTATION
+# Summarize Data                            ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 # Display data to aid in analysis
 d.ADPsales.PG
@@ -151,8 +151,14 @@ summary(d.custmrsurvs.SvyRng.Rmduol)
 # Only 81 surveys from Dist. Rumduol
 summary(d.custmrsurvs.SvyRng.Rmduol$Comm)  
 # Only 10 surveys from Comm Chrung Popel and Muen Chey
+
+d.customers
+summary(d.customers)
+
+d.households
+summary(d.households)
 ###############################################################################
-# Emptied Before vs. Never Emptied Before            ADDED TO FSM5 PRESENTATION
+# Emptied Before vs. Never Emptied Before   ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 summary(d.baseline)
 summary(d.baseline$EmptyBefor)
@@ -216,7 +222,7 @@ CrossTable(freqs); assocstats(freqs)
 # Number of pits not associated with emptying before.
 # Fewer rings associated with empting before (p = 0.005, v = 0.20)
 ###############################################################################
-# Emptied Before                                     ADDED TO FSM5 PRESENTATION
+# Emptied Before                            ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 dset = subset(d.followup, EmptyBefor == "Yes")
 dset2 = subset(d.followup, EmptyBefor == "No")
@@ -554,7 +560,7 @@ summary(dset$EmptyNumPer20Yr); sd(dset$EmptyNumPer20Yr, na.rm = TRUE)
 summary(dset$YrsBtwnEmpties); sd(dset$YrsBtwnEmpties, na.rm = TRUE)
 # Years between empties ranged from 0.2 to 31 yrs (mean = 4.4, sd = 4.5)
 ###############################################################################
-# Have Not Emptied Before     ADDED TO FSM5 PRESENTATION
+# Have Not Emptied Before                   ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 dset2 = droplevels(subset(d.followup, EmptyBefor == "No"))
 summary(dset2)
@@ -656,12 +662,12 @@ summary(glm(EmptyWhyNot_TooBusy ~ LatAge + IDPoor + NumPplHHLatUsr + HousFlod +
 summary(dset2$EmptyPlan); prop.table(table(dset2$EmptyPlan))
 t.test(x = as.numeric(dset2$EmptyPlan), y = as.numeric(dset2$EmptyPlan))
 summary(dset2$EmptyPlanMethds); prop.table(table(dset2$EmptyPlanMethds))
-t.test(x = as.numeric(dset2$EmptyPlanMethds), 
+t.test(x = as.numeric(dset$EmptyPlanMethds), 
        y = as.numeric(dset2$EmptyPlanMethds))
 # 86% planned out how they will empty in the future. Not stat diff (p = 1).
 # Of them, 76% planned to bucket, 12% weren't sure which method they'd use, 
 # 7% planned to use a pump, and 4% planned to use a vacuum truck. 
-# (not stat diff, p = 1)
+# (not stat diff, p = .30)
 summary(dset2$EmptyWilPay)
 prop.table(table(dset2$EmptyWilPay))
 empty.wil.pay = as.numeric(as.character(
@@ -748,7 +754,7 @@ summary(glm(HousFlod ~ IDPoor + NumPplHHLatUsr +
 # Planning to bucket and not having a plan, more flooding
 # Planning to vtruck trends with more flooding
 ###############################################################################
-# Pierced Pits     ADDED TO FSM5 PRESENTATION
+# Pierced Pits                              ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 freqs = table(d.baseline$PiercdPit, d.baseline$VillTyp)
 CrossTable(freqs); assocstats(freqs)  
@@ -933,7 +939,7 @@ summary(glm(PiercdPit ~ IDPoorTyp + NumPplHH + NumPplHHLatUsr +
 # Most emptied by bucket (80), others by pump (18).
 # Nothing else new.
 ###############################################################################
-# Closing Rates                                      ADDED TO FSM5 PRESENTATION
+# Closing Rates                             ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 sum(d.ADPsales.villtyp$NumSales) / sum(d.ADPsales.villtyp$NumSalesVisits)
 # Total closing rate = 14%
@@ -954,7 +960,7 @@ prop.test(x = d.ADPsales.PG$NumSales,
 # the engagement of village chief and regular visits by monitoring staff to 
 # households during non-sales months to measure pit fill rates.
 ###############################################################################
-# Delivery and Cancellation Rates     ADDED TO FSM5 PRESENTATION
+# Delivery and Cancellation Rates           ADDED TO FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 sum(d.ADPsales.villtyp$NumDeliverd) / sum(d.ADPsales.villtyp$NumSales)
 # Total delivery rate = 67%
@@ -986,7 +992,7 @@ prop.test(x = d.ADPsales.PG$NumCanceld,
           n = d.ADPsales.PG$NumSales)
 # p = 0.000 -> Fewer cancellations in HHs with PG
 ###############################################################################
-# Backlog Rates   OMITTED FROM FSM5 PRESENTATION
+# Backlog Rates                         OMITTED FROM FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 sum(d.ADPsales.villtyp$NumBacklog) / sum(d.ADPsales.villtyp$NumSales)
 # Total backlog rate = 5%
@@ -1006,30 +1012,11 @@ prop.test(x = d.ADPsales.PG$NumBacklog,
 ###############################################################################
 # Sales Waves
 ###############################################################################
-customers = data.frame(Poss = c(163+166+170+108+147+178+176+169+129+131,
-                                   NA, NA),
-                       Sales = c(106, 89, 42),
-                       Visits = c(484, 628, 628))
-customers$Poss[2] = customers$Poss[1] - customers$Sales[1]
-customers$Poss[3] = customers$Poss[2] - customers$Sales[2]
-customers$Rate = customers$Sales / customers$Visits
-customers$UnvistdMin = NA   # All visits were to unvisited HHs
-customers$UnvistdMax = NA   # All visits were to visited HHs
-customers$UnvistdMin[1] = customers$Poss[1] - customers$Visits[1] 
-customers$UnvistdMax[1] = customers$UnvistdMin[1]
-customers$UnvistdMin[2] = customers$UnvistdMin[1] - customers$Visits[2]
-customers$UnvistdMax[2] = customers$UnvistdMax[1] - 
-  (customers$Visits[2] - (customers$Visits[1] - customers$Sales[1]))
-customers$UnvistdMin[3] = 0
-customers$UnvistdMax[3] = customers$UnvistdMax[2] - 
-  (customers$Visits[3] - (customers$Visits[2] - customers$Sales[2]))
-customers$RevisitsMin = c(0,0,NA)
-customers$RevisitsMin[3] = -(customers$UnvistdMin[2] - customers$Visits[3])
-customers$RevisitsMax = c(0, customers$Visits[1], customers$Visits[3])
+d.customers
 # Could not describe any meaningful differences because cannot determine 
-# number of revisited households in each wave
+# actual number of revisited households in each wave
 ###############################################################################
-# Sludge Levels     OMITTED FROM FSM5 PRESENTATION (LENGTH), WILL BE IN ARTICLE
+# Sludge Levels                         OMITTED FROM FSM5 PRESENTATION, ARTICLE
 ###############################################################################
 summary(d.sldglvls)
 # PGs all installed Aug 1-23 2017
