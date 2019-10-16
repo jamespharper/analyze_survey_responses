@@ -1,0 +1,216 @@
+<!-- The FSM Survey, Aug 2019 to Dec 2020 -->
+<!-- Analyze responses of rural Cambodian latrine owners about FSM to
+<!-- questionnaire and discrete choice experiment -->
+<!-- Written by James Harper, PE of the University of Colorado Boulder -->
+<!-- Last updated Oct 15, 2019 -->
+
+---
+title: "The FSM Survey"
+author: "James Harper, PE; OTHER AUTHORS"
+date: "10/15/2019"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+# Initialize environment and user input
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())                                      # Clear global environment
+cat("\014")                                              # Clear console window
+source("functions.R")                                   # Load custom functions
+load_libraries(                                      # Install & load libraries
+  c("rio", "gplots", "Amelia", "car", "fastDummies", "FactoMineR", "lavaan",
+    "extrafont", "gmodels", "vcd", "ltm", "MASS", "ggpubr", "dplyr", "CDFt",
+    "fitdistrplus", "goft", "flexsurv", "reldist", "vioplot", "aplpack",
+    "rgdal", "viridis", "lubridate", "citr"))
+loadfonts(device = "win")
+options(max.print = 1000)
+```
+
+```{r load_clean_data, include = FALSE}
+# Load data
+load_and_clean_raw_data = 1
+if (load_and_clean_raw_data == 1) {
+  
+  # Import raw data
+  file.to.import = 
+    paste(getwd(), 
+          "/data/surveys/FSMsurvey/FSM Rawdata.cleaning26sep19.v1.xlsx",
+          sep = "")
+  d1 = import(file.to.import, which = "Dataset", guess_max = 3000)
+  
+  # Rename variables (columns)
+  names(d1)
+  old.col.names1 = names(d1)
+  names(d1) = c("StrtTm","EndTm","Date","EndTimEnumr","GPSx",
+                "GPSy","Enumr","Date2","Prov","Dist",
+                "Comm","Vill","VillID","I1","DCEbook",
+                "I2","GPSlatlong","GPSalt","GPSacc","GPSerror",
+                "CustRecID","CustLoc","I3","NearWtrFld","I4",
+                "AnswSurv","I5","DecsnMkr","LatAcc","WhyNoLatAcc",
+                "I6","I7","LatAtWrk","I8","Gndr",
+                "Age","IDPoor","Educ","ShwLat","1stLat",
+                "I9","LatYrs","NumPits","PTyp","PSer",
+                "PAlt","PPrc","PDifAcc","NumRngsP1","NumRngsP2",
+                "NumRngsP3","P2x2spac","PNoFuncRain","NumAdlts","NumChld",
+                "NumInfs","NumPFild","PFulNw","PracPFulLst","PracPFulLstOtr",
+                "I10","PFul_Exp","PFul_Tim","PFul_Eff","PFul_Cost",
+                "PSerKnwDat","PSerDat","PSerLrn","PSerLrnOtr","PSerWhSld",
+                "PSerWhSldOtr","PSerWhInst","PSerWhInstOtr","POvrflwRn","PAltKnwDat",
+                "PAltDat","PAltLrn","PAltLrnOtr","PAltWhSld","PAltWhSldOtr",
+                "PAltWhInst","PAltWhInstOtr","PPrcKnwDat","PPrcDat","PPrcLrn",
+                "PPrcLrnOtr","PPrcWhPrc","PPrcWhPrcOtr","I11","EmptWh",
+                "EmptWhOtr","EmptEqup","EmptEqupOtr","EmptMnth","EmptPrbs",
+                "EmptSchd","EmptCost","EmptPAdd","EmptPAddOtr","DispLoc",
+                "I12","EmptDIYappel","SrvcLrn","SrvcLrnOtr","SrvcCntct",
+                "SrvcCntctOtr","SrvcDely","I13","SrvcSat_Ovral","SrvcSat_Cost",
+                "SrvcSat_Safe","SrvcSat_Ease","SrvcSat_Comp","SrvcRec","KnwEmptPrcs",
+                "KnwEmptPrcsOtr","KnwClthYN","KnwClth","KnwClthOtr","KnwADP",
+                "KnwADPOtr","I14","KnwHhelthFSM","KnwMrukFS","KnwFSwtrSaf",
+                "KnwFSfldSaf","KnwPwatSaf","KnwLiqFSSafrSol","KnwTimSeldPSaf","I15",
+                "I16","AttKilMrukImp","AttSafMstImpDisp","I17","I18",
+                "SNmNeiOpns","I19","SNmSlfEmpt","SNmFlodOut","SNmHirSrvc",
+                "SNmInstNwP","SNmUseADP","SNmPrcP","SNmResmOD","I20",
+                "I21","I22","PCntlAblEmptPhys","PCntlAblEmptFnan","I23",
+                "I24","I25","I26","IntSlfEmpt","IntHirSrvc",
+                "IntInstNwP","IntUseNeiLat","IntResmOD","IntDK","I27",
+                "I28","I29","SrvcTooExpn","SrvcTooFew","I30",
+                "UsedFSag","I31","I32","I33","I34",
+                "I35","I36","I37","I38","I39",
+                "IntPFulNoSrvc","I40","IntPFulNoSrvc2","I41","I42",
+                "I43","I44","I45","I46","I47",
+                "I48","I49","I50","I51","I52",
+                "I53","DCEbook2","DCEq1","DCEq1Ans","DCEq1Ver",
+                "DCEq2","DCEq2Ans","DCEq2Ver","DCEq3","DCEq3Ans",
+                "DCEq3Ver","DCEq4","DCEq4Ans","DCEq4Ver","DCEq5",
+                "DCEq5Ans","DCEq5Ver","DCEbookVer","I54","RespQ",
+                "I55")
+  print(data.frame(names(d1), old.col.names1))
+  
+  # Remove unused variables
+  names(d1)
+  column =1
+  for (column in 1:length(d1)) {
+    print(summary(as.factor(d1[,column])))
+  }
+  
+  d1 = subset(d1, select = -c(I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,I14,
+                              I15,I16,I17,I18,I19,I20,I21,I22,I23,I24,I25,I26,
+                              I27,I28,I29,I30,I31,I32,I33,I34,I35,I36,I37,I38,
+                              I39,I40,I41,I42,I43,I44,I45,I46,I47,I48,I49,I50,
+                              I51,I52,I53,I54,I55))
+  
+  # Convert data formats
+  names(d1)
+  
+  # Create new variable Var3 based on Var1 and Var2
+  # summary(d.NAME$Var1)
+  # summary(d.NAME$Var2)
+  # d.NAME$Var3 = as.character(NA)
+  # for (row in 1:length(d.NAME$Var1)) {
+  #   if (is.na(d.NAME[row,]$Var1)) {
+  #     d.NAME[row,]$Var3 = NA
+  #   } else if (d.NAME[row,]$Var1 == "TEXT1" |
+  #              d.NAME[row,]$Var1 == "TEXT2" ) {
+  #     d.NAME[row,]$Var3 = "TEXT3"
+  #   }
+  # }
+  
+  # Data Quality Control
+  # dset = d.NAME
+  # summary(d.NAME, maxsum = 5)
+  # names(d.NAME)
+  # sapply(d.NAME, function(x) sum(is.na(x)))
+  # missmap(d.NAME, main = "Missing Values in Variables", legend = F)
+  
+  # Save data to disk
+  # save(d.NAME,
+  #      file = paste(getwd(), "/path/to/file.RData", sep = ""))
+  
+} else {
+  load(file = paste(getwd(), "/path/to/file.RData", sep = ""))
+}
+
+```
+
+<!-- Task List -->
+
+<!-- Comment Legend -->
+<!-- * = added to writing in this section -->
+<!-- ~ = excluded from writing in this section; may be in another section -->
+
+# Abstract 
+
+Background and Purpose: 
+
+Methods: 
+
+Results: 
+
+Conclusions: 
+
+# Keywords
+
+; ; 
+
+# Background
+
+## SUBHEADING
+
+![Figure 1: CAPTION](figures/placeholder.png){width=500px}
+
+# Methods
+
+## Research Context
+
+## Study Design
+
+Table 1: CAPTION
+
+'knitr::kable(data, caption = "Table 1: CAPTION")'
+
+## Data Analysis
+
+# Results and Discussion
+
+# Discussion
+
+## Limitations and Suggestions for Future Work
+
+# Conclusions
+
+REVIEW_RESULTS
+REVIEW_DISCUSSION
+WRAP_UP_AND_EFFECTS
+
+# List of Abbreviations
+
+ADP		Alternating dual-pit
+FSM		Fecal sludge management
+
+# Acknowledgements
+
+The authors would like to acknowledge the generous support of iDE Cambodia and iDE Global for their surveying efforts; data, documentation, and analysis support; and dedication to improving the sanitation infrastructure of the poor in rural Cambodia.  The authors would also like to acknowledge the financial support provided through the Graduate Assistance in Areas of National Need (GAANN) fellowship by the U.S. Department of Education.
+
+# References
+
+# Appendix
+
+# Extra Text
+
+# RMarkdown Help
+<http://rmarkdown.rstudio.com>.
+**bold**
+`echo = FALSE`
+```{r cars}
+summary(cars)
+```
+
+Hide code while including plots with echo=false
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+| Right | Left | Default | Center |
+|------:|:-----|---------|:------:|
+| 1 | 2 | 3 | 4 |
