@@ -738,6 +738,6 @@ print(NumADPSoldByWave)
 ###############################################################################
 save(d.baseline, d.followup, d.sldglvls, d.custmrsurvs, d.custmrsurvs.SvyRng,
      d.ADPsales.villtyp, d.ADPsales.PG, d.custmrsurvs.SvyRng.Rmduol, 
-     NumADPSoldByWave, d.customers, d.households,
-     file = paste(getwd(), "/data/raw/surveys/pit_gauge/pit_gauge.RData", 
+     NumADPSoldByWave, d.customers, d.households, d.adpsales,
+     file = paste(getwd(), "/data/surveys/pit_gauge/pit_gauge.RData", 
                   sep = ""))
