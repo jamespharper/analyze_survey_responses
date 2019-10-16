@@ -23,7 +23,7 @@ load_libraries(                                      # Install & load libraries
     "fitdistrplus", "goft", "flexsurv", "reldist", "vioplot", "aplpack",
     "rgdal", "viridis", "lubridate", "citr"))
 loadfonts(device = "win")
-options(max.print = 1000)
+options(max.print = 10000)
 ```
 
 ```{r load_clean_data, include = FALSE}
@@ -72,7 +72,7 @@ if (load_and_clean_raw_data == 1) {
                 "SNmInstNwP","SNmUseADP","SNmPrcP","SNmResmOD","I20",
                 "I21","I22","PCntlAblEmptPhys","PCntlAblEmptFnan","I23",
                 "I24","I25","I26","IntSlfEmpt","IntHirSrvc",
-                "IntInstNwP","IntUseNeiLat","IntResmOD","IntDK","I27",
+                "IntInstNwP","IntUseNeiLat","IntResmOD","IntDK","__UNKNOWN__",
                 "I28","I29","SrvcTooExpn","SrvcTooFew","I30",
                 "UsedFSag","I31","I32","I33","I34",
                 "I35","I36","I37","I38","I39",
@@ -88,19 +88,33 @@ if (load_and_clean_raw_data == 1) {
   
   # Remove unused variables
   names(d1)
-  column =1
   for (column in 1:length(d1)) {
-    print(summary(as.factor(d1[,column])))
+    if (startsWith(colnames(d1)[column], "I")) {
+      print(colnames(d1)[column])
+      print(summary(as.factor(d1[,column])))
+    }
   }
-  
   d1 = subset(d1, select = -c(I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,I14,
                               I15,I16,I17,I18,I19,I20,I21,I22,I23,I24,I25,I26,
-                              I27,I28,I29,I30,I31,I32,I33,I34,I35,I36,I37,I38,
+                              I28,I29,I30,I31,I32,I33,I34,I35,I36,I37,I38,
                               I39,I40,I41,I42,I43,I44,I45,I46,I47,I48,I49,I50,
-                              I51,I52,I53,I54,I55))
+                              I51,I52,I53,I54,I55,EndTimEnumr,GPSx,GPSy))
   
-  # Convert data formats
+  # Translate all responses from Khmer into English, convert data formats and 
+  # clean as needed
   names(d1)
+  d1$StrtTm = as.Date(d1$StrtTm); summary(as.factor(d1$StrtTm))
+  d1$EndTm = as.Date(d1$EndTm); summary(as.factor(d1$EndTm))
+  d1$Date = as.Date(d1$Date); summary(as.factor(d1$Date))
+  d1$Enumr = as.factor(d1$Enumr); summary(d1$Enumr)
+  d1$Date2 = as.Date(d1$Date2); summary(as.factor(d1$Date2))
+  d1$Date - d1$Date2   # Different.  Not sure what each refers to.
+  d1$Prov = as.factor(d1$Prov); summary(d1$Prov)
+  d1$Dist = as.factor(d1$Dist); summary(d1$Dist)
+  d1$Comm = as.factor(d1$Comm); summary(d1$Comm)
+  d1$Vill = as.factor(d1$Vill); summary(d1$Vill)
+  d1$VillID = as.factor(d1$VillID); summary(d1$VillID)
+  d1$DCEbook = as.factor(d1$DCEbook); summary(d1$DCEbook)
   
   # Create new variable Var3 based on Var1 and Var2
   # summary(d.NAME$Var1)
