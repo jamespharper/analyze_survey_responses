@@ -28,7 +28,7 @@ options(max.print = 10000)
 
 ```{r load_clean_data, include = FALSE}
 # Load data
-load_and_clean_raw_data = 1
+load_and_clean_raw_data = 0
 if (load_and_clean_raw_data == 1) {
   
   # Import raw data
@@ -115,6 +115,332 @@ if (load_and_clean_raw_data == 1) {
   d1$Vill = as.factor(d1$Vill); summary(d1$Vill)
   d1$VillID = as.factor(d1$VillID); summary(d1$VillID)
   d1$DCEbook = as.factor(d1$DCEbook); summary(d1$DCEbook)
+  d1$GPSlatlong = as.factor(d1$GPSlatlong); summary(d1$GPSlatlong)
+  
+  d1$GPSerror = as.factor(d1$GPSerror); summary(d1$GPSerror)
+  levels(d1$GPSerror) = c("Unknown","Slow acquisition","Unknown", 
+                          "Slow acquisition","Slow acquisition","Unknown",
+                          "Slow acquisition","Slow acquisition","Slow acquisition",
+                          "Slow acquisition","Slow acquisition","Slow acquisition",
+                          "Slow acquisition","Slow acquisition","Slow acquisition",
+                          "Slow acquisition","Slow acquisition","Unknown")
+  
+  d1$CustRecID = as.factor(d1$CustRecID); summary(d1$CustRecID)
+  
+  d1$CustLoc = as.factor(d1$CustLoc); summary(d1$CustLoc)
+  levels(d1$CustLoc) = c("No","Yes",
+                         "Yes but latrine installed less than 2 years ago",
+                         "Yes but not available",
+                         "Yes but latrine uninstalled")
+  
+  d1$NearWtrFld = as.factor(d1$NearWtrFld); summary(d1$NearWtrFld)
+  levels(d1$NearWtrFld) = c("No","Static","Static+Crop","Moving",
+                            "Moving+Static","Moving+Static+Crop",
+                            "Moving+Crop","Crop")
+  
+  d1$NearStatcWtr = as.character(NA)
+  for (row in 1:length(d1$NearWtrFld)) {
+    if (is.na(d1[row,]$NearWtrFld)) {
+      d1[row,]$NearStatcWtr = NA
+    } else if (grepl("Static", d1[row,]$NearWtrFld)) {
+      d1[row,]$NearStatcWtr = "Yes"
+    } else {
+      d1[row,]$NearStatcWtr = "No"
+    }
+  }
+  d1$NearStatcWtr = as.factor(d1$NearStatcWtr); summary(d1$NearStatcWtr)
+  print(data.frame(d1$NearWtrFld, d1$NearStatcWtr))
+  
+  d1$NearMovingWtr = as.character(NA)
+  for (row in 1:length(d1$NearWtrFld)) {
+    if (is.na(d1[row,]$NearWtrFld)) {
+      d1[row,]$NearMovingWtr = NA
+    } else if (grepl("Moving", d1[row,]$NearWtrFld)) {
+      d1[row,]$NearMovingWtr = "Yes"
+    } else {
+      d1[row,]$NearMovingWtr = "No"
+    }
+  }
+  d1$NearMovingWtr = as.factor(d1$NearMovingWtr); summary(d1$NearMovingWtr)
+  print(data.frame(d1$NearWtrFld, d1$NearMovingWtr))
+  
+  d1$NearCropFld = as.character(NA)
+  for (row in 1:length(d1$NearWtrFld)) {
+    if (is.na(d1[row,]$NearWtrFld)) {
+      d1[row,]$NearCropFld = NA
+    } else if (grepl("Crop", d1[row,]$NearWtrFld)) {
+      d1[row,]$NearCropFld = "Yes"
+    } else {
+      d1[row,]$NearCropFld = "No"
+    }
+  }
+  d1$NearCropFld = as.factor(d1$NearCropFld); summary(d1$NearCropFld)
+  print(data.frame(d1$NearWtrFld, d1$NearCropFld))
+  
+  names(d1)
+  d1$AnswSurv = as.factor(d1$AnswSurv); summary(d1$AnswSurv)
+  levels(d1$AnswSurv) = c("No","Yes")
+  
+  d1$DecsnMkr = as.factor(d1$DecsnMkr); summary(d1$DecsnMkr)
+  levels(d1$DecsnMkr) = c("Grandma",
+                          "Grandma+FamilyM",
+                          "Grandpa+Grandma",
+                          "Husband",
+                          "Husband+Wife",
+                          "Husband+Wife+Mother",
+                          "Husband+Wife+FamilyM",
+                          "Husband+Wife+FamilyF",
+                          "Husband+Wife+Father",
+                          "Husband+Wife+Father+Mother",
+                          "Husband+FamilyM",
+                          "Husband+FamilyF",
+                          "Wife",
+                          "Wife+Grandma",
+                          "Wife+Mother",
+                          "Wife+Mother+Grandpa",
+                          "Wife+FamilyF",
+                          "Wife+Father",
+                          "Wife+Father+Mother",
+                          "Mother",
+                          "Mother+FamilyF",
+                          "FamilyM",
+                          "FamilyM+FamilyF",
+                          "FamilyF",
+                          "Respondent",
+                          "Respondent+Grandma",
+                          "Respondent+Husband",
+                          "Respondent+Husband+Wife",
+                          "Respondent+Husband+Wife+Mother",
+                          "Respondent+Husband+Wife+FamilyF",
+                          "Respondent+Husband+Mother",
+                          "Respondent+Husband+FamilyM",
+                          "Respondent+Husband+FamilyM+FamilyF",
+                          "Respondent+Husband+Father+Mother",
+                          "Respondent+Wife",
+                          "Respondent+Wife+FamilyM+FamilyF",
+                          "Respondent+Wife+FamilyF",
+                          "Respondent+Wife+Father",
+                          "Respondent+Wife+Father+Mother",
+                          "Respondent+Wife+Father+FamilyF",
+                          "Respondent+NotFamily",
+                          "Respondent+Mother",
+                          "Respondent+Mother+FamilyM",
+                          "Respondent+Mother+FamilyF",
+                          "Respondent+FamilyM",
+                          "Respondent+FamilyM+FamilyF",
+                          "Respondent+FamilyF",
+                          "Respondent+Father",
+                          "Respondent+Father+Mother",
+                          "Father",
+                          "Father+Mother",
+                          "Father+Mother+FamilyF",
+                          "Father+FamilyM",
+                          "Father+FamilyF")
+  
+  d1$DMresp = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMresp = NA
+    } else if (grepl("Respondent", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMresp = "Yes"
+    } else {
+      d1[row,]$DMresp = "No"
+    }
+  }
+  d1$DMresp = as.factor(d1$DMresp); summary(d1$DMresp)
+  print(data.frame(d1$DecsnMkr, d1$DMresp))
+  
+  d1$DMhusb = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMhusb = NA
+    } else if (grepl("Husband", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMhusb = "Yes"
+    } else {
+      d1[row,]$DMhusb = "No"
+    }
+  }
+  d1$DMhusb = as.factor(d1$DMhusb); summary(d1$DMhusb)
+  print(data.frame(d1$DecsnMkr, d1$DMhusb))
+  
+  d1$DMwife = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMwife = NA
+    } else if (grepl("Wife", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMwife = "Yes"
+    } else {
+      d1[row,]$DMwife = "No"
+    }
+  }
+  d1$DMwife = as.factor(d1$DMwife); summary(d1$DMwife)
+  print(data.frame(d1$DecsnMkr, d1$DMwife))
+  
+  d1$DMfath = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfath = NA
+    } else if (grepl("Father", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfath = "Yes"
+    } else {
+      d1[row,]$DMfath = "No"
+    }
+  }
+  d1$DMfath = as.factor(d1$DMfath); summary(d1$DMfath)
+  print(data.frame(d1$DecsnMkr, d1$DMfath))
+  
+  d1$DMmoth = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMmoth = NA
+    } else if (grepl("Mother", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMmoth = "Yes"
+    } else {
+      d1[row,]$DMmoth = "No"
+    }
+  }
+  d1$DMmoth = as.factor(d1$DMmoth); summary(d1$DMmoth)
+  print(data.frame(d1$DecsnMkr, d1$DMmoth))
+  
+  d1$DMgrpa = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMgrpa = NA
+    } else if (grepl("Grandpa", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMgrpa = "Yes"
+    } else {
+      d1[row,]$DMgrpa = "No"
+    }
+  }
+  d1$DMgrpa = as.factor(d1$DMgrpa); summary(d1$DMgrpa)
+  print(data.frame(d1$DecsnMkr, d1$DMgrpa))
+  
+  d1$DMgrma = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMgrma = NA
+    } else if (grepl("Grandma", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMgrma = "Yes"
+    } else {
+      d1[row,]$DMgrma = "No"
+    }
+  }
+  d1$DMgrma = as.factor(d1$DMgrma); summary(d1$DMgrma)
+  print(data.frame(d1$DecsnMkr, d1$DMgrma))
+  
+  d1$DMfamM = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfamM = NA
+    } else if (grepl("FamilyM", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfamM = "Yes"
+    } else {
+      d1[row,]$DMfamM = "No"
+    }
+  }
+  d1$DMfamM = as.factor(d1$DMfamM); summary(d1$DMfamM)
+  print(data.frame(d1$DecsnMkr, d1$DMfamM))
+  
+  d1$DMfamF = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfamF = NA
+    } else if (grepl("FamilyF", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMfamF = "Yes"
+    } else {
+      d1[row,]$DMfamF = "No"
+    }
+  }
+  d1$DMfamF = as.factor(d1$DMfamF); summary(d1$DMfamF)
+  print(data.frame(d1$DecsnMkr, d1$DMfamF))
+  
+  d1$DMotr = as.character(NA)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (is.na(d1[row,]$DecsnMkr)) {
+      d1[row,]$DMotr = NA
+    } else if (grepl("NotFamily", d1[row,]$DecsnMkr)) {
+      d1[row,]$DMotr = "Yes"
+    } else {
+      d1[row,]$DMotr = "No"
+    }
+  }
+  d1$DMotr = as.factor(d1$DMotr); summary(d1$DMotr)
+  print(data.frame(d1$DecsnMkr, d1$DMotr))
+  
+  names(d1)
+  d1$LatAcc = as.factor(d1$LatAcc); summary(d1$LatAcc)
+  levels(d1$LatAcc) = c("No","Latrine abandoned","Yes","Shared latrine")
+  
+  d1$WhyNoLatAcc = as.factor(d1$WhyNoLatAcc); summary(d1$WhyNoLatAcc)
+  levels(d1$WhyNoLatAcc) = c("Insufficient money",
+                             "Insufficient money",
+                             "Cancelled latrine order",
+                             "Latrine not available to purchase",
+                             "UNKNOWN",
+                             "Insufficient money",
+                             "UNKNOWN",
+                             "UNKNOWN",
+                             "Cancelled latrine order",
+                             "Cancelled latrine order",
+                             "Cancelled latrine order")
+  
+  d1$LatAtWrk = as.factor(d1$LatAtWrk); summary(d1$LatAtWrk)
+  levels(d1$LatAtWrk) = c("No","Yes")
+  
+  d1$Gndr = as.factor(d1$Gndr); summary(d1$Gndr)
+  levels(d1$Gndr) = c("M","F")
+  
+  d1$DMmale = as.character(NA)
+  summary(d1$DecsnMkr)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (!is.na(d1[row,]$DMresp) & !is.na(d1[row,]$Gndr)) {
+      if (d1[row,]$DMresp == "Yes" & d1[row,]$Gndr == "M") {
+        d1[row,]$DMmale = "Yes"
+      }
+    }
+    if (is.na(d1[row,]$DMmale)) {
+      if (!is.na(d1[row,]$DecsnMkr)) {
+        if (grepl("Father", d1[row,]$DecsnMkr) |
+            grepl("Husband", d1[row,]$DecsnMkr) |
+            grepl("Grandpa", d1[row,]$DecsnMkr) |
+            grepl("FamilyM", d1[row,]$DecsnMkr)) {
+          d1[row,]$DMmale = "Yes"
+        } else {
+          d1[row,]$DMmale = "No"
+        }
+      }
+    }
+  }
+  d1$DMmale = as.factor(d1$DMmale); summary(d1$DMmale)
+  print(data.frame(d1$DecsnMkr, d1$Gndr, d1$DMmale))
+  
+  d1$DMfemale = as.character(NA)
+  summary(d1$DecsnMkr)
+  for (row in 1:length(d1$DecsnMkr)) {
+    if (!is.na(d1[row,]$DMresp) & !is.na(d1[row,]$Gndr)) {
+      if (d1[row,]$DMresp == "Yes" & d1[row,]$Gndr == "F") {
+        d1[row,]$DMfemale = "Yes"
+      }
+    }
+    if (is.na(d1[row,]$DMfemale)) {
+      if (!is.na(d1[row,]$DecsnMkr)) {
+        if (grepl("Mother", d1[row,]$DecsnMkr) |
+            grepl("Wife", d1[row,]$DecsnMkr) |
+            grepl("Grandma", d1[row,]$DecsnMkr) |
+            grepl("FamilyF", d1[row,]$DecsnMkr)) {
+          d1[row,]$DMfemale = "Yes"
+        } else {
+          d1[row,]$DMfemale = "No"
+        }
+      }
+    }
+  }
+  d1$DMfemale = as.factor(d1$DMfemale); summary(d1$DMfemale)
+  print(data.frame(d1$DecsnMkr, d1$Gndr, d1$DMfemale))
+  print(data.frame(d1$DecsnMkr, d1$Gndr, d1$DMfemale, d1$DMmale))
+  
+  # Female: Gndr if DMresp == "Yes", DMwife == "Yes", DMmoth == "Yes", DMgrma == "Yes", DMfamF == "Yes"
+  
   
   # Create new variable Var3 based on Var1 and Var2
   # summary(d.NAME$Var1)
@@ -137,11 +463,11 @@ if (load_and_clean_raw_data == 1) {
   # missmap(d.NAME, main = "Missing Values in Variables", legend = F)
   
   # Save data to disk
-  # save(d.NAME,
-  #      file = paste(getwd(), "/path/to/file.RData", sep = ""))
+  save(d1,
+       file = paste(getwd(), "/data/surveys/FSMsurvey/FSMsurvey.RData", sep = ""))
   
 } else {
-  load(file = paste(getwd(), "/path/to/file.RData", sep = ""))
+  load(file = paste(getwd(), "/data/surveys/FSMsurvey/FSMsurvey.RData", sep = ""))
 }
 
 ```
